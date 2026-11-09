@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Background rounded square (rx=116) with linear gradient #12A06F -> #0A5E43 -->
+    <path android:pathData="M116,0 H396 A116,116 0 0 1 512,116 V396 A116,116 0 0 1 396,512 H116 A116,116 0 0 1 0,396 V116 A116,116 0 0 1 116,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="512"
+                android:endY="512"
+                android:type="linear">
+                <item
+                    android:color="#FF12A06F"
+                    android:offset="0.0" />
+                <item
+                    android:color="#FF0A5E43"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Ledger book (khata) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M146,92 H350 A34,34 0 0 1 384,126 V374 A34,34 0 0 1 350,408 H146 A34,34 0 0 1 112,374 V126 A34,34 0 0 1 146,92 Z" />
+    <path
+        android:fillColor="#FFCFE9DD"
+        android:pathData="M138,92 A26,26 0 0 1 164,118 V382 A26,26 0 0 1 138,408 A26,26 0 0 1 112,382 V118 A26,26 0 0 1 138,92 Z" />
+
+    <!-- Spine binder holes -->
+    <path
+        android:fillColor="#FF0B7A55"
+        android:pathData="M130,150 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 Z" />
+    <path
+        android:fillColor="#FF0B7A55"
+        android:pathData="M130,214 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 Z" />
+    <path
+        android:fillColor="#FF0B7A55"
+        android:pathData="M130,278 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 Z" />
+    <path
+        android:fillColor="#FF0B7A55"
+        android:pathData="M130,342 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 Z" />
+
+    <!-- Ruled entries -->
+    <path
+        android:fillColor="#FF12A06F"
+        android:pathData="M205,144 H337 A9,9 0 0 1 346,153 A9,9 0 0 1 337,162 H205 A9,9 0 0 1 196,153 A9,9 0 0 1 205,144 Z" />
+    <path
+        android:fillColor="#FF12A06F"
+        android:pathData="M205,204 H299 A9,9 0 0 1 308,213 A9,9 0 0 1 299,222 H205 A9,9 0 0 1 196,213 A9,9 0 0 1 205,204 Z" />
+    <path
+        android:fillColor="#FF12A06F"
+        android:pathData="M205,264 H323 A9,9 0 0 1 332,273 A9,9 0 0 1 323,282 H205 A9,9 0 0 1 196,273 A9,9 0 0 1 205,264 Z" />
+
+    <!-- Smart / wise spark -->
+    <path
+        android:fillColor="#FFF5A524"
+        android:pathData="M398,62 L410,94 L442,106 L410,118 L398,150 L386,118 L354,106 L386,94 Z" />
+
+    <!-- Rupee coin -->
+    <path
+        android:fillColor="#FFF5A524"
+        android:pathData="M266,352 a86,86 0 1,0 172,0 a86,86 0 1,0 -172,0 Z"
+        android:strokeColor="#FF0E8F63"
+        android:strokeWidth="14" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M288,352 a64,64 0 1,0 128,0 a64,64 0 1,0 -128,0 Z"
+        android:strokeColor="#8CFFFFFF"
+        android:strokeWidth="5" />
+
+    <!-- Rupee symbol: translate(352,352) scale(0.6) translate(-257,-333) -->
+    <group
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="197.8"
+        android:translateY="152.2">
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M210,266 H304"
+            android:strokeColor="#FF0A5E43"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="20" />
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M210,300 H304"
+            android:strokeColor="#FF0A5E43"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="20" />
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M226,266 H252 C298,266 298,332 252,332 H226 L296,400"
+            android:strokeColor="#FF0A5E43"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="20" />
+    </group>
+</vector>

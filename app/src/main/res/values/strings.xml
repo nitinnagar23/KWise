@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">KhataWise</string>
+    <string name="tab_invoices">Invoices</string>
+    <string name="tab_hisab_kitab">Hisab kitab</string>
+    <string name="label_ladhan">Ladhan (loading)</string>
+    <string name="label_utaar">Utaar (unloading)</string>
+    <string name="label_gaadi_kiraya">Gaadi kiraya (freight)</string>
+    <string name="new_purchase_invoice">New purchase invoice</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_new_bill">New Bill</string>
+    <string name="nav_rates">Today\'s Rates</string>
+    <string name="nav_khata">Ledger</string>
+    <string name="nav_estimate">Calculator</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Dashboard & Home -->
+    <string name="today_sales">Today\'s Sales</string>
+    <string name="collected_today">Collected Today</string>
+    <string name="total_udhari">Total Udhari</string>
+    <string name="udhari_added">Udhari Added</string>
+    <string name="low_stock_items">Low Stock Items</string>
+    <string name="create_new_bill">New Bill (Bikri Entry)</string>
+    <string name="collect_udhari">Collect Udhari</string>
+    <string name="recent_activity">Recent Activity</string>
+    <string name="reorder_alerts">Stock Reorder Suggestions</string>
+    <string name="overdue_reminders">Overdue Udhari Reminders</string>
+    <string name="send_whatsapp_reminder">Send Reminder</string>
+
+    <!-- Billing -->
+    <string name="select_customer">Select Customer</string>
+    <string name="walk_in_customer">Walk-in Customer</string>
+    <string name="select_feed_items">Select Feed &amp; Commodities</string>
+    <string name="credit_limit_warning">Credit Limit Exceeded!</string>
+    <string name="voice_input">Voice Bill Input</string>
+    <string name="amount_due">Amount Due</string>
+    <string name="save_and_print_bill">Save &amp; Generate Bill</string>
+    <string name="pay_full">Full Paid</string>
+    <string name="pay_half">Half Paid</string>
+    <string name="pay_udhari">Full Udhari</string>
+
+    <!-- Calculator & Budget Split -->
+    <string name="calc_mode_items">Items</string>
+    <string name="calc_mode_budget">Budget</string>
+    <string name="make_sale">Make Sale</string>
+    <string name="save_draft">Save Draft</string>
+    <string name="open_drafts">Drafts</string>
+    <string name="split_equal">Equal Split</string>
+    <string name="split_ratio">Ratio</string>
+    <string name="split_amount">Amount (₹)</string>
+    <string name="split_weight">Weight (kg)</string>
+
+    <!-- Customers -->
+    <string name="customers_title">Customers</string>
+    <string name="status_clear">Clear</string>
+    <string name="status_has_udhari">Has Udhari</string>
+    <string name="status_over_limit">Over limit</string>
+    <string name="credit_ok">Credit OK</string>
+    <string name="credit_blocked">Blocked</string>
+
+    <!-- Sync Status -->
+    <string name="sync_synced">Synced</string>
+    <string name="sync_syncing">Syncing…</string>
+    <string name="sync_offline">Offline</string>
+
+    <!-- Reports & Backup -->
+    <string name="profit_margin_view">Profit &amp; Margin</string>
+    <string name="customer_insights">Customer Insights</string>
+    <string name="gst_monthly_export">GST Monthly Export (CSV / PDF)</string>
+</resources>

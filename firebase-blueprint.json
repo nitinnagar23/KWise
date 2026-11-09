@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Store owner profile and settings",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["storeName"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer khata profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "village": { "type": "string" },
+        "creditLimit": { "type": "number" },
+        "currentBalance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Ledger debit/credit transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "type": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "paymentMode": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "type", "amount"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Commodity stock record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "bagWeightKg": { "type": "number" },
+        "stockBags": { "type": "number" },
+        "stockLooseKg": { "type": "number" },
+        "salePricePerKg": { "type": "number" },
+        "costPricePerKg": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Bill": {
+      "title": "Bill",
+      "description": "Customer purchase bill and invoice",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "billNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "netAmount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "balanceDue": { "type": "number" },
+        "timestamp": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "totalAmount"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Feed manufacturer / raw material supplier record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "balance": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "DevicePairingToken": {
+      "title": "DevicePairingToken",
+      "description": "Temporary 15-minute expiring device pairing secret code for secondary/staff devices",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "adminUid": { "type": "string" },
+        "storeName": { "type": "string" },
+        "assignedRole": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "expiresAt": { "type": "number" },
+        "claimedByUid": { "type": "string" },
+        "claimedByName": { "type": "string" },
+        "claimedAt": { "type": "number" }
+      },
+      "required": ["code", "adminUid", "storeName", "assignedRole", "status", "expiresAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Store owner profile"
+    },
+    "/users/{userId}/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Store customers and credit limits"
+    },
+    "/users/{userId}/transactions/{txId}": {
+      "schema": "Transaction",
+      "description": "Ledger credit/debit records"
+    },
+    "/users/{userId}/inventory/{itemId}": {
+      "schema": "InventoryItem",
+      "description": "Feed and grain inventory stock"
+    },
+    "/users/{userId}/bills/{billId}": {
+      "schema": "Bill",
+      "description": "Customer bills and invoices"
+    },
+    "/users/{userId}/suppliers/{supplierId}": {
+      "schema": "Supplier",
+      "description": "Supplier accounts and purchase ledger"
+    },
+    "/pairings/{code}": {
+      "schema": "DevicePairingToken",
+      "description": "15-minute expiring device pairing tokens"
+    }
+  }
+}

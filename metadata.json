@@ -1,0 +1,6 @@
+{
+  "name": "KhataWise",
+  "description": "KhataWise – Smart Shop Register: Offline-first cattle feed ledger, mixed-unit inventory, credit (Udhari) tracking, and Firebase cloud sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

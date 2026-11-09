@@ -1,0 +1,150 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build Type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Make Gradlew Executable
+        run: chmod +x gradlew
+
+      - name: Prepare Keystore & Environment
+        env:
+          GOOGLE_SERVICES_JSON_SECRET: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          DEBUG_KEYSTORE_SECRET: ${{ secrets.DEBUG_KEYSTORE }}
+        run: |
+          # 1. Restore debug.keystore from GitHub Secret or debug.keystore.base64 if available
+          if [ -n "$DEBUG_KEYSTORE_SECRET" ]; then
+            echo "Restoring debug.keystore from DEBUG_KEYSTORE secret..."
+            echo "$DEBUG_KEYSTORE_SECRET" | base64 -d > debug.keystore 2>/dev/null || true
+          elif [ -f "debug.keystore.base64" ]; then
+            echo "Restoring debug.keystore from debug.keystore.base64..."
+            base64 -d debug.keystore.base64 > debug.keystore 2>/dev/null || true
+          fi
+
+          # 2. If debug.keystore is still missing or empty, generate a valid debug keystore
+          if [ ! -f "debug.keystore" ] || [ ! -s "debug.keystore" ]; then
+            echo "Generating debug.keystore using keytool..."
+            keytool -genkey -v \
+              -keystore debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          # 2b. Ensure my-upload-key.jks exists for release builds if not already present
+          if [ ! -f "my-upload-key.jks" ] || [ ! -s "my-upload-key.jks" ]; then
+            keytool -genkey -v \
+              -keystore my-upload-key.jks \
+              -storepass android \
+              -alias upload \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=KhataWise Upload,O=KhataWise,C=IN"
+          fi
+
+          # Confirm keystore is present and valid
+          ls -la debug.keystore my-upload-key.jks
+
+          # 3. Ensure .env exists so Secrets Gradle plugin succeeds
+          if [ ! -f ".env" ]; then
+            if [ -f ".env.example" ]; then
+              echo "Creating .env from .env.example..."
+              cp .env.example .env
+            else
+              touch .env
+            fi
+          fi
+
+          # 4. Restore google-services.json if missing (e.g. from secret, base64 fallback, or workspace asset)
+          if [ ! -f "app/google-services.json" ]; then
+            if [ -n "$GOOGLE_SERVICES_JSON_SECRET" ]; then
+              echo "Restoring app/google-services.json from GOOGLE_SERVICES_JSON secret..."
+              echo "$GOOGLE_SERVICES_JSON_SECRET" | base64 -d > app/google-services.json 2>/dev/null || echo "$GOOGLE_SERVICES_JSON_SECRET" > app/google-services.json
+            elif [ -f "app/google-services.json.base64" ]; then
+              echo "Restoring app/google-services.json from app/google-services.json.base64..."
+              base64 -d app/google-services.json.base64 > app/google-services.json 2>/dev/null || true
+            elif [ -f "public/assets/aistudio/google-services_e0e94e82.json" ]; then
+              echo "Restoring app/google-services.json from public asset..."
+              cp public/assets/aistudio/google-services_e0e94e82.json app/google-services.json
+            elif [ -f "public/assets/aistudio/google-services_4c59a661.json" ]; then
+              echo "Restoring app/google-services.json from public asset..."
+              cp public/assets/aistudio/google-services_4c59a661.json app/google-services.json
+            fi
+          fi
+
+          # Confirm google-services.json status
+          if [ -f "app/google-services.json" ]; then
+            echo "app/google-services.json is present:"
+            ls -la app/google-services.json
+          else
+            echo "Notice: app/google-services.json not found, proceeding with dynamic fallback..."
+          fi
+
+      - name: Build Debug APK
+        if: "${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_type == 'debug' }}"
+        run: |
+          ./gradlew assembleDebug -Djava.awt.headless=true --no-daemon --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk KhataWise.apk
+
+      - name: Build Release APK
+        if: "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release' }}"
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'android' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'android' }}
+        run: |
+          ./gradlew assembleRelease -Djava.awt.headless=true --no-daemon --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk KhataWise.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: KhataWise-APK
+          path: KhataWise.apk
+          retention-days: 30
+
+      - name: Publish Direct APK to GitHub Releases
+        if: "${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create latest KhataWise.apk --title "KhataWise Latest APK" --notes "Direct installable Android APK (tap KhataWise.apk below to install directly without unzipping)." --clobber 2>/dev/null || \
+          gh release upload latest KhataWise.apk --clobber || true

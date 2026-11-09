@@ -1,0 +1,159 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getStaffDoc(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid));
+    }
+
+    function isStaffMember(userId) {
+      return isAuthenticated() && (
+        request.auth.uid == userId ||
+        exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid))
+      );
+    }
+
+    function getStaffRole(userId) {
+      return request.auth.uid == userId
+        ? 'ADMINISTRATOR'
+        : (exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid))
+            ? getStaffDoc(userId).data.role
+            : 'NONE');
+    }
+
+    function isAdmin(userId) {
+      return isAuthenticated() && (
+        request.auth.uid == userId ||
+        getStaffRole(userId) == 'ADMINISTRATOR'
+      );
+    }
+
+    function isAdminOrManager(userId) {
+      return isAuthenticated() && (
+        request.auth.uid == userId ||
+        getStaffRole(userId) == 'ADMINISTRATOR' ||
+        getStaffRole(userId) == 'MANAGER'
+      );
+    }
+
+    function isValidUser(data) {
+      return (('storeName' in data && data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 100) ||
+              ('shopName' in data && data.shopName is string && data.shopName.size() > 0 && data.shopName.size() <= 100));
+    }
+
+    function isValidCustomer(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             (!('phone' in data) || data.phone is string) &&
+             (!('village' in data) || data.village is string) &&
+             (!('creditLimit' in data) || data.creditLimit is number) &&
+             (!('currentBalance' in data) || data.currentBalance is number) &&
+             (!('totalUdhari' in data) || data.totalUdhari is number);
+    }
+
+    function isValidTransaction(data) {
+      return data.customerId is string && data.customerId.size() > 0 &&
+             data.type is string &&
+             data.amount is number && data.amount >= 0 &&
+             (!('totalSalePrice' in data) || data.totalSalePrice is number) &&
+             (!('paidAmount' in data) || data.paidAmount is number) &&
+             (!('udhariAmount' in data) || data.udhariAmount is number);
+    }
+
+    function isValidInventory(data) {
+      return (('name' in data && data.name is string && data.name.size() > 0) ||
+              ('feedName' in data && data.feedName is string && data.feedName.size() > 0)) &&
+             (!('stockBags' in data) || data.stockBags is number) &&
+             (!('stockLooseKg' in data) || data.stockLooseKg is number) &&
+             (!('currentStockKg' in data) || data.currentStockKg is number);
+    }
+
+    function isValidBill(data) {
+      return data.customerId is string && data.customerId.size() > 0 &&
+             data.totalAmount is number && data.totalAmount >= 0;
+    }
+
+    function isValidSupplier(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             (!('balance' in data) || data.balance is number);
+    }
+
+    function isValidPairingToken(data) {
+      return data.code is string && data.code.size() == 6 &&
+             data.adminUid is string && data.adminUid.size() > 0 &&
+             data.storeName is string &&
+             data.assignedRole is string &&
+             data.status is string &&
+             data.expiresAt is number;
+    }
+
+    match /users/{userId} {
+      allow read: if isStaffMember(userId);
+      allow write: if isAdmin(userId) && (request.method != 'create' && request.method != 'update' || isValidUser(request.resource.data));
+
+      match /customers/{customerId} {
+        allow read: if isStaffMember(userId);
+        allow create: if isStaffMember(userId) && isValidCustomer(request.resource.data);
+        allow update: if isStaffMember(userId) && isValidCustomer(request.resource.data);
+        allow delete: if isAdminOrManager(userId);
+      }
+
+      match /transactions/{txId} {
+        allow read: if isStaffMember(userId);
+        allow create: if isStaffMember(userId) && isValidTransaction(request.resource.data);
+        allow update: if isStaffMember(userId) && isValidTransaction(request.resource.data);
+        allow delete: if isAdminOrManager(userId);
+      }
+
+      match /inventory/{itemId} {
+        allow read: if isStaffMember(userId);
+        allow create, update: if isStaffMember(userId) && isValidInventory(request.resource.data);
+        allow delete: if isAdminOrManager(userId);
+      }
+
+      match /bills/{billId} {
+        allow read: if isStaffMember(userId);
+        allow create, update: if isStaffMember(userId) && isValidBill(request.resource.data);
+        allow delete: if isAdminOrManager(userId);
+      }
+
+      match /suppliers/{supplierId} {
+        allow read, write: if isAdminOrManager(userId) && (request.method != 'create' && request.method != 'update' || isValidSupplier(request.resource.data));
+      }
+
+      match /staff/{staffId} {
+        allow read: if isStaffMember(userId);
+        allow write: if isAdmin(userId) || (isAuthenticated() && request.auth.uid == staffId);
+      }
+    }
+
+    match /pairings/{code} {
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.adminUid && isValidPairingToken(request.resource.data);
+
+      allow delete: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
+
+      allow get: if resource == null ||
+                    (resource.data.status == 'ACTIVE' && request.time.toMillis() < resource.data.expiresAt) ||
+                    (isAuthenticated() && (
+                      resource.data.adminUid == request.auth.uid ||
+                      resource.data.claimedByUid == request.auth.uid
+                    ));
+
+      allow list: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
+
+      allow update: if isAuthenticated() && (
+        resource.data.adminUid == request.auth.uid ||
+        (resource.data.status == 'ACTIVE' &&
+         request.resource.data.status == 'CLAIMED' &&
+         request.resource.data.claimedByUid == request.auth.uid)
+      );
+    }
+  }
+}

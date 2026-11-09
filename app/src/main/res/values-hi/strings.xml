@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">KhataWise</string>
+    <string name="tab_invoices">बिल (Invoices)</string>
+    <string name="tab_hisab_kitab">हिसाब-किताब</string>
+    <string name="label_ladhan">लदान (Loading)</string>
+    <string name="label_utaar">उतार (Unloading)</string>
+    <string name="label_gaadi_kiraya">गाड़ी किराया (Freight)</string>
+    <string name="new_purchase_invoice">नया खरीद बिल</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">होम</string>
+    <string name="nav_new_bill">नया बिल</string>
+    <string name="nav_rates">आज का भाव</string>
+    <string name="nav_khata">खाता</string>
+    <string name="nav_estimate">कैलकुलेटर</string>
+    <string name="nav_settings">सेटिंग्स</string>
+
+    <!-- Dashboard & Home -->
+    <string name="today_sales">आज की बिक्री</string>
+    <string name="collected_today">आज की वसूली</string>
+    <string name="total_udhari">कुल उधारी बाक़ी</string>
+    <string name="udhari_added">उधारी जुड़ी</string>
+    <string name="low_stock_items">कम स्टॉक आइटम</string>
+    <string name="create_new_bill">नया बिल बनाएं (बिक्री एंट्री)</string>
+    <string name="collect_udhari">उधारी जमा करें</string>
+    <string name="recent_activity">हाल की लेन-देन</string>
+    <string name="reorder_alerts">स्टॉक री-ऑर्डर सुझाव</string>
+    <string name="overdue_reminders">बकाया उधारी रिमाइंडर</string>
+    <string name="send_whatsapp_reminder">व्हाट्सएप भेजें</string>
+
+    <!-- Billing -->
+    <string name="select_customer">ग्राहक चुनें</string>
+    <string name="walk_in_customer">नकद ग्राहक</string>
+    <string name="select_feed_items">पशु आहार / अनाज चुनें</string>
+    <string name="credit_limit_warning">उधारी सीमा (Credit Limit) पार!</string>
+    <string name="voice_input">बोलकर लिखें</string>
+    <string name="amount_due">कुल देय राशि</string>
+    <string name="save_and_print_bill">बिल सेव करें</string>
+    <string name="pay_full">पूरा नकद (Full)</string>
+    <string name="pay_half">आधा जमा (Half)</string>
+    <string name="pay_udhari">पूरी उधारी (Udhari)</string>
+
+    <!-- Calculator & Budget Split -->
+    <string name="calc_mode_items">आइटम</string>
+    <string name="calc_mode_budget">बजट</string>
+    <string name="make_sale">बिक्री बनाएं</string>
+    <string name="save_draft">ड्राफ्ट सेव करें</string>
+    <string name="open_drafts">ड्राफ्ट</string>
+    <string name="split_equal">बराबर बाँटें</string>
+    <string name="split_ratio">अनुपात</string>
+    <string name="split_amount">राशि (₹)</string>
+    <string name="split_weight">वजन (कि.ग्रा.)</string>
+
+    <!-- Customers -->
+    <string name="customers_title">ग्राहक</string>
+    <string name="status_clear">कोई बकाया नहीं</string>
+    <string name="status_has_udhari">उधारी बाक़ी</string>
+    <string name="status_over_limit">सीमा से अधिक</string>
+    <string name="credit_ok">उधार चालू</string>
+    <string name="credit_blocked">उधार बंद</string>
+
+    <!-- Sync Status -->
+    <string name="sync_synced">सिंक हो गया</string>
+    <string name="sync_syncing">सिंक हो रहा है…</string>
+    <string name="sync_offline">ऑफ़लाइन</string>
+
+    <!-- Reports & Backup -->
+    <string name="profit_margin_view">मुनाफा और मार्जिन</string>
+    <string name="customer_insights">ग्राहक विश्लेषण</string>
+    <string name="gst_monthly_export">GST मासिक रिपोर्ट (CSV / PDF)</string>
+</resources>
