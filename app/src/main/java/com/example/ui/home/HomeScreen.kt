@@ -285,7 +285,7 @@ fun HomeScreen(
                     Text(
                         text = settings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store",
                         style = MaterialTheme.typography.headlineSmall.copy(fontSize = 23.sp),
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -553,7 +553,7 @@ fun HomeScreen(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = tr("New Bill", "नया बिल"),
+                    text = tr("New bill", "नया बिल"),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -574,7 +574,7 @@ fun HomeScreen(
                 Text(
                     text = tr("Today's Sales", "आज की बिक्री"),
                     style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -676,7 +676,7 @@ fun HomeScreen(
                                 Text(
                                     text = initials,
                                     style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = avatarFg
                                 )
                             }
@@ -715,7 +715,7 @@ fun HomeScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(bill.totalSalePrice),
                                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
 
@@ -737,14 +737,14 @@ fun HomeScreen(
                                 IconButton(
                                     onClick = { saleToEdit = sale },
                                     modifier = Modifier
-                                        .size(36.dp)
+                                        .size(44.dp)
                                         .testTag("edit_today_sale_${bill.id}")
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Today's Sale",
+                                        contentDescription = tr("Edit today's sale", "आज की बिक्री बदलें"),
                                         tint = FlatTextMuted,
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
@@ -801,7 +801,7 @@ fun HomeScreen(
                     OutlinedTextField(
                         value = reasonInput,
                         onValueChange = { reasonInput = it },
-                        label = { Text(tr("Edit Reason", "कारण")) },
+                        label = { Text(tr("Edit reason", "कारण")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -832,7 +832,7 @@ fun HomeScreen(
                         contentColor = primaryForestGreenTextOn
                     )
                 ) {
-                    Text(tr("Save Changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold)
+                    Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -858,7 +858,7 @@ fun HomeScreen(
             containerColor = FlatDarkCard,
             title = {
                 Text(
-                    tr("Collect Udhari Payment", "उधारी वसूली दर्ज करें"),
+                    tr("Collect udhari payment", "उधारी वसूली दर्ज करें"),
                     color = FlatTextPrimary,
                     fontWeight = FontWeight.Bold
                 )
@@ -908,7 +908,7 @@ fun HomeScreen(
                                     onClick = {
                                         collectAmountStr = cust.totalUdhari.stripTrailingZeros().toPlainString()
                                     },
-                                    label = { Text(tr("Full Due", "पूरा बाक़ी")) }
+                                    label = { Text(tr("Full due", "पूरा बाक़ी")) }
                                 )
                                 FilterChip(
                                     selected = false,
@@ -967,7 +967,7 @@ fun HomeScreen(
                         ),
                         modifier = Modifier.testTag("confirm_collect_udhari_btn")
                     ) {
-                        Text(tr("Save Payment", "जमा करें"), fontWeight = FontWeight.Bold)
+                        Text(tr("Save payment", "जमा करें"), fontWeight = FontWeight.Bold)
                     }
                 }
             },
@@ -1081,7 +1081,7 @@ private fun DashboardKpiTile(
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = valueColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

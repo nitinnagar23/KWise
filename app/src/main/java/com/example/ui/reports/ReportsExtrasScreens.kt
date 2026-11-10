@@ -238,7 +238,7 @@ fun GstReportScreen(
                         Text(
                             text = tr("GST report", "GST रिपोर्ट"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -274,7 +274,7 @@ fun GstReportScreen(
                             Text(
                                 text = tr(period.labelEn, period.labelHi),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (isSelected) Color.White else FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
@@ -311,14 +311,14 @@ fun GstReportScreen(
                             Text(
                                 text = tr("TAXABLE SALES", "कर योग्य बिक्री"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalTaxableSales),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -342,14 +342,14 @@ fun GstReportScreen(
                             Text(
                                 text = tr("GST COLLECTED", "एकत्रित GST"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalGstCollected),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepExtraGreen
                             )
                             Text(
@@ -383,14 +383,14 @@ fun GstReportScreen(
                             Text(
                                 text = tr("INPUT TAX ON PURCHASES", "खरीद पर इनपुट टैक्स"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.4.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(inputTaxOnPurchases),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -414,14 +414,14 @@ fun GstReportScreen(
                             Text(
                                 text = tr("NET GST PAYABLE", "देय शुद्ध GST"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepExtraGreen,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(netGstPayable),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepExtraGreen
                             )
                             Text(
@@ -449,7 +449,7 @@ fun GstReportScreen(
                         Text(
                             text = tr("HSN-WISE SUMMARY", "HSN-वार सारांश"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.5.sp
                         )
@@ -503,7 +503,7 @@ fun GstReportScreen(
                                 Text(
                                     text = "2309 · 5%",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -549,7 +549,7 @@ fun GstReportScreen(
                                 Text(
                                     text = "Nil rated",
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -594,14 +594,14 @@ fun GstReportScreen(
                             Text(
                                 text = tr("Total", "कुल"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.weight(1.45f)
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalTaxableSales),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.weight(0.95f)
@@ -609,7 +609,7 @@ fun GstReportScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(cgstCollected),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.weight(0.75f)
@@ -617,7 +617,7 @@ fun GstReportScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(sgstCollected),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.weight(0.75f)
@@ -640,7 +640,7 @@ fun GstReportScreen(
                             "अधिकांश पशु आहार पर Nil या 5% GST लगता है। रिटर्न भरने से पहले यह सारांश अपने CA के साथ साझा करें।"
                         ),
                         fontSize = 12.5.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         color = RepExtraBlueInfoText,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                     )
@@ -809,7 +809,7 @@ fun StockReportScreen(
                         Text(
                             text = tr("Stock report", "स्टॉक रिपोर्ट"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -840,14 +840,14 @@ fun StockReportScreen(
                             Text(
                                 text = tr("COST VALUE", "लागत मूल्य"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalCostValue),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -871,14 +871,14 @@ fun StockReportScreen(
                             Text(
                                 text = tr("SELLING VALUE", "बिक्री मूल्य"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalSellingValue),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepExtraGreen
                             )
                             Text(
@@ -910,7 +910,7 @@ fun StockReportScreen(
                             Text(
                                 text = tr("Profit if all stock is sold", "सारा स्टॉक बिकने पर मुनाफा"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepExtraGreen
                             )
                             Text(
@@ -923,7 +923,7 @@ fun StockReportScreen(
                         Text(
                             text = CurrencyUtils.formatInr(potentialProfit),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = RepExtraGreen
                         )
                     }
@@ -949,7 +949,7 @@ fun StockReportScreen(
                             Text(
                                 text = tr(filter.labelEn, filter.labelHi),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (isSelected) Color.White else FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
@@ -1075,7 +1075,7 @@ fun StockReportScreen(
                                         Text(
                                             text = formatProductCardTitle(prod),
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -1134,7 +1134,7 @@ fun StockReportScreen(
                                 Text(
                                     text = tr("Total", "कुल"),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     modifier = Modifier.weight(1.2f)
                                 )
@@ -1149,7 +1149,7 @@ fun StockReportScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(sumFilteredCost),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.weight(0.85f)
@@ -1157,7 +1157,7 @@ fun StockReportScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(sumFilteredSell),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = RepExtraGreen,
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.weight(0.85f)
@@ -1356,7 +1356,7 @@ fun ExpenseReportScreen(
                         Text(
                             text = tr("Expense report", "ख़र्च रिपोर्ट"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -1392,7 +1392,7 @@ fun ExpenseReportScreen(
                             Text(
                                 text = tr(period.labelEn, period.labelHi),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (isSelected) Color.White else FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
@@ -1429,14 +1429,14 @@ fun ExpenseReportScreen(
                             Text(
                                 text = tr("TOTAL EXPENSES", "कुल ख़र्च"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalExpenses),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepExtraRed
                             )
                             Text(
@@ -1460,14 +1460,14 @@ fun ExpenseReportScreen(
                             Text(
                                 text = tr("BIGGEST", "सबसे बड़ा"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
                                 text = biggestCategory?.name?.substringBefore(" · ") ?: "Transport",
                                 fontSize = 21.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -1501,7 +1501,7 @@ fun ExpenseReportScreen(
                         Text(
                             text = tr("BY CATEGORY", "श्रेणी के अनुसार"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.5.sp
                         )
@@ -1534,7 +1534,7 @@ fun ExpenseReportScreen(
                                     Text(
                                         text = "${CurrencyUtils.formatInr(cb.amount)} · ${cb.pct}%",
                                         fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                 }
@@ -1578,7 +1578,7 @@ fun ExpenseReportScreen(
                         Text(
                             text = tr("BIGGEST ENTRIES", "सबसे बड़ी प्रविष्टियां"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.5.sp
                         )
@@ -1612,7 +1612,7 @@ fun ExpenseReportScreen(
                                         Text(
                                             text = entry.title,
                                             fontSize = 14.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary
                                         )
                                         Text(
@@ -1625,7 +1625,7 @@ fun ExpenseReportScreen(
                                     Text(
                                         text = "−${CurrencyUtils.formatInr(entry.amount)}",
                                         fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                 }
@@ -1661,7 +1661,7 @@ fun ExpenseReportScreen(
                             Text(
                                 text = tr("Stock loss is shown in the Stock report", "स्टॉक नुकसान स्टॉक रिपोर्ट में दिखाया गया है"),
                                 fontSize = 13.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1674,7 +1674,7 @@ fun ExpenseReportScreen(
                         Text(
                             text = tr("View →", "देखें →"),
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = RepExtraGreen
                         )
                     }
@@ -1734,7 +1734,7 @@ private fun ExportBottomBar(
                 Text(
                     text = "PDF",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

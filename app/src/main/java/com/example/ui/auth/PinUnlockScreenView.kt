@@ -266,7 +266,7 @@ internal fun PinUnlockFullScreen(
                 Text(
                     text = userInitials,
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = LoginNavyAvatarBg
                 )
             }
@@ -277,7 +277,7 @@ internal fun PinUnlockFullScreen(
             Text(
                 text = tr("Welcome back, $firstName", "वापसी पर स्वागत है, $firstName"),
                 fontSize = 23.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = LoginNavyText,
                 textAlign = TextAlign.Center
             )
@@ -296,7 +296,7 @@ internal fun PinUnlockFullScreen(
                     Text(
                         text = roleLabel,
                         fontSize = 12.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = LoginNavyText,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                     )
@@ -305,7 +305,7 @@ internal fun PinUnlockFullScreen(
                     text = "  ·  $resolvedShopName",
                     fontSize = 13.5.sp,
                     color = LoginSubtleText,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -339,7 +339,7 @@ internal fun PinUnlockFullScreen(
                 text = pinError ?: tr("Enter your 4-digit PIN", "अपना 4-अंकीय पिन दर्ज करें"),
                 fontSize = 13.5.sp,
                 color = if (pinError != null) Color(0xFFDC2626) else LoginSubtleText,
-                fontWeight = if (pinError != null) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (pinError != null) FontWeight.Bold else FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
 
@@ -374,7 +374,7 @@ internal fun PinUnlockFullScreen(
                                 Text(
                                     text = digit,
                                     fontSize = 26.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = LoginNavyText
                                 )
                             }
@@ -434,7 +434,7 @@ internal fun PinUnlockFullScreen(
                         Text(
                             text = "0",
                             fontSize = 26.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginNavyText
                         )
                     }
@@ -469,7 +469,7 @@ internal fun PinUnlockFullScreen(
                     "पिन भूल गए? इसे रीसेट करने के लिए अपने एडमिन से कहें"
                 ),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = LoginBrandGreen,
                 textAlign = TextAlign.Center,
                 modifier = Modifier

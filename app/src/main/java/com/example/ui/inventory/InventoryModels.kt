@@ -65,7 +65,7 @@ data class InventoryItemMeta(
     val category: String = "Feed",
     val reorderBags: Int = 8,
     val reorderLooseKg: BigDecimal = BigDecimal("50"),
-    val supplierName: String = "Sharma Traders",
+    val supplierName: String = "",
     val barcode: String = ""
 )
 
@@ -185,7 +185,7 @@ object InventoryMetaPrefs {
                 .filter { inv -> inv.wholesalerName.isNotBlank() }
                 .maxByOrNull { it.date }
                 ?.wholesalerName
-            ?: "Sharma Traders"
+            ?: ""
 
         val defaultCategory = when {
             product.feedName.contains("Cake", ignoreCase = true) ||
@@ -237,7 +237,7 @@ object InventoryMetaPrefs {
             .putString("${productId}_category", meta.category.trim().ifBlank { "Feed" })
             .putInt("${productId}_reorderBags", meta.reorderBags.coerceAtLeast(1))
             .putString("${productId}_reorderLooseKg", meta.reorderLooseKg.toPlainString())
-            .putString("${productId}_supplier", meta.supplierName.trim().ifBlank { "Sharma Traders" })
+            .putString("${productId}_supplier", meta.supplierName.trim())
             .putString("${productId}_barcode", meta.barcode.trim())
             .apply()
     }
@@ -550,7 +550,7 @@ internal fun buildAllStockHistoryMovements(
     purchaseInvoices
         .filter { !it.isDeleted }
         .forEach { inv ->
-            val supplier = inv.wholesalerName.ifBlank { "Sharma Traders" }
+            val supplier = inv.wholesalerName.ifBlank { "Supplier not set" }
             inv.getItems().forEachIndexed { idx, line ->
                 val prod = productMap[line.productId]
                     ?: products.find { it.feedName.equals(line.feedName, ignoreCase = true) }

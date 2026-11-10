@@ -169,7 +169,7 @@ fun OfflineAndSyncBanner(
                         Text(
                             text = tr("You're offline", "आप ऑफ़लाइन हैं"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StateAmberText
                         )
                         Text(
@@ -228,7 +228,7 @@ fun OfflineAndSyncBanner(
                                 "$countLabel बदलाव सिंक हो रहे हैं..."
                             ),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E3A8A)
                         )
                     }
@@ -284,7 +284,7 @@ fun OfflineAndSyncBanner(
                             Text(
                                 text = tr("Couldn't sync", "सिंक नहीं हो सका"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color(0xFF7F1D1D)
                             )
                             Text(
@@ -309,7 +309,7 @@ fun OfflineAndSyncBanner(
                         Text(
                             text = tr("Retry", "पुनः प्रयास"),
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -344,13 +344,8 @@ fun OfflineAndSyncBanner(
                         Text(
                             text = tr("Back online · All synced", "वापस ऑनलाइन · सब सिंक हो गया"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF064E3B)
-                        )
-                        Text(
-                            text = tr("Hides by itself after 3 seconds.", "3 सेकंड बाद अपने आप हट जाएगा।"),
-                            fontSize = 12.5.sp,
-                            color = StateBrandGreen
                         )
                     }
                 }
@@ -391,7 +386,7 @@ fun OfflineAndSyncBanner(
                                     "पिछला बैकअप $lastBackupDaysAgo दिन पहले"
                                 ),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateAmberText
                             )
                             Text(
@@ -413,7 +408,7 @@ fun OfflineAndSyncBanner(
                         Text(
                             text = tr("Back up now", "अभी बैकअप लें"),
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -490,7 +485,7 @@ fun HeaderSyncStatusDotPill(
             Text(
                 text = label,
                 fontSize = 12.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = textColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -692,7 +687,7 @@ fun OpeningOrRestoringShopCard(
             Text(
                 text = title,
                 fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = StateNavyText,
                 textAlign = TextAlign.Center
             )
@@ -793,14 +788,14 @@ fun KhataWiseActionStateButton(
                 Text(
                     text = loadingText,
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             } else {
                 Text(
                     text = text,
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = contentColor
                 )
             }
@@ -852,7 +847,7 @@ fun EmptyCustomersStateCard(
             Text(
                 text = tr("No customers yet", "अभी कोई ग्राहक नहीं है"),
                 fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = StateNavyText,
                 textAlign = TextAlign.Center
             )
@@ -890,7 +885,7 @@ fun EmptyCustomersStateCard(
                     Text(
                         text = tr("+ Add customer", "+ ग्राहक जोड़ें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -911,7 +906,7 @@ fun EmptyCustomersStateCard(
                             Text(
                                 text = tr("Import", "संपर्क से जोड़ें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateBrandGreen
                             )
                         }
@@ -961,7 +956,7 @@ fun EmptyBillsTodayStateCard(
             Text(
                 text = tr("No bills today", "आज कोई बिल नहीं है"),
                 fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = StateNavyText,
                 textAlign = TextAlign.Center
             )
@@ -995,7 +990,7 @@ fun EmptyBillsTodayStateCard(
                 Text(
                     text = tr("+ New bill", "+ नया बिल"),
                     fontSize = 14.5.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -1042,7 +1037,7 @@ fun EmptyStockListStateCard(
             Text(
                 text = tr("Your stock list is empty", "आपकी स्टॉक सूची खाली है"),
                 fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = StateNavyText,
                 textAlign = TextAlign.Center
             )
@@ -1080,7 +1075,7 @@ fun EmptyStockListStateCard(
                     Text(
                         text = tr("+ Add item", "+ आइटम जोड़ें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1101,7 +1096,7 @@ fun EmptyStockListStateCard(
                             Text(
                                 text = tr("Import Excel", "एक्सेल इम्पोर्ट"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateBrandGreen
                             )
                         }
@@ -1152,7 +1147,7 @@ fun AllCaughtUpStateCard(
             Text(
                 text = title,
                 fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = StateNavyText,
                 textAlign = TextAlign.Center
             )
@@ -1209,7 +1204,7 @@ fun NoSearchResultsStateCard(
             Text(
                 text = tr("No results for “$query”", "“$query” के लिए कोई परिणाम नहीं"),
                 fontSize = 19.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = StateNavyText,
                 textAlign = TextAlign.Center
             )
@@ -1245,7 +1240,7 @@ fun NoSearchResultsStateCard(
                     Text(
                         text = tr("Clear search", "खोज साफ़ करें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateBrandGreen
                     )
                 }
@@ -1300,7 +1295,7 @@ fun NoInternetErrorCard(
                     Text(
                         text = tr("No internet", "इंटरनेट नहीं है"),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText
                     )
                     Spacer(modifier = Modifier.height(3.dp))
@@ -1334,7 +1329,7 @@ fun NoInternetErrorCard(
                     Text(
                         text = tr("Try again", "पुनः प्रयास करें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1351,7 +1346,7 @@ fun NoInternetErrorCard(
                         Text(
                             text = tr("Continue offline", "ऑफ़लाइन जारी रखें"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StateBrandGreen
                         )
                     }
@@ -1404,7 +1399,7 @@ fun CouldNotLoadErrorCard(
                     Text(
                         text = title,
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText
                     )
                     Spacer(modifier = Modifier.height(3.dp))
@@ -1438,7 +1433,7 @@ fun CouldNotLoadErrorCard(
                     Text(
                         text = tr("Retry", "पुनः प्रयास"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1455,7 +1450,7 @@ fun CouldNotLoadErrorCard(
                         Text(
                             text = tr("Report problem", "समस्या बताएं"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StateBrandGreen
                         )
                     }
@@ -1516,7 +1511,7 @@ fun BillSyncConflictCard(
                             "बिल #$billNumber दो फ़ोनों पर बदला गया"
                         ),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -1546,7 +1541,7 @@ fun BillSyncConflictCard(
                         Text(
                             text = "${tr("This phone", "यह फ़ोन")} · $thisPhoneTime",
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StateNavyText
                         )
                         Spacer(modifier = Modifier.height(2.dp))
@@ -1572,7 +1567,7 @@ fun BillSyncConflictCard(
                         Text(
                             text = counterDeviceLabel,
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StateNavyText
                         )
                         Spacer(modifier = Modifier.height(2.dp))
@@ -1599,7 +1594,7 @@ fun BillSyncConflictCard(
                 Text(
                     text = tr("Keep selected", "चुना हुआ रखें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -1649,7 +1644,7 @@ fun ReportsAdminOnlyErrorCard(
                     Text(
                         text = tr("Only Admin can see Reports", "केवल एडमिन ही रिपोर्ट देख सकते हैं"),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -1678,7 +1673,7 @@ fun ReportsAdminOnlyErrorCard(
                     Text(
                         text = tr("Request access", "एक्सेस का अनुरोध करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateBrandGreen
                     )
                 }
@@ -1728,7 +1723,7 @@ fun BackupCouldNotFinishCard(
                     Text(
                         text = tr("Backup couldn't finish", "बैकअप पूरा नहीं हो सका"),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText
                     )
                     Spacer(modifier = Modifier.height(3.dp))
@@ -1758,7 +1753,7 @@ fun BackupCouldNotFinishCard(
                 Text(
                     text = tr("Allow Drive access", "Drive एक्सेस की अनुमति दें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -1824,7 +1819,7 @@ fun DeleteCustomerConfirmationDialog(
                     Text(
                         text = tr("Can't delete $customerName", "$customerName को हटाया नहीं जा सकता"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText,
                         textAlign = TextAlign.Center
                     )
@@ -1860,7 +1855,7 @@ fun DeleteCustomerConfirmationDialog(
                         Text(
                             text = tr("Collect udhari", "उधारी वसूल करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -1899,7 +1894,7 @@ fun DeleteCustomerConfirmationDialog(
                     Text(
                         text = tr("Delete $customerName?", "$customerName को हटाएं?"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateNavyText,
                         textAlign = TextAlign.Center
                     )
@@ -1937,7 +1932,7 @@ fun DeleteCustomerConfirmationDialog(
                                 Text(
                                     text = tr("Cancel", "रद्द करें"),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = StateNavyText
                                 )
                             }
@@ -1958,7 +1953,7 @@ fun DeleteCustomerConfirmationDialog(
                             Text(
                                 text = tr("Delete", "हटाएं"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -2022,7 +2017,7 @@ fun DeleteBillConfirmationDialog(
                 Text(
                     text = tr("Delete bill #$billNumber?", "बिल #$billNumber हटाएं?"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateNavyText,
                     textAlign = TextAlign.Center
                 )
@@ -2063,7 +2058,7 @@ fun DeleteBillConfirmationDialog(
                             Text(
                                 text = label,
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (isSelected) Color.White else StateNavyText,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                             )
@@ -2150,7 +2145,7 @@ fun DeleteBillConfirmationDialog(
                         Text(
                             text = tr("Return items instead", "इसके बजाय आइटम वापस (रिटर्न) करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StateBrandGreen
                         )
                     }
@@ -2174,7 +2169,7 @@ fun DeleteBillConfirmationDialog(
                     Text(
                         text = tr("Delete bill", "बिल हटाएं"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -2246,7 +2241,7 @@ fun DeleteInventoryItemConfirmationDialog(
                 Text(
                     text = tr("Delete $itemName?", "$itemName को हटाएं?"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateNavyText,
                     textAlign = TextAlign.Center
                 )
@@ -2273,7 +2268,7 @@ fun DeleteInventoryItemConfirmationDialog(
                     Text(
                         text = tr("Hide item instead", "इसके बजाय आइटम छुपाएं"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateBrandGreen
                     )
                 }
@@ -2298,7 +2293,7 @@ fun DeleteInventoryItemConfirmationDialog(
                             Text(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateNavyText
                             )
                         }
@@ -2319,7 +2314,7 @@ fun DeleteInventoryItemConfirmationDialog(
                         Text(
                             text = tr("Delete", "हटाएं"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -2377,7 +2372,7 @@ fun RemoveStaffConfirmationDialog(
                 Text(
                     text = tr("Remove $staffDisplayTitle?", "$staffDisplayTitle को हटाएं?"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateNavyText,
                     textAlign = TextAlign.Center
                 )
@@ -2415,7 +2410,7 @@ fun RemoveStaffConfirmationDialog(
                             Text(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateNavyText
                             )
                         }
@@ -2436,7 +2431,7 @@ fun RemoveStaffConfirmationDialog(
                         Text(
                             text = tr("Remove", "हटाएं"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -2494,7 +2489,7 @@ fun UnpairDeviceConfirmationDialog(
                 Text(
                     text = tr("Unpair $counterTitle?", "$counterTitle को अनपेयर करें?"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateNavyText,
                     textAlign = TextAlign.Center
                 )
@@ -2532,7 +2527,7 @@ fun UnpairDeviceConfirmationDialog(
                             Text(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateNavyText
                             )
                         }
@@ -2553,7 +2548,7 @@ fun UnpairDeviceConfirmationDialog(
                         Text(
                             text = tr("Unpair", "अनपेयर करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -2611,7 +2606,7 @@ fun LogoutKhataWiseConfirmationDialog(
                 Text(
                     text = tr("Log out of KhataWise?", "KhataWise से लॉग आउट करें?"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateNavyText,
                     textAlign = TextAlign.Center
                 )
@@ -2646,7 +2641,7 @@ fun LogoutKhataWiseConfirmationDialog(
                                     "$pendingSyncChanges बदलाव अभी भी सिंक होने बाकी हैं"
                                 ),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateAmberText,
                                 textAlign = TextAlign.Center
                             )
@@ -2671,7 +2666,7 @@ fun LogoutKhataWiseConfirmationDialog(
                     Text(
                         text = tr("Sync & log out", "सिंक करें और लॉग आउट करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -2684,7 +2679,7 @@ fun LogoutKhataWiseConfirmationDialog(
                     Text(
                         text = tr("Log out anyway", "फिर भी लॉग आउट करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StateCrimsonRed
                     )
                 }
@@ -2755,7 +2750,7 @@ fun ResetAllShopDataConfirmationDialog(
                 Text(
                     text = tr("Reset all shop data?", "दुकान का सारा डेटा रीसेट करें?"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateNavyText,
                     textAlign = TextAlign.Center
                 )
@@ -2778,7 +2773,7 @@ fun ResetAllShopDataConfirmationDialog(
                 Text(
                     text = tr("TYPE DELETE TO CONFIRM", "पुष्टि करने के लिए DELETE लिखें"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StateSubtleText,
                     letterSpacing = 0.6.sp,
                     modifier = Modifier
@@ -2813,7 +2808,7 @@ fun ResetAllShopDataConfirmationDialog(
                             singleLine = true,
                             textStyle = TextStyle(
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateNavyText
                             ),
                             modifier = Modifier
@@ -2843,7 +2838,7 @@ fun ResetAllShopDataConfirmationDialog(
                             Text(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StateNavyText
                             )
                         }
@@ -2862,7 +2857,7 @@ fun ResetAllShopDataConfirmationDialog(
                             Text(
                                 text = tr("Reset", "रीसेट करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }

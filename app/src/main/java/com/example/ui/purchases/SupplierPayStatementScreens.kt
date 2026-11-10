@@ -141,7 +141,7 @@ fun PaySupplierFlowScreen(
             initialSummary
                 ?: allSummaries.firstOrNull { it.balancePayable > BigDecimal.ZERO }
                 ?: allSummaries.firstOrNull()
-                ?: SupplierKhataSummary(wholesalerName = "Sharma Traders", balancePayable = BigDecimal.ZERO)
+                ?: SupplierKhataSummary(wholesalerName = "Supplier 1", balancePayable = BigDecimal.ZERO)
         )
     }
     var supplierDropdownOpen by remember { mutableStateOf(false) }
@@ -251,7 +251,7 @@ fun PaySupplierFlowScreen(
                             Text(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -301,7 +301,7 @@ fun PaySupplierFlowScreen(
                             Text(
                                 text = "Pay ${CurrencyUtils.formatInr(enteredAmount)}",
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -346,7 +346,7 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = tr("Pay supplier", "सप्लायर को भुगतान करें"),
                             fontSize = 21.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -394,7 +394,7 @@ fun PaySupplierFlowScreen(
                                     Text(
                                         text = supplierInitials(selectedSummary.wholesalerName),
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = SupAvatarText
                                     )
                                 }
@@ -407,7 +407,7 @@ fun PaySupplierFlowScreen(
                                         Text(
                                             text = selectedSummary.wholesalerName,
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -438,14 +438,14 @@ fun PaySupplierFlowScreen(
                                 Text(
                                     text = tr("YOU OWE", "देना है"),
                                     fontSize = 10.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextSecondary,
                                     letterSpacing = 0.6.sp
                                 )
                                 Text(
                                     text = CurrencyUtils.formatInr(owedBefore),
                                     fontSize = 19.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (owedBefore > BigDecimal.ZERO) SupRed else SupGreen
                                 )
                             }
@@ -475,7 +475,7 @@ fun PaySupplierFlowScreen(
                     Text(
                         text = tr("AMOUNT PAID", "भुगतान की गई राशि"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -495,7 +495,7 @@ fun PaySupplierFlowScreen(
                             Text(
                                 text = "₹ ",
                                 fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupGreen
                             )
                             BasicTextField(
@@ -508,7 +508,7 @@ fun PaySupplierFlowScreen(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 textStyle = TextStyle(
                                     fontSize = 26.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = SupGreen
                                 ),
                                 cursorBrush = SolidColor(SupGreen),
@@ -550,7 +550,7 @@ fun PaySupplierFlowScreen(
                                 Text(
                                     text = label,
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else FlatTextPrimary,
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                                 )
@@ -564,7 +564,7 @@ fun PaySupplierFlowScreen(
                     Text(
                         text = tr("PAYMENT MODE", "भुगतान का माध्यम"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -595,7 +595,7 @@ fun PaySupplierFlowScreen(
                                         Text(
                                             text = modeLabel,
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (isSelected) Color.White else FlatTextPrimary
                                         )
                                     }
@@ -638,7 +638,7 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = tr("DATE", "तारीख"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.7.sp
                         )
@@ -681,7 +681,7 @@ fun PaySupplierFlowScreen(
                             Text(
                                 text = dateLabel,
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp)
                             )
@@ -695,7 +695,7 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = tr("TIME", "समय"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.7.sp
                         )
@@ -725,7 +725,7 @@ fun PaySupplierFlowScreen(
                             Text(
                                 text = timeFmt.format(Date(paymentTimestamp)),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp)
                             )
@@ -738,7 +738,7 @@ fun PaySupplierFlowScreen(
                     Text(
                         text = tr("PAY AGAINST", "किस बिल के विरुद्ध"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -772,7 +772,7 @@ fun PaySupplierFlowScreen(
                                         Text(
                                             text = label,
                                             fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (selected) Color.White else FlatTextPrimary
                                         )
                                     }
@@ -800,7 +800,7 @@ fun PaySupplierFlowScreen(
                                     Text(
                                         text = "Bill #P-212 · ${shortDateFmt.format(Date(lastTxDate))}",
                                         fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     Text(
@@ -819,7 +819,7 @@ fun PaySupplierFlowScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(enteredAmount.min(owedBefore.max(enteredAmount))),
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = SupGreen
                                     )
                                 }
@@ -878,7 +878,7 @@ fun PaySupplierFlowScreen(
                                             Text(
                                                 text = "Bill #$shortNo · ${shortDateFmt.format(Date(inv.date))}",
                                                 fontSize = 14.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary
                                             )
                                             Text(
@@ -898,7 +898,7 @@ fun PaySupplierFlowScreen(
                                         Text(
                                             text = CurrencyUtils.formatInr(allocatedForThis),
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = SupGreen
                                         )
                                     }
@@ -913,7 +913,7 @@ fun PaySupplierFlowScreen(
                     Text(
                         text = tr("REFERENCE / NOTE (OPTIONAL)", "रेफरेंस / नोट (वैकल्पिक)"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -957,9 +957,9 @@ fun PaySupplierFlowScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = tr("Receipt photo attached ✓", "रसीद फोटो जोड़ी गई ✓"),
+                                    text = tr("Receipt photo attached", "रसीद फोटो जोड़ी गई"),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = SupGreen
                                 )
                                 Icon(
@@ -1007,7 +1007,7 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = CurrencyUtils.formatInr(remainingOwed),
                             fontSize = 24.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = SupGreen
                         )
                     }
@@ -1055,7 +1055,7 @@ fun PaySupplierFlowScreen(
             Text(
                 text = "${CurrencyUtils.formatInr(enteredAmount)} paid",
                 fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary
             )
 
@@ -1096,7 +1096,7 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = CurrencyUtils.formatInr(owedBefore),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -1116,7 +1116,7 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = "−${CurrencyUtils.formatInr(enteredAmount)}",
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = SupGreen
                         )
                     }
@@ -1131,13 +1131,13 @@ fun PaySupplierFlowScreen(
                         Text(
                             text = tr("You owe now", "अब देना बाकी है"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
                             text = CurrencyUtils.formatInr(remainingOwed),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (remainingOwed > BigDecimal.ZERO) SupRed else SupGreen
                         )
                     }
@@ -1161,7 +1161,7 @@ fun PaySupplierFlowScreen(
                     Text(
                         text = tr("Added to Cashbook", "कैशबुक में जोड़ा गया"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1205,7 +1205,7 @@ fun PaySupplierFlowScreen(
                 Text(
                     text = tr("Share payment slip", "भुगतान पर्ची शेयर करें"),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
 
@@ -1218,7 +1218,7 @@ fun PaySupplierFlowScreen(
                 Text(
                     text = tr("View supplier khata", "सप्लायर खाता देखें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = SupGreen
                 )
             }
@@ -1368,7 +1368,7 @@ fun SupplierStatementScreen(
         "${shortDateFmt.format(Date(firstDate))} – ${fullDateFmt.format(Date(lastDate))}"
     }
 
-    val shopName = settings?.shopName?.ifBlank { "Khal Bhandaar 12" } ?: "Khal Bhandaar 12"
+    val shopName = settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name"
     val shopCity = settings?.shopAddress?.ifBlank { "Gohra" } ?: "Gohra"
     val shopPhone = settings?.shopPhone?.ifBlank { "89410 00198" } ?: "89410 00198"
     val ownerName = currentUser?.name?.ifBlank { "Nitin Nagar" } ?: "Nitin Nagar"
@@ -1426,9 +1426,9 @@ fun SupplierStatementScreen(
                         )
                     ) {
                         Text(
-                            text = if (formatTab == 0) tr("Share PDF", "PDF शेयर करें") else tr("Share Image", "इमेज शेयर करें"),
+                            text = if (formatTab == 0) tr("Share PDF", "PDF शेयर करें") else tr("Share image", "इमेज शेयर करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -1463,7 +1463,7 @@ fun SupplierStatementScreen(
                         Text(
                             text = tr("Save", "सेव करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = SupGreen
                         )
                     }
@@ -1543,7 +1543,7 @@ fun SupplierStatementScreen(
                     Text(
                         text = tr("Statement", "स्टेटमेंट"),
                         fontSize = 21.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1560,7 +1560,7 @@ fun SupplierStatementScreen(
                     Text(
                         text = "A4",
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     )
@@ -1594,7 +1594,7 @@ fun SupplierStatementScreen(
                                 Text(
                                     text = label,
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (selected) Color.White else FlatTextPrimary
                                 )
                             }
@@ -1644,7 +1644,7 @@ fun SupplierStatementScreen(
                         Text(
                             text = period,
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (isSelected) Color.White else FlatTextPrimary,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
@@ -1732,8 +1732,8 @@ fun SupplierStatementScreen(
                                     ) {
                                         Text(
                                             text = "₹",
-                                            fontSize = 8.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
                                             color = Color.White
                                         )
                                     }
@@ -1743,7 +1743,7 @@ fun SupplierStatementScreen(
                                     Text(
                                         text = shopName,
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     Text(
@@ -1758,7 +1758,7 @@ fun SupplierStatementScreen(
                                 Text(
                                     text = "SUPPLIER STATEMENT",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = SupGreen,
                                     letterSpacing = 0.4.sp
                                 )
@@ -1787,14 +1787,14 @@ fun SupplierStatementScreen(
                                 Text(
                                     text = "SUPPLIER",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextSecondary,
                                     letterSpacing = 0.6.sp
                                 )
                                 Text(
                                     text = summary.wholesalerName,
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 val subGstin = buildString {
@@ -1813,14 +1813,14 @@ fun SupplierStatementScreen(
                                 Text(
                                     text = "PERIOD",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextSecondary,
                                     letterSpacing = 0.6.sp
                                 )
                                 Text(
                                     text = periodRangeLabel,
                                     fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                             }
@@ -1838,21 +1838,21 @@ fun SupplierStatementScreen(
                             Text(
                                 text = "DATE",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 modifier = Modifier.width(44.dp)
                             )
                             Text(
                                 text = "DETAILS",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
                                 text = "BILL",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.width(50.dp)
@@ -1860,7 +1860,7 @@ fun SupplierStatementScreen(
                             Text(
                                 text = "PAID",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.width(50.dp)
@@ -1868,7 +1868,7 @@ fun SupplierStatementScreen(
                             Text(
                                 text = "BALANCE",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.width(58.dp)
@@ -1923,7 +1923,7 @@ fun SupplierStatementScreen(
                                     Text(
                                         text = numFmt.format(row.runningBalance.toLong()),
                                         fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         textAlign = TextAlign.End,
                                         modifier = Modifier.width(58.dp)
@@ -1948,14 +1948,14 @@ fun SupplierStatementScreen(
                             Text(
                                 text = "Total",
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
                                 text = numFmt.format(totalBillSum.toLong()),
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.width(50.dp)
@@ -1963,7 +1963,7 @@ fun SupplierStatementScreen(
                             Text(
                                 text = numFmt.format(totalPaidSum.toLong()),
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.width(50.dp)
@@ -1985,7 +1985,7 @@ fun SupplierStatementScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(summary.balancePayable),
                                 fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (summary.balancePayable > BigDecimal.ZERO) SupRed else SupGreen
                             )
                             if (summary.balancePayable > BigDecimal.ZERO) {

@@ -180,7 +180,7 @@ fun VoiceBillFlowScreen(
     var step by remember { mutableIntStateOf(1) } // 1 = Listening (Page 7), 2 = Check your items (Page 8)
 
     var transcript by remember {
-        mutableStateOf("Do bori cattle feed, ek bori khal, paanch kilo chana — Ramesh ke naam")
+        mutableStateOf("")
     }
     var isEditingTranscript by remember { mutableStateOf(false) }
     var isListening by remember { mutableStateOf(false) }
@@ -337,7 +337,7 @@ fun VoiceBillFlowScreen(
                             Text(
                                 text = tr("Tap to stop", "रोकने के लिए टैप करें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -394,7 +394,7 @@ fun VoiceBillFlowScreen(
                         Text(
                             text = tr("Voice bill", "बोलकर बिल बनाएं"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -411,7 +411,7 @@ fun VoiceBillFlowScreen(
                         Text(
                             text = "हिंदी + English",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = VoiceGreen,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
@@ -469,7 +469,7 @@ fun VoiceBillFlowScreen(
                 Text(
                     text = tr("Listening...", "सुन रहे हैं..."),
                     fontSize = 19.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = VoiceGreen
                 )
 
@@ -516,7 +516,7 @@ fun VoiceBillFlowScreen(
                             Text(
                                 text = tr("WHAT WE HEARD", "हमने क्या सुना"),
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.6.sp
                             )
@@ -545,7 +545,7 @@ fun VoiceBillFlowScreen(
                             Text(
                                 text = buildAnnotatedString {
                                     append("“")
-                                    withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = FlatTextPrimary)) {
+                                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
                                         append(transcript)
                                     }
                                     append("”")
@@ -573,14 +573,14 @@ fun VoiceBillFlowScreen(
                         Text(
                             text = tr("Try saying", "ऐसे बोलकर देखें"),
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary
                         )
 
                         val examples = listOf(
                             "“Ek bori makka”" to "1 bag Maize",
                             "“Do kilo bajra”" to "2 kg Bajra",
-                            "“Sunita ko udhari mein”" to "Udhari to Sunita"
+                            "“Customer 1 ko udhari mein”" to "Udhari to Customer 1"
                         )
                         examples.forEach { (phrase, meaning) ->
                             Row(
@@ -597,7 +597,7 @@ fun VoiceBillFlowScreen(
                                 Text(
                                     text = phrase,
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -671,7 +671,7 @@ fun VoiceBillFlowScreen(
                                     "बिल में ${ activeItems.size } आइटम जोड़ें"
                                 ),
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -697,7 +697,7 @@ fun VoiceBillFlowScreen(
                             Text(
                                 text = tr("Speak again", "फिर से बोलें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -740,7 +740,7 @@ fun VoiceBillFlowScreen(
                         Text(
                             text = tr("Check your items", "अपने आइटम जांचें"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         val foundCount = activeItems.size + (if (matchedCustomer != null) 1 else 0)
@@ -799,16 +799,16 @@ fun VoiceBillFlowScreen(
                                 text = tr("Customer", "ग्राहक"),
                                 fontSize = 13.5.sp,
                                 color = FlatTextSecondary,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             )
                             Surface(
                                 shape = RoundedCornerShape(50),
                                 color = VoiceGreenSoft
                             ) {
                                 Text(
-                                    text = "${matchedCustomer?.name ?: "Ramesh Yadav"} ✓",
+                                    text = matchedCustomer?.name ?: tr("Walk-in", "वॉक-इन"),
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = VoiceGreen,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                                 )
@@ -818,7 +818,7 @@ fun VoiceBillFlowScreen(
                         Text(
                             text = tr("Change", "बदलें"),
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = VoiceGreen,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
@@ -864,7 +864,7 @@ fun VoiceBillFlowScreen(
                                     Text(
                                         text = prod.feedName,
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     val desc = if (candidate.isBagUnit && !prod.isLooseOnly) {
@@ -883,7 +883,7 @@ fun VoiceBillFlowScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(candidate.lineAmount),
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
 
@@ -929,7 +929,7 @@ fun VoiceBillFlowScreen(
                                         Text(
                                             text = "?",
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = VoiceAmber
                                         )
                                     }
@@ -938,7 +938,7 @@ fun VoiceBillFlowScreen(
                                         Text(
                                             text = candidate.rawPhrase,
                                             fontSize = 15.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary
                                         )
                                         Text(
@@ -975,7 +975,7 @@ fun VoiceBillFlowScreen(
                                             Text(
                                                 text = optionProd.feedName,
                                                 fontSize = 13.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                                             )
@@ -1034,7 +1034,7 @@ fun VoiceBillFlowScreen(
                             Text(
                                 text = countSummary,
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -1042,7 +1042,7 @@ fun VoiceBillFlowScreen(
                         Text(
                             text = CurrencyUtils.formatInr(totalSoFar),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = VoiceGreen
                         )
                     }
@@ -1203,8 +1203,8 @@ private fun VoiceCustomerPickerDialog(
         containerColor = FlatDarkCard,
         title = {
             Text(
-                text = tr("Select Customer", "ग्राहक चुनें"),
-                fontWeight = FontWeight.ExtraBold,
+                text = tr("Select customer", "ग्राहक चुनें"),
+                fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary
             )
         },
@@ -1339,7 +1339,7 @@ fun EstimateDraftsFullScreen(
                 Text(
                     text = tr("Drafts", "ड्राफ्ट"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -1548,7 +1548,7 @@ private fun DraftEstimateCard(
             Text(
                 text = tr("Delete", "हटाएं"),
                 color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
         }
@@ -1586,7 +1586,7 @@ private fun DraftEstimateCard(
                         Text(
                             text = draft.title,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -1616,7 +1616,7 @@ private fun DraftEstimateCard(
                                 Text(
                                     text = if (isBudget) tr("Budget", "बजट") else tr("Items", "सामान"),
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isBudget) VoiceAmber else VoiceBlueText,
                                     modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
                                 )
@@ -1633,7 +1633,7 @@ private fun DraftEstimateCard(
                         Text(
                             text = CurrencyUtils.formatInr(draft.totalAmount),
                             fontSize = 17.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Icon(
@@ -1666,7 +1666,7 @@ private fun DraftEstimateCard(
                                 Text(
                                     text = tr("Open", "खोलें"),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = VoiceGreen
                                 )
                             }
@@ -1750,7 +1750,7 @@ fun SaveAsDraftBottomSheet(
                 Text(
                     text = tr("Save as draft", "ड्राफ्ट के रूप में सेव करें"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -1768,14 +1768,14 @@ fun SaveAsDraftBottomSheet(
                 Text(
                     text = tr("DRAFT NAME", "ड्राफ्ट का नाम"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
                 OutlinedTextField(
                     value = draftName,
                     onValueChange = { draftName = it },
-                    placeholder = { Text(tr("e.g. Ramesh · feed", "जैसे रमेश · फीड")) },
+                    placeholder = { Text(tr("e.g. Customer name · feed", "जैसे ग्राहक का नाम · फीड")) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -1797,7 +1797,7 @@ fun SaveAsDraftBottomSheet(
                 Text(
                     text = tr("FOR CUSTOMER (OPTIONAL)", "ग्राहक के लिए (वैकल्पिक)"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
@@ -1827,7 +1827,7 @@ fun SaveAsDraftBottomSheet(
                                     Text(
                                         text = chosenCustomer!!.name,
                                         fontSize = 13.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = VoiceGreen
                                     )
                                     Icon(
@@ -1851,7 +1851,7 @@ fun SaveAsDraftBottomSheet(
                         Text(
                             text = tr("Change", "बदलें"),
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = VoiceGreen,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
@@ -1879,7 +1879,7 @@ fun SaveAsDraftBottomSheet(
                         Text(
                             text = itemsSummaryTitle,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -1894,7 +1894,7 @@ fun SaveAsDraftBottomSheet(
                     Text(
                         text = CurrencyUtils.formatInr(totalAmount),
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                 }
@@ -1912,7 +1912,7 @@ fun SaveAsDraftBottomSheet(
                     Text(
                         text = tr("Lock today's rates", "आज के भाव लॉक करें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1953,7 +1953,7 @@ fun SaveAsDraftBottomSheet(
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1974,7 +1974,7 @@ fun SaveAsDraftBottomSheet(
                     Text(
                         text = tr("Save draft", "ड्राफ्ट सेव करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }

@@ -156,7 +156,7 @@ fun PurchaseBillsTabView(
                                 Text(
                                     text = label,
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else FlatTextPrimary
                                 )
                             }
@@ -229,7 +229,7 @@ fun PurchaseBillsTabView(
                         Text(
                             text = monthHeader,
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.8.sp,
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp, start = 2.dp)
@@ -271,7 +271,7 @@ fun PurchaseBillsTabView(
                 Text(
                     text = tr("Purchase bill", "खरीद बिल"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -343,7 +343,7 @@ internal fun PurchaseBillRowCard(
                 Text(
                     text = invoice.wholesalerName,
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -364,7 +364,7 @@ internal fun PurchaseBillRowCard(
                 Text(
                     text = CurrencyUtils.formatInr(invoice.totalInvoiceCost),
                     fontSize = 16.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Surface(
@@ -374,7 +374,7 @@ internal fun PurchaseBillRowCard(
                     Text(
                         text = badgeText,
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = badgeColor,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                     )
@@ -486,14 +486,14 @@ fun SupplierPaymentsTabView(
                             Text(
                                 text = tr("PAID · 30 DAYS", "भुगतान · 30 दिन"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.6.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(paid30DaysTotal),
                                 fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupGreen
                             )
                             Text(
@@ -519,14 +519,14 @@ fun SupplierPaymentsTabView(
                             Text(
                                 text = tr("STILL TO PAY", "अभी देना बाकी"),
                                 fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.6.sp
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(totalStillToPay),
                                 fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (totalStillToPay > BigDecimal.ZERO) SupRed else SupGreen
                             )
                             Text(
@@ -565,7 +565,7 @@ fun SupplierPaymentsTabView(
                                 Text(
                                     text = mode,
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else FlatTextPrimary
                                 )
                             }
@@ -595,7 +595,7 @@ fun SupplierPaymentsTabView(
                         Text(
                             text = groupHeader,
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.8.sp,
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp, start = 2.dp)
@@ -641,7 +641,7 @@ fun SupplierPaymentsTabView(
                                         Text(
                                             text = supplierInitials(payment.wholesalerName),
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = SupAvatarText
                                         )
                                     }
@@ -650,7 +650,7 @@ fun SupplierPaymentsTabView(
                                         Text(
                                             text = payment.wholesalerName,
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -672,7 +672,7 @@ fun SupplierPaymentsTabView(
                                     Text(
                                         text = "−${CurrencyUtils.formatInr(payment.amount)}",
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = SupGreen
                                     )
                                     Surface(
@@ -682,7 +682,7 @@ fun SupplierPaymentsTabView(
                                         Text(
                                             text = modeLabel,
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (isUpi) SupBlue else SupGreen,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                         )
@@ -716,7 +716,7 @@ fun SupplierPaymentsTabView(
                 Text(
                     text = tr("Payment", "भुगतान"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

@@ -182,7 +182,7 @@ fun CustomersScreen(
                 title = {
                     Column {
                         Text(
-                            text = tr("Customers Directory", "ग्राहक सूची"),
+                            text = tr("Customers directory", "ग्राहक सूची"),
                             fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
@@ -241,7 +241,7 @@ fun CustomersScreen(
                     elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp),
                     modifier = Modifier.testTag("customers_add_fab")
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = tr("Add Customer", "ग्राहक जोड़ें"))
+                    Icon(Icons.Default.Add, contentDescription = tr("Add customer", "ग्राहक जोड़ें"))
                 }
             }
         }
@@ -328,7 +328,7 @@ fun CustomersScreen(
                                     Text(
                                         text = letter,
                                         style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = CGreen
                                     )
                                 }
@@ -377,7 +377,7 @@ fun CustomersScreen(
                         ) {
                             Text(
                                 text = letter,
-                                fontSize = 10.sp,
+                                fontSize = 11.sp,
                                 fontWeight = if (hasEntries) FontWeight.Bold else FontWeight.Normal,
                                 color = if (hasEntries) CGreen else FlatTextMuted.copy(alpha = 0.4f)
                             )

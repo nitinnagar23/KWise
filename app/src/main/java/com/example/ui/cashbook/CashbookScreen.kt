@@ -429,7 +429,7 @@ fun CashbookScreen(
                 udhariGiven = dayUdhariGiven,
                 collectionsReceived = dayCollectionsReceived,
                 upiReceived = upiBankToday,
-                closedByName = currentUser?.name?.takeIf { it.isNotBlank() } ?: "Ramesh",
+                closedByName = currentUser?.name?.takeIf { it.isNotBlank() } ?: "Admin",
                 onBack = { activeSubScreen = null },
                 onDayClosed = { record, carryForward ->
                     ExpenseCategoryStore.saveClosedDay(context, record)
@@ -447,7 +447,7 @@ fun CashbookScreen(
             val record = closedRecordForSelectedDay ?: ClosedDayRecord(
                 dayStartMillis = selectedDayStart,
                 closedAtMillis = System.currentTimeMillis(),
-                closedByName = currentUser?.name?.takeIf { it.isNotBlank() } ?: "Ramesh",
+                closedByName = currentUser?.name?.takeIf { it.isNotBlank() } ?: "Admin",
                 openingCash = baseOpeningCash,
                 cashIn = dayCashIn,
                 cashOut = dayCashOut,
@@ -519,7 +519,7 @@ fun CashbookScreen(
                         Text(
                             text = tr("+ Cash in", "+ कैश इन"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -541,7 +541,7 @@ fun CashbookScreen(
                         Text(
                             text = tr("− Cash out", "− कैश आउट"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -590,7 +590,7 @@ fun CashbookScreen(
                             Text(
                                 text = tr("Cashbook", "कैशबुक"),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -666,7 +666,7 @@ fun CashbookScreen(
                         Text(
                             text = headerDateLabel,
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             modifier = Modifier
                                 .clickable { showDatePicker = true }
@@ -720,7 +720,7 @@ fun CashbookScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(closingCash),
                                     fontSize = 30.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     modifier = Modifier.testTag("cashbook_closing_cash_text")
                                 )
@@ -738,7 +738,7 @@ fun CashbookScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(upiBankToday),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     modifier = Modifier.testTag("cashbook_upi_today_text")
                                 )
@@ -771,7 +771,7 @@ fun CashbookScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(baseOpeningCash),
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         maxLines = 1
                                     )
@@ -799,7 +799,7 @@ fun CashbookScreen(
                                     Text(
                                         text = "+${CurrencyUtils.formatInr(dayCashIn)}",
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = CbBrandGreen,
                                         maxLines = 1
                                     )
@@ -827,7 +827,7 @@ fun CashbookScreen(
                                     Text(
                                         text = "−${CurrencyUtils.formatInr(dayCashOut)}",
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = CbCrimsonRed,
                                         maxLines = 1
                                     )
@@ -862,12 +862,12 @@ fun CashbookScreen(
                                 ) {
                                     Text(
                                         text = if (closedRecordForSelectedDay != null) {
-                                            tr("✓ Day closed · View summary", "✓ दिन बंद · सारांश देखें")
+                                            tr("Day closed · View summary", "दिन बंद · सारांश देखें")
                                         } else {
                                             tr("Close day", "दिन बंद करें")
                                         },
                                         fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (closedRecordForSelectedDay != null) CbBrandGreen else Color.White
                                     )
                                 }
@@ -1061,8 +1061,8 @@ fun CashbookScreen(
             containerColor = FlatDarkCard,
             title = {
                 Text(
-                    text = tr("Set Opening Cash", "ओपनिंग कैश सेट करें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    text = tr("Set opening cash", "ओपनिंग कैश सेट करें"),
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1129,7 +1129,7 @@ private fun CashbookEntryRow(entry: CashbookEntry) {
                 Text(
                     text = symbolText,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = symbolColor
                 )
             }
@@ -1142,7 +1142,7 @@ private fun CashbookEntryRow(entry: CashbookEntry) {
                     Text(
                         text = entry.title,
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -1175,7 +1175,7 @@ private fun CashbookEntryRow(entry: CashbookEntry) {
         Text(
             text = "$amountPrefix${CurrencyUtils.formatInr(entry.amount)}",
             fontSize = 15.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = symbolColor
         )
     }
@@ -1261,7 +1261,7 @@ private fun AddCashEntryDialog(
                     Text(
                         text = tr("Add cash entry", "कैश एंट्री जोड़ें"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Surface(
@@ -1371,7 +1371,7 @@ private fun AddCashEntryDialog(
                                 Text(
                                     text = "₹",
                                     fontSize = 24.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = activeAccentColor
                                 )
                                 BasicTextField(
@@ -1381,7 +1381,7 @@ private fun AddCashEntryDialog(
                                     },
                                     textStyle = TextStyle(
                                         fontSize = 26.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = activeAccentColor
                                     ),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -1553,7 +1553,7 @@ private fun AddCashEntryDialog(
                     ) {
                         Text(
                             text = if (attachedReceiptUri != null) {
-                                tr("✓ Receipt photo attached", "✓ रसीद की फ़ोटो जुड़ गई")
+                                tr("Receipt photo attached", "रसीद की फ़ोटो जुड़ गई")
                             } else {
                                 tr("+ Attach photo of receipt", "+ रसीद की फ़ोटो जोड़ें")
                             },
@@ -1618,7 +1618,7 @@ private fun AddCashEntryDialog(
                                 tr("Save cash out", "कैश आउट सेव करें")
                             },
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

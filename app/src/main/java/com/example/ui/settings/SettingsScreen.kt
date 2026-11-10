@@ -683,7 +683,7 @@ fun SettingsScreen(
                 Text(
                     text = "KhataWise",
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             }
@@ -749,8 +749,8 @@ fun SettingsScreen(
                         ) {
                             Text(
                                 text = unreadNotificationsCount.toString(),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.White,
                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                             )
@@ -819,7 +819,7 @@ fun SettingsScreen(
                             text = displayInitial,
                             color = Color.White,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -827,9 +827,9 @@ fun SettingsScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = settings?.shopName?.ifBlank { "Khal Bhandaar 12" } ?: "Khal Bhandaar 12",
+                            text = settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name",
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -1032,7 +1032,7 @@ fun SettingsScreen(
                                     ) {
                                         Text(
                                             text = tile.badge,
-                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                             fontWeight = FontWeight.Bold,
                                             color = badgeFg,
                                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
@@ -1462,7 +1462,7 @@ fun SettingsScreen(
             containerColor = FlatDarkCard,
             title = {
                 Text(
-                    tr("Edit Admin Name", "एडमिन का नाम बदलें"),
+                    tr("Edit Admin name", "एडमिन का नाम बदलें"),
                     color = FlatTextPrimary,
                     fontWeight = FontWeight.Bold
                 )
@@ -1480,7 +1480,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = adminNameInput,
                         onValueChange = { adminNameInput = it },
-                        label = { Text(tr("Admin Full Name", "पूरा नाम")) },
+                        label = { Text(tr("Admin full name", "पूरा नाम")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )

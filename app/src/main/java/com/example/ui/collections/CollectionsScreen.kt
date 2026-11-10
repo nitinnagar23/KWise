@@ -287,7 +287,7 @@ fun CollectionsScreen(
                     Text(
                         text = tr("Collections", "वसूली"),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -370,7 +370,7 @@ fun CollectionsScreen(
                         .testTag("tab_upcoming")
                 )
                 CollectionsTabItem(
-                    label = tr("No Date", "बिना तारीख़"),
+                    label = tr("No date", "बिना तारीख़"),
                     count = noDateCustomers.size,
                     badgeBg = ColNoDatePillBg,
                     badgeTextColor = ColNoDatePillText,
@@ -551,7 +551,7 @@ fun CollectionsScreen(
                                 Text(
                                     text = sectionHeader,
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextSecondary,
                                     letterSpacing = 0.6.sp,
                                     modifier = Modifier.padding(top = 4.dp)
@@ -610,7 +610,7 @@ fun CollectionsScreen(
                                 Text(
                                     text = tr("Udhari with no promise date", "बिना वादा तारीख़ वाली उधारी"),
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -763,7 +763,7 @@ private fun CollectionsTabItem(
             Text(
                 text = label,
                 fontSize = 14.sp,
-                fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 color = if (selected) ColBrandGreen else FlatTextSecondary,
                 maxLines = 1
             )
@@ -774,7 +774,7 @@ private fun CollectionsTabItem(
                 Text(
                     text = count.toString(),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = badgeTextColor,
                     modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                 )
@@ -831,7 +831,7 @@ private fun CollectionsSummaryCard(
                 Text(
                     text = if (masked) "₹ • • • •" else CurrencyUtils.formatInr(totalAmount),
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = amountColor,
                     modifier = Modifier.testTag(amountTestTag)
                 )
@@ -930,7 +930,7 @@ private fun CollectionCustomerCard(
                         Text(
                             text = computeCustomerInitials(customer.name),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = ColBlue
                         )
                     }
@@ -939,7 +939,7 @@ private fun CollectionCustomerCard(
                         Text(
                             text = customer.name,
                             fontSize = 16.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -964,7 +964,7 @@ private fun CollectionCustomerCard(
                     Text(
                         text = CurrencyUtils.formatInr(customer.totalUdhari),
                         fontSize = 16.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = ColCrimson,
                         modifier = Modifier.testTag("collection_customer_amount_${customer.id}")
                     )
@@ -1112,7 +1112,7 @@ private fun CollectionCustomerCard(
                     Text(
                         text = tr("Collect", "वसूलें"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -1157,7 +1157,7 @@ private fun CollectedTodayBannerCard(
                 Text(
                     text = tr("Collected today", "आज वसूला गया"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = ColBrandGreen
                 )
                 Text(
@@ -1170,7 +1170,7 @@ private fun CollectedTodayBannerCard(
             Text(
                 text = tr("Done", "पूरा हुआ"),
                 fontSize = 13.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = ColBrandGreen
             )
         }
@@ -1195,7 +1195,7 @@ private fun EmptyCollectionsPlaceholder(text: String) {
                 text = text,
                 fontSize = 14.sp,
                 color = FlatTextMuted,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

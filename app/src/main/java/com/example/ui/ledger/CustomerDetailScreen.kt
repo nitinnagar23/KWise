@@ -361,7 +361,7 @@ fun CustomerDetailScreen(
                     Text(
                         text = customer.name,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = DetailNavyText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -413,7 +413,7 @@ fun CustomerDetailScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Outlined.Edit,
-                                contentDescription = tr("Edit Customer", "ग्राहक संपादित करें"),
+                                contentDescription = tr("Edit customer", "ग्राहक संपादित करें"),
                                 tint = DetailNavyText,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -462,7 +462,7 @@ fun CustomerDetailScreen(
                                         Text(
                                             text = customer.getInitials(),
                                             fontSize = 19.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = DetailNavyText
                                         )
                                     }
@@ -472,7 +472,7 @@ fun CustomerDetailScreen(
                                     Text(
                                         text = customer.name,
                                         fontSize = 19.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = DetailNavyText
                                     )
                                     val fatherVillage = buildList {
@@ -503,7 +503,7 @@ fun CustomerDetailScreen(
                                             Text(
                                                 text = "Trust $score · $badgeLabel",
                                                 fontSize = 12.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = DetailAmberText,
                                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                             )
@@ -517,7 +517,7 @@ fun CustomerDetailScreen(
                                                 Text(
                                                     text = "$daysLate days late",
                                                     fontSize = 12.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = DetailCrimsonRed,
                                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                                 )
@@ -563,14 +563,14 @@ fun CustomerDetailScreen(
                                 Text(
                                     text = "OUTSTANDING",
                                     fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = DetailSubtleText,
                                     letterSpacing = 0.6.sp
                                 )
                                 Text(
                                     text = CurrencyUtils.formatInr(customer.totalUdhari),
                                     fontSize = 36.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (customer.totalUdhari > BigDecimal.ZERO) DetailCrimsonRed else DetailBrandGreen
                                 )
 
@@ -639,7 +639,7 @@ fun CustomerDetailScreen(
                                             Text(
                                                 text = tr("Collect udhari", "उधारी वसूलें"),
                                                 fontSize = 14.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 maxLines = 1
                                             )
                                         }
@@ -659,7 +659,7 @@ fun CustomerDetailScreen(
                                             Text(
                                                 text = tr("New bill", "नया बिल"),
                                                 fontSize = 14.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = DetailBrandGreen
                                             )
                                         }
@@ -727,7 +727,7 @@ fun CustomerDetailScreen(
                                         Text(
                                             text = customer.getInitials(),
                                             fontSize = 15.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = DetailNavyText
                                         )
                                     }
@@ -736,7 +736,7 @@ fun CustomerDetailScreen(
                                     Text(
                                         text = customer.village.ifBlank { customer.name },
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = DetailNavyText
                                     )
                                     if (customer.phone.isNotBlank()) {
@@ -754,14 +754,14 @@ fun CustomerDetailScreen(
                                     Text(
                                         text = "OUTSTANDING",
                                         fontSize = 10.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = DetailSubtleText,
                                         letterSpacing = 0.5.sp
                                     )
                                     Text(
                                         text = CurrencyUtils.formatInr(customer.totalUdhari),
                                         fontSize = 20.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (customer.totalUdhari > BigDecimal.ZERO) DetailCrimsonRed else DetailBrandGreen
                                     )
                                 }
@@ -805,7 +805,7 @@ fun CustomerDetailScreen(
                                 Text(
                                     text = label,
                                     fontSize = 14.5.sp,
-                                    fontWeight = if (active) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                    fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (active) DetailBrandGreen else DetailSubtleText
                                 )
                             }
@@ -830,13 +830,13 @@ fun CustomerDetailScreen(
                             Text(
                                 text = tr("Ledger", "लेजर"),
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = DetailNavyText
                             )
                             Text(
                                 text = tr("Statement →", "स्टेटमेंट →"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = DetailBrandGreen,
                                 modifier = Modifier
                                     .clickable { activeOverlay = CustomerDetailOverlay.STATEMENT }
@@ -887,7 +887,7 @@ fun CustomerDetailScreen(
                                                 Text(
                                                     text = row.title,
                                                     fontSize = 15.5.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = DetailNavyText
                                                 )
                                                 Text(
@@ -903,7 +903,7 @@ fun CustomerDetailScreen(
                                                 Text(
                                                     text = (if (isBill) "+" else "−") + CurrencyUtils.formatInr(amt),
                                                     fontSize = 16.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = if (isBill) DetailCrimsonRed else DetailBrandGreen
                                                 )
                                                 Text(
@@ -951,7 +951,7 @@ fun CustomerDetailScreen(
                                     Text(
                                         text = label,
                                         fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (selected) Color.White else DetailNavyText,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                     )
@@ -1038,7 +1038,7 @@ fun CustomerDetailScreen(
                                         Text(
                                             text = "Bill #$billCode",
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = DetailNavyText
                                         )
                                         Spacer(modifier = Modifier.height(3.dp))
@@ -1053,7 +1053,7 @@ fun CustomerDetailScreen(
                                         Text(
                                             text = CurrencyUtils.formatInr(bill.totalSalePrice),
                                             fontSize = 16.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = DetailNavyText
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
@@ -1064,7 +1064,7 @@ fun CustomerDetailScreen(
                                             Text(
                                                 text = badgeText,
                                                 fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = badgeFg,
                                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                             )
@@ -1119,7 +1119,7 @@ fun CustomerDetailScreen(
                                         Text(
                                             text = promiseTitle,
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = DetailCrimsonRed
                                         )
                                         Text(
@@ -1166,7 +1166,7 @@ fun CustomerDetailScreen(
                                                 Text(
                                                     text = tr("Change date", "तारीख बदलें"),
                                                     fontSize = 14.5.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = DetailBrandGreen
                                                 )
                                             }
@@ -1187,7 +1187,7 @@ fun CustomerDetailScreen(
                                                 Text(
                                                     text = tr("Collect now", "अभी वसूलें"),
                                                     fontSize = 14.5.sp,
-                                                    fontWeight = FontWeight.ExtraBold
+                                                    fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         }
@@ -1210,7 +1210,7 @@ fun CustomerDetailScreen(
                             Text(
                                 text = tr("Payments received", "प्राप्त भुगतान"),
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = DetailNavyText
                             )
                             Text(
@@ -1276,7 +1276,7 @@ fun CustomerDetailScreen(
                                         Text(
                                             text = dateTimeFmt.format(Date(pay.date)),
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = DetailNavyText
                                         )
                                         Text(
@@ -1289,7 +1289,7 @@ fun CustomerDetailScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(pay.amount),
                                         fontSize = 17.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = DetailBrandGreen
                                     )
 

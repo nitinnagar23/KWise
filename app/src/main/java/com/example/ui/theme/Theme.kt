@@ -6,77 +6,80 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+// Tokens follow KhataWise UI Guidelines §2.1 (light) and §6.1 (dark).
 val HighContrastDarkColorScheme = darkColorScheme(
-    primary = CGreen,
-    onPrimary = Color(0xFF061A0E),
-    primaryContainer = CGreenContainer,
-    onPrimaryContainer = OnCGreenContainer,
-    secondary = CAmber,
+    primary = Color(0xFF0B7A55),                 // green strong (buttons, toggles) - same in both themes
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF12372B),        // green tint
+    onPrimaryContainer = Color(0xFF6EE7B7),      // green text (dark)
+    secondary = Color(0xFFF59E0B),
     onSecondary = Color(0xFF281804),
-    secondaryContainer = CAmberContainer,
-    onSecondaryContainer = OnCAmberContainer,
-    tertiary = CRedUdhari,
-    onTertiary = Color(0xFF38080B),
-    tertiaryContainer = Color(0xFF0C2B4E),
-    onTertiaryContainer = Color(0xFF93C5FD),
-    error = CRedUdhari,
+    secondaryContainer = Color(0xFF3A2E12),      // amber tint
+    onSecondaryContainer = Color(0xFFFCD34D),    // amber chip text (dark)
+    tertiary = Color(0xFF2F80C9),                // blue: info, UPI, manager
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFF14305E),       // admin / navy button, white text
+    onTertiaryContainer = Color.White,
+    error = Color(0xFFF87171),
     onError = Color(0xFF38080B),
-    errorContainer = CRedUdhariBg,
-    onErrorContainer = CRedUdhari,
-    background = Color(0xFF121413),
-    onBackground = Color(0xFFFFFFFF),
-    surface = Color(0xFF181B19),
-    onSurface = Color(0xFFFFFFFF),
-    surfaceVariant = Color(0xFF1E211F),
-    onSurfaceVariant = Color(0xFF9CA3AF),
-    surfaceContainerLowest = Color(0xFF141615),
-    surfaceContainerLow = Color(0xFF161917),
-    surfaceContainer = Color(0xFF1E211F),
-    surfaceContainerHigh = Color(0xFF242826),
-    surfaceContainerHighest = Color(0xFF2A2E2C),
-    inverseOnSurface = Color(0xFF6B7280),
-    outline = Color(0xFF2A2E2C),
-    outlineVariant = Color(0xFF343836)
+    errorContainer = Color(0xFF3B1D1F),          // red tint
+    onErrorContainer = Color(0xFFFCA5A5),        // red chip text (dark)
+    background = Color(0xFF0F1720),              // bg
+    onBackground = Color(0xFFE8EEF5),            // ink
+    surface = Color(0xFF1A2330),                 // surface
+    onSurface = Color(0xFFE8EEF5),
+    surfaceVariant = Color(0xFF1A2330),          // cards
+    onSurfaceVariant = Color(0xFF9AA8BA),        // muted
+    surfaceContainerLowest = Color(0xFF1A2330),  // fields
+    surfaceContainerLow = Color(0xFF1A2330),     // bars, bottom navigation
+    surfaceContainer = Color(0xFF0F1720),
+    surfaceContainerHigh = Color(0xFF243040),    // fill
+    surfaceContainerHighest = Color(0xFF2A3646),
+    inverseOnSurface = Color(0xFF8794A8),        // hint
+    outline = Color(0xFF2A3646),                 // border, divider
+    outlineVariant = Color(0xFF3A4A5E)           // field-border
 )
 
 val CleanLightColorScheme = lightColorScheme(
-    primary = Color(0xFF15803D),
+    primary = Color(0xFF0B7A55),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFDCFCE7),
-    onPrimaryContainer = Color(0xFF14532D),
+    primaryContainer = Color(0xFFDDF5EA),
+    onPrimaryContainer = Color(0xFF0B6B49),
     secondary = Color(0xFFD97706),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFEF3C7),
-    onSecondaryContainer = Color(0xFF78350F),
-    tertiary = Color(0xFFDC2626),
+    secondaryContainer = Color(0xFFFDEBD0),
+    onSecondaryContainer = Color(0xFF7C3A06),
+    tertiary = Color(0xFF2F80C9),
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFF1E40AF),
+    tertiaryContainer = Color(0xFF14305E),
     onTertiaryContainer = Color.White,
-    error = Color(0xFFDC2626),
+    error = Color(0xFFB91C1C),
     onError = Color.White,
-    errorContainer = Color(0xFFFEE2E2),
+    errorContainer = Color(0xFFFDE4E4),
     onErrorContainer = Color(0xFF991B1B),
-    background = Color(0xFFF6F5F0),
-    onBackground = Color(0xFF111827),
+    background = Color(0xFFF6F8FB),              // bg
+    onBackground = Color(0xFF0F1F3D),            // ink
     surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF111827),
+    onSurface = Color(0xFF0F1F3D),
     surfaceVariant = Color(0xFFFFFFFF),
-    onSurfaceVariant = Color(0xFF6B7280),
-    surfaceContainerLowest = Color(0xFFF1EFEA),
+    onSurfaceVariant = Color(0xFF4B5B73),        // muted
+    surfaceContainerLowest = Color(0xFFFFFFFF),  // fields
     surfaceContainerLow = Color(0xFFFFFFFF),
-    surfaceContainer = Color(0xFFF6F5F0),
-    surfaceContainerHigh = Color(0xFFEFECE6),
-    surfaceContainerHighest = Color(0xFFE5E2DC),
-    inverseOnSurface = Color(0xFF6B7280),
-    outline = Color(0xFFE6E3DA),
-    outlineVariant = Color(0xFFD6D3C9)
+    surfaceContainer = Color(0xFFF6F8FB),
+    surfaceContainerHigh = Color(0xFFEEF2F7),    // fill
+    surfaceContainerHighest = Color(0xFFE3E8F0),
+    inverseOnSurface = Color(0xFF7B889C),        // hint
+    outline = Color(0xFFE3E8F0),                 // border
+    outlineVariant = Color(0xFFCBD5E1)           // field-border
 )
 
 @Composable
 fun KhataWiseTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    // Drives the theme-aware status colours (CGreen, CAmber, CRedUdhari, ...) in Color.kt.
+    KwThemeState.isDark = darkTheme
     val colorScheme = if (darkTheme) HighContrastDarkColorScheme else CleanLightColorScheme
     MaterialTheme(
         colorScheme = colorScheme,
@@ -87,7 +90,7 @@ fun KhataWiseTheme(
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {

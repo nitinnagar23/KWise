@@ -387,7 +387,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("Tell us about your shop", "अपनी दुकान के बारे में बताएं"),
                         fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbNavyText,
                         letterSpacing = (-0.3).sp
                     )
@@ -435,7 +435,7 @@ fun FirstTimeSetupWizardScreen(
                                         Text(
                                             text = initial,
                                             fontSize = 17.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = OnbNavyText
                                         )
                                     }
@@ -444,7 +444,7 @@ fun FirstTimeSetupWizardScreen(
                                     Text(
                                         text = resolvedOwnerName,
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = OnbNavyText,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -468,7 +468,7 @@ fun FirstTimeSetupWizardScreen(
                                 Text(
                                     text = tr("Signed in", "साइन इन"),
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = OnbBrandGreen,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                                 )
@@ -486,7 +486,7 @@ fun FirstTimeSetupWizardScreen(
                             shopName = it
                             step1Error = null
                         },
-                        placeholder = tr("e.g. Khal Bhandaar", "जैसे खल भंडार"),
+                        placeholder = tr("e.g. Shop Name", "जैसे शॉप का नाम"),
                         testTag = "onboarding_shop_name_input"
                     )
 
@@ -516,7 +516,7 @@ fun FirstTimeSetupWizardScreen(
                                 Text(
                                     text = label,
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else OnbNavyText,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp)
                                 )
@@ -559,7 +559,7 @@ fun FirstTimeSetupWizardScreen(
                             mobileNumber = it.filter { ch -> ch.isDigit() || ch == ' ' }.take(12)
                             step1Error = null
                         },
-                        placeholder = "98765 43210",
+                        placeholder = "Mobile number",
                         leadingPrefix = "+91",
                         keyboardType = KeyboardType.Phone,
                         testTag = "onboarding_mobile_input"
@@ -629,7 +629,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("Continue", "आगे बढ़ें"),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -678,7 +678,7 @@ fun FirstTimeSetupWizardScreen(
                             Text(
                                 text = tr("Skip", "छोड़ें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = OnbSubtleText
                             )
                         }
@@ -702,7 +702,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("How do you get paid?", "भुगतान कैसे प्राप्त करें?"),
                         fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbNavyText,
                         letterSpacing = (-0.3).sp
                     )
@@ -740,7 +740,7 @@ fun FirstTimeSetupWizardScreen(
                             Text(
                                 text = tr("Verify", "सत्यापित करें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = OnbBrandGreen,
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
@@ -778,7 +778,7 @@ fun FirstTimeSetupWizardScreen(
                             Text(
                                 text = "${tr("Verified", "सत्यापित")} · ${ownerName.ifBlank { resolvedOwnerName }}",
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = OnbBrandGreen,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
@@ -842,7 +842,7 @@ fun FirstTimeSetupWizardScreen(
                                     Text(
                                         text = tr("I have a GSTIN", "मेरे पास GSTIN है"),
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = OnbNavyText
                                     )
                                     Text(
@@ -885,7 +885,7 @@ fun FirstTimeSetupWizardScreen(
                                 Text(
                                     text = tr("Prices include GST", "कीमतों में GST शामिल है"),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = OnbNavyText
                                 )
                                 Switch(
@@ -933,7 +933,7 @@ fun FirstTimeSetupWizardScreen(
                                         Text(
                                             text = langOpt,
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (isSelected) Color.White else OnbNavyText
                                         )
                                     }
@@ -982,7 +982,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("Continue", "आगे बढ़ें"),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -1024,7 +1024,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("$readyShopName is ready", "$readyShopName तैयार है"),
                         fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbNavyText,
                         textAlign = TextAlign.Center
                     )
@@ -1105,7 +1105,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("Go to Home", "होम पर जाएं"),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1121,7 +1121,7 @@ fun FirstTimeSetupWizardScreen(
                     Text(
                         text = tr("Take a quick tour", "एक त्वरित टूर लें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbBrandGreen
                     )
                 }
@@ -1172,7 +1172,7 @@ fun WelcomeTourScreen(
                 Text(
                     text = tr("Skip", "छोड़ें"),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = OnbSubtleText
                 )
             }
@@ -1189,8 +1189,8 @@ fun WelcomeTourScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFEAF6F0),
-                            Color(0xFFF1F5F8)
+                            Color(0xFFE3F4EC),
+                            Color(0xFFF6F8FB)
                         )
                     )
                 )
@@ -1236,7 +1236,7 @@ fun WelcomeTourScreen(
         Text(
             text = titleText,
             fontSize = 25.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = OnbNavyText,
             textAlign = TextAlign.Center
         )
@@ -1297,7 +1297,7 @@ fun WelcomeTourScreen(
             Text(
                 text = if (slideIndex < 3) tr("Next", "आगे") else tr("Get started", "शुरू करें"),
                 fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -1330,15 +1330,15 @@ private fun TourSlide1Illustration() {
                         Text(
                             text = "RY",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E4D8C)
                         )
                     }
                 }
                 Text(
-                    text = "Ramesh Yadav",
+                    text = "Customer 1",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = OnbNavyText
                 )
             }
@@ -1350,7 +1350,7 @@ private fun TourSlide1Illustration() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Cattle Feed 2 bags", fontSize = 13.5.sp, color = OnbSubtleText)
-                Text("₹2,700", fontSize = 13.5.sp, fontWeight = FontWeight.ExtraBold, color = OnbNavyText)
+                Text("₹2,700", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = OnbNavyText)
             }
             HorizontalDivider(
                 color = Color(0xFFF1F5F9),
@@ -1361,7 +1361,7 @@ private fun TourSlide1Illustration() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Chana Churi 5 kg", fontSize = 13.5.sp, color = OnbSubtleText)
-                Text("₹230", fontSize = 13.5.sp, fontWeight = FontWeight.ExtraBold, color = OnbNavyText)
+                Text("₹230", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = OnbNavyText)
             }
             HorizontalDivider(
                 color = Color(0xFFF1F5F9),
@@ -1372,8 +1372,8 @@ private fun TourSlide1Illustration() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Total", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = OnbNavyText)
-                Text("₹2,930", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OnbNavyText)
+                Text("Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = OnbNavyText)
+                Text("₹2,930", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = OnbNavyText)
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -1389,7 +1389,7 @@ private fun TourSlide1Illustration() {
                     Text(
                         text = tr("Save & share bill", "बिल सेव और शेयर करें"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 }
@@ -1436,7 +1436,7 @@ private fun TourSlide2Illustration(upiId: String) {
                                 Text(
                                     text = "KM",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color(0xFF1E4D8C)
                                 )
                             }
@@ -1444,7 +1444,7 @@ private fun TourSlide2Illustration(upiId: String) {
                         Text(
                             text = "Kailash Meena",
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = OnbNavyText
                         )
                     }
@@ -1455,7 +1455,7 @@ private fun TourSlide2Illustration(upiId: String) {
                         Text(
                             text = "Overdue 8 days",
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF991B1B),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
@@ -1480,15 +1480,15 @@ private fun TourSlide2Illustration(upiId: String) {
                                 Text(
                                     text = "RY",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color(0xFF1E4D8C)
                                 )
                             }
                         }
                         Text(
-                            text = "Ramesh Yadav",
+                            text = "Customer 1",
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = OnbNavyText
                         )
                     }
@@ -1499,7 +1499,7 @@ private fun TourSlide2Illustration(upiId: String) {
                         Text(
                             text = "Due today",
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF991B1B),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
@@ -1543,14 +1543,14 @@ private fun TourSlide3Illustration() {
             Text(
                 text = "GROSS PROFIT",
                 fontSize = 11.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = OnbSubtleText,
                 letterSpacing = 0.6.sp
             )
             Text(
                 text = "22% margin",
                 fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = OnbBrandGreen
             )
 
@@ -1607,7 +1607,7 @@ private fun TourSlide3Illustration() {
                     Text(
                         text = "3 items low",
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = Color(0xFF92400E),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                     )
@@ -1619,7 +1619,7 @@ private fun TourSlide3Illustration() {
                     Text(
                         text = "Cash ₹6,390",
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbBrandGreen,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                     )
@@ -1669,7 +1669,7 @@ private fun TourSlide4Illustration() {
                     Text(
                         text = "Numbers hidden from\ncustomers",
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbNavyText,
                         lineHeight = 19.sp
                     )
@@ -1683,7 +1683,7 @@ private fun TourSlide4Illustration() {
                         Text(
                             text = "Admin",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                         )
@@ -1695,7 +1695,7 @@ private fun TourSlide4Illustration() {
                         Text(
                             text = "Manager",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E4D8C),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                         )
@@ -1707,7 +1707,7 @@ private fun TourSlide4Illustration() {
                         Text(
                             text = "Cashier",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = OnbNavyText,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                         )
@@ -1739,7 +1739,7 @@ private fun TourSlide4Illustration() {
                 Text(
                     text = "Fingerprint or PIN to open",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = OnbNavyText
                 )
             }
@@ -1775,7 +1775,7 @@ private fun SetupFieldLabel(label: String, required: Boolean) {
         Text(
             text = label,
             fontSize = 11.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = OnbSubtleText,
             letterSpacing = 0.6.sp
         )
@@ -1783,7 +1783,7 @@ private fun SetupFieldLabel(label: String, required: Boolean) {
             Text(
                 text = " *",
                 fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = OnbErrorRed
             )
         }
@@ -1910,7 +1910,7 @@ private fun ReadyActionCard(
                     Text(
                         text = title,
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = OnbNavyText
                     )
                     Spacer(modifier = Modifier.height(2.dp))

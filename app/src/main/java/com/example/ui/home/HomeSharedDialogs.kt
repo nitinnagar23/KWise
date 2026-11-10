@@ -119,7 +119,7 @@ fun CustomerDropdownSelector(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = selectedCustomer?.name ?: tr("Select Customer", "ग्राहक चुनें"),
+                            text = selectedCustomer?.name ?: tr("Select customer", "ग्राहक चुनें"),
                             fontWeight = FontWeight.SemiBold,
                             color = if (selectedCustomer != null) FlatTextPrimary else FlatTextMuted
                         )
@@ -222,7 +222,7 @@ fun ProductDropdownSelector(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = selectedProduct?.feedName ?: tr("Select Product", "सामान चुनें"),
+                            text = selectedProduct?.feedName ?: tr("Select product", "सामान चुनें"),
                             fontWeight = FontWeight.SemiBold,
                             color = if (selectedProduct != null) FlatTextPrimary else FlatTextMuted
                         )
@@ -308,17 +308,7 @@ fun QuickAddCustomerDialog(
             .entries
             .sortedByDescending { it.value }
             .map { it.key }
-        val defaultVillages = listOf(
-            "Rampur",
-            "Kishanpur",
-            "Sultanpur",
-            "Govindpur",
-            "Madhopur",
-            "Chandpur",
-            "Fatehpur",
-            "Nawabganj"
-        )
-        (fromCustomers + defaultVillages).distinctBy { it.lowercase() }
+        fromCustomers.distinctBy { it.lowercase() }
     }
 
     val filteredVillageHints = remember(allVillageHints, village) {
@@ -356,9 +346,9 @@ fun QuickAddCustomerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = tr("Add New Customer", "नया ग्राहक जोड़ें"),
+                        text = tr("Add new customer", "नया ग्राहक जोड़ें"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Surface(
@@ -477,7 +467,7 @@ fun QuickAddCustomerDialog(
                             Text(
                                 text = "${phoneEntries.size} ${tr("added", "जोड़े गए")}",
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = FlatTextSecondary
                             )
                         }
@@ -506,7 +496,7 @@ fun QuickAddCustomerDialog(
                                             },
                                             placeholder = {
                                                 Text(
-                                                    "+91 98765 43210",
+                                                    "Mobile number",
                                                     color = FlatTextMuted,
                                                     fontSize = 14.5.sp
                                                 )
@@ -558,7 +548,7 @@ fun QuickAddCustomerDialog(
                                             text = tr("Tag", "टैग"),
                                             fontSize = 12.sp,
                                             color = FlatTextSecondary,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                         if (idx == 0) {
                                             Surface(
@@ -825,8 +815,8 @@ fun QuickAddCustomerDialog(
                             .testTag("save_customer_btn")
                     ) {
                         Text(
-                            text = tr("Save Customer", "सेव करें"),
-                            fontWeight = FontWeight.ExtraBold,
+                            text = tr("Save customer", "सेव करें"),
+                            fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
                     }

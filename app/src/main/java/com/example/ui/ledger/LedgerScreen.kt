@@ -235,7 +235,7 @@ fun LedgerScreen(
                         ) {
                             Text(
                                 text = tr("Customers", "ग्राहक"),
-                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 14.sp,
                                 color = if (selectedTab == 0) LedgerBrandGreen else FlatTextSecondary,
                                 maxLines = 1
@@ -261,7 +261,7 @@ fun LedgerScreen(
                     text = {
                         Text(
                             text = tr("Sales ledger", "बिक्री खाता"),
-                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = if (selectedTab == 1) LedgerBrandGreen else FlatTextSecondary,
                             maxLines = 1
@@ -275,7 +275,7 @@ fun LedgerScreen(
                         text = {
                             Text(
                                 text = tr("Repayments", "वसूली"),
-                                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Medium,
+                                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 14.sp,
                                 color = if (selectedTab == 2) LedgerBrandGreen else FlatTextSecondary,
                                 maxLines = 1
@@ -348,7 +348,7 @@ fun LedgerScreen(
                     Text(
                         text = when (selectedTab) {
                             0 -> tr("Customer", "ग्राहक")
-                            1 -> tr("New Bill", "नया बिल")
+                            1 -> tr("New bill", "नया बिल")
                             else -> tr("Repayment", "वसूली")
                         },
                         fontWeight = FontWeight.Bold,
@@ -469,13 +469,13 @@ fun CustomersTab(
                             text = tr("Total market udhari", "कुल बाज़ार उधारी"),
                             fontSize = 13.sp,
                             color = FlatTextSecondary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (hideTotalUdhari) "₹ ••••" else CurrencyUtils.formatInr(totalOutstandingUdhari),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LedgerCrimson,
                             modifier = Modifier.testTag("total_market_udhari_text")
                         )
@@ -518,7 +518,7 @@ fun CustomersTab(
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { searchQuery = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = null, tint = FlatTextSecondary)
+                        Icon(Icons.Default.Clear, contentDescription = tr("Clear search", "सर्च साफ़ करें"), tint = FlatTextSecondary)
                     }
                 }
             },
@@ -766,7 +766,7 @@ fun CustomerCardItem(
             ) {
                 Text(
                     text = initials,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = LedgerAvatarText
                 )
@@ -820,7 +820,7 @@ fun CustomerCardItem(
                             CurrencyUtils.formatInr(customer.totalUdhari)
                         },
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -975,7 +975,7 @@ fun SalesTab(
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { searchQuery = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = null, tint = FlatTextSecondary)
+                        Icon(Icons.Default.Clear, contentDescription = tr("Clear search", "सर्च साफ़ करें"), tint = FlatTextSecondary)
                     }
                 }
             },
@@ -1017,7 +1017,7 @@ fun SalesTab(
                         Text(
                             text = sectionHeader,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp,
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp, start = 2.dp)
@@ -1093,7 +1093,7 @@ fun SalesTab(
                                     Text(
                                         text = CurrencyUtils.formatInr(bill.totalSalePrice),
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -1135,7 +1135,7 @@ fun SalesTab(
                 ) {
                     Text(
                         text = "${tr("Bill", "बिल")} $billNo",
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Surface(
@@ -1202,7 +1202,7 @@ fun SalesTab(
                     Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(FlatDarkBorder))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(tr("Total Bill:", "कुल बिल:"), color = FlatTextSecondary, fontWeight = FontWeight.SemiBold)
-                        Text(CurrencyUtils.formatInr(bill.totalSalePrice), fontWeight = FontWeight.ExtraBold, color = FlatTextPrimary)
+                        Text(CurrencyUtils.formatInr(bill.totalSalePrice), fontWeight = FontWeight.Bold, color = FlatTextPrimary)
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(tr("Paid Amount:", "जमा राशि:"), color = FlatTextSecondary)
@@ -1317,7 +1317,7 @@ fun PaymentsTab(
                     Text(
                         text = CurrencyUtils.formatInr(todayTotal),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = LedgerBrandGreen,
                         modifier = Modifier.testTag("repayments_received_today_text")
                     )
@@ -1350,7 +1350,7 @@ fun PaymentsTab(
                     Text(
                         text = CurrencyUtils.formatInr(monthTotal),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = LedgerBrandGreen,
                         modifier = Modifier.testTag("repayments_this_month_text")
                     )
@@ -1419,7 +1419,7 @@ fun PaymentsTab(
                         Text(
                             text = sectionHeader,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.dp.value.sp,
                             modifier = Modifier.padding(top = 6.dp, bottom = 2.dp, start = 2.dp)
@@ -1462,7 +1462,7 @@ fun PaymentsTab(
                                 ) {
                                     Text(
                                         text = initials,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         fontSize = 14.5.sp,
                                         color = LedgerAvatarText
                                     )
@@ -1497,7 +1497,7 @@ fun PaymentsTab(
                                     Text(
                                         text = "+${CurrencyUtils.formatInr(pay.amount)}",
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = LedgerBrandGreen
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -1518,7 +1518,7 @@ fun PaymentsTab(
                                         Text(
                                             text = "${tr("Balance", "बाक़ी")} ${CurrencyUtils.formatInr(currentBalance)}",
                                             fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = FlatTextSecondary
                                         )
                                     }
@@ -1550,7 +1550,7 @@ fun RecordPaymentDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = FlatDarkCard,
-        title = { Text("Record Udhari Repayment", color = FlatTextPrimary, fontWeight = FontWeight.Medium) },
+        title = { Text("Record Udhari Repayment", color = FlatTextPrimary, fontWeight = FontWeight.SemiBold) },
         text = {
             Column {
                 Text("Select Customer", style = MaterialTheme.typography.labelSmall, color = FlatTextSecondary)

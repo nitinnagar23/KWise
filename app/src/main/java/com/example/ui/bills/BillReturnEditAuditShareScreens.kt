@@ -331,7 +331,7 @@ fun BillReturnFlowScreen(
                         Text(
                             text = tr("Return items", "सामान वापसी"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BNavyText
                         )
                         Text(
@@ -372,7 +372,7 @@ fun BillReturnFlowScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(originalBillTotal),
                                     fontSize = 22.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BNavyText
                                 )
                             }
@@ -384,7 +384,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = "Paid ${CurrencyUtils.formatInr(originalBillPaid)}",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BBrandGreen,
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                                     )
@@ -396,7 +396,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = "Due ${CurrencyUtils.formatInr(originalBillDue)}",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BCrimsonRed,
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                                     )
@@ -408,7 +408,7 @@ fun BillReturnFlowScreen(
                     Text(
                         text = tr("CHOOSE ITEMS TO RETURN", "वापसी के लिए सामान चुनें"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -497,7 +497,7 @@ fun BillReturnFlowScreen(
                                         Text(
                                             text = displayTitle,
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = BNavyText
                                         )
                                         Text(
@@ -510,7 +510,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = if (isChecked) CurrencyUtils.formatInr(itemReturnAmt) else "—",
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (isChecked) BNavyText else BSubtleText
                                     )
                                 }
@@ -526,7 +526,7 @@ fun BillReturnFlowScreen(
                                             text = tr("Return quantity", "वापसी मात्रा"),
                                             fontSize = 14.sp,
                                             color = BSubtleText,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.SemiBold
                                         )
 
                                         Row(
@@ -561,7 +561,7 @@ fun BillReturnFlowScreen(
                                             Text(
                                                 text = unitText,
                                                 fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = BNavyText
                                             )
 
@@ -628,7 +628,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = tr("Return charges too", "चार्ज भी वापस करें"),
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BNavyText
                                     )
                                     Text(
@@ -650,7 +650,7 @@ fun BillReturnFlowScreen(
                     Text(
                         text = tr("REASON", "कारण"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -670,7 +670,7 @@ fun BillReturnFlowScreen(
                                 Text(
                                     text = reasonLabel,
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (selected) Color.White else BNavyText,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp)
                                 )
@@ -682,7 +682,7 @@ fun BillReturnFlowScreen(
                     Text(
                         text = tr("NOTE (OPTIONAL)", "नोट (वैकल्पिक)"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -732,7 +732,7 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(totalReturnValue),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                         }
@@ -757,7 +757,7 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = tr("Continue", "आगे बढ़ें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -802,7 +802,7 @@ fun BillReturnFlowScreen(
                         Text(
                             text = tr("Settle the return", "वापसी का निपटान करें"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BNavyText
                         )
                         Text(
@@ -823,7 +823,7 @@ fun BillReturnFlowScreen(
                     Text(
                         text = tr("HOW SHOULD WE SETTLE?", "निपटान कैसे करें?"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -892,7 +892,7 @@ fun BillReturnFlowScreen(
                                         Text(
                                             text = title,
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = BNavyText
                                         )
                                         Text(
@@ -940,7 +940,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = "Put $firstReturnedLabel back in stock",
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BNavyText
                                     )
                                     Text(
@@ -967,7 +967,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = "Create credit note #$creditNoteCode",
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BNavyText
                                     )
                                     Text(
@@ -1001,7 +1001,7 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = tr("BILL AFTER RETURN", "वापसी के बाद बिल"),
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BSubtleText,
                                 letterSpacing = 0.6.sp
                             )
@@ -1025,7 +1025,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(billTotalAfter),
                                         fontSize = 16.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BNavyText
                                     )
                                 }
@@ -1042,7 +1042,7 @@ fun BillReturnFlowScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(originalBillPaid),
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BBrandGreen
                                 )
                             }
@@ -1068,7 +1068,7 @@ fun BillReturnFlowScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(billDueAfter),
                                         fontSize = 16.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BCrimsonRed
                                     )
                                 }
@@ -1116,7 +1116,7 @@ fun BillReturnFlowScreen(
                                 .weight(0.38f)
                                 .height(52.dp)
                         ) {
-                            Text(tr("Back", "पीछे"), fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                            Text(tr("Back", "पीछे"), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
 
                         Button(
@@ -1170,7 +1170,7 @@ fun BillReturnFlowScreen(
                                 .height(52.dp)
                                 .testTag("confirm_return_btn")
                         ) {
-                            Text(tr("Confirm return", "वापसी पक्की करें"), fontWeight = FontWeight.ExtraBold, fontSize = 15.5.sp)
+                            Text(tr("Confirm return", "वापसी पक्की करें"), fontWeight = FontWeight.Bold, fontSize = 15.5.sp)
                         }
                     }
                 }
@@ -1211,7 +1211,7 @@ fun BillReturnFlowScreen(
                 Text(
                     text = tr("Return recorded", "वापसी दर्ज हो गई"),
                     fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BNavyText
                 )
 
@@ -1254,7 +1254,7 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = "Credit note #$creditNoteCode",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                             Surface(
@@ -1264,7 +1264,7 @@ fun BillReturnFlowScreen(
                                 Text(
                                     text = "Issued",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BBrandGreen,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                                 )
@@ -1300,7 +1300,7 @@ fun BillReturnFlowScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(lineAmt),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BNavyText
                                 )
                             }
@@ -1317,7 +1317,7 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(customerOutstandingAfter),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BCrimsonRed
                             )
                         }
@@ -1333,7 +1333,7 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = "$afterStockBags bags",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                         }
@@ -1368,7 +1368,7 @@ fun BillReturnFlowScreen(
                     Text(
                         text = tr("Share credit note on WhatsApp", "व्हाट्सएप पर क्रेडिट नोट शेयर करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1378,7 +1378,7 @@ fun BillReturnFlowScreen(
                     Text(
                         text = "View bill #$shortBillNo",
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BBrandGreen
                     )
                 }
@@ -1532,7 +1532,7 @@ fun EditBillFlowScreen(
             title = {
                 Text(
                     text = tr("Add item to bill", "बिल में सामान जोड़ें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BNavyText
                 )
             },
@@ -1633,7 +1633,7 @@ fun EditBillFlowScreen(
                 Text(
                     text = "Edit bill #$shortBillNo",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BNavyText
                 )
                 Text(
@@ -1665,7 +1665,7 @@ fun EditBillFlowScreen(
                     ),
                     fontSize = 13.5.sp,
                     color = BInfoBlueText,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
@@ -1673,7 +1673,7 @@ fun EditBillFlowScreen(
             Text(
                 text = tr("ITEMS", "सामान"),
                 fontSize = 11.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = BSubtleText,
                 letterSpacing = 0.6.sp
             )
@@ -1715,7 +1715,7 @@ fun EditBillFlowScreen(
                             Text(
                                 text = titleStr,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText,
                                 modifier = Modifier.weight(1f)
                             )
@@ -1732,7 +1732,7 @@ fun EditBillFlowScreen(
                                         Text(
                                             text = "Edited",
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = BAmberText,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                         )
@@ -1741,7 +1741,7 @@ fun EditBillFlowScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(lineTotal),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BNavyText
                                 )
                             }
@@ -1787,7 +1787,7 @@ fun EditBillFlowScreen(
                                 Text(
                                     text = unitDisplay,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BNavyText
                                 )
 
@@ -1839,7 +1839,7 @@ fun EditBillFlowScreen(
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                         textStyle = TextStyle(
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = BNavyText
                                         ),
                                         modifier = Modifier.weight(1f)
@@ -1887,7 +1887,7 @@ fun EditBillFlowScreen(
                 Text(
                     text = "+ Add item",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BBrandGreen
                 )
             }
@@ -1896,7 +1896,7 @@ fun EditBillFlowScreen(
             Text(
                 text = tr("EXTRA CHARGES (OPTIONAL)", "अतिरिक्त शुल्क (वैकल्पिक)"),
                 fontSize = 11.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = BSubtleText,
                 letterSpacing = 0.6.sp
             )
@@ -1923,7 +1923,7 @@ fun EditBillFlowScreen(
                                 onValueChange = { if (it.isEmpty() || it.all(Char::isDigit)) ladaanChargeText = it },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = BNavyText),
+                                textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold, color = BNavyText),
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -1953,7 +1953,7 @@ fun EditBillFlowScreen(
                                     onValueChange = { if (it.isEmpty() || it.all(Char::isDigit)) utaarChargeText = it },
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = BNavyText),
+                                    textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold, color = BNavyText),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -1999,7 +1999,7 @@ fun EditBillFlowScreen(
                             onValueChange = { if (it.isEmpty() || it.all(Char::isDigit)) deliveryChargeText = it },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = BNavyText),
+                            textStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Bold, color = BNavyText),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -2035,7 +2035,7 @@ fun EditBillFlowScreen(
                         Text(
                             text = "New total",
                             fontSize = 17.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BNavyText
                         )
                         Row(
@@ -2045,7 +2045,7 @@ fun EditBillFlowScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(newGrandTotal),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                             if (deltaTotal.compareTo(BigDecimal.ZERO) != 0) {
@@ -2057,7 +2057,7 @@ fun EditBillFlowScreen(
                                     Text(
                                         text = "$sign${CurrencyUtils.formatInr(deltaTotal.abs())}",
                                         fontSize = 12.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (deltaTotal > BigDecimal.ZERO) BAmberText else BBrandGreen,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                     )
@@ -2076,7 +2076,7 @@ fun EditBillFlowScreen(
                         Text(
                             text = CurrencyUtils.formatInr(originalPaidTotal),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BBrandGreen
                         )
                     }
@@ -2089,7 +2089,7 @@ fun EditBillFlowScreen(
                         Text(
                             text = CurrencyUtils.formatInr(newUdhariDue),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BCrimsonRed
                         )
                     }
@@ -2099,10 +2099,10 @@ fun EditBillFlowScreen(
             // REASON FOR EDIT *
             Text(
                 text = buildAnnotatedString {
-                    withStyle(SpanStyle(color = BSubtleText, fontWeight = FontWeight.ExtraBold)) {
+                    withStyle(SpanStyle(color = BSubtleText, fontWeight = FontWeight.Bold)) {
                         append("REASON FOR EDIT ")
                     }
-                    withStyle(SpanStyle(color = BCrimsonRed, fontWeight = FontWeight.ExtraBold)) {
+                    withStyle(SpanStyle(color = BCrimsonRed, fontWeight = FontWeight.Bold)) {
                         append("*")
                     }
                 },
@@ -2126,7 +2126,7 @@ fun EditBillFlowScreen(
                         Text(
                             text = chip,
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (selected) Color.White else BNavyText,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp)
                         )
@@ -2173,7 +2173,7 @@ fun EditBillFlowScreen(
                         .weight(0.38f)
                         .height(52.dp)
                 ) {
-                    Text(tr("Cancel", "रद्द करें"), fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                    Text(tr("Cancel", "रद्द करें"), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
 
                 Button(
@@ -2234,7 +2234,7 @@ fun EditBillFlowScreen(
                         .height(52.dp)
                         .testTag("save_bill_changes_btn")
                 ) {
-                    Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.ExtraBold, fontSize = 15.5.sp)
+                    Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold, fontSize = 15.5.sp)
                 }
             }
         }
@@ -2354,7 +2354,7 @@ fun AuditLogFullScreen(
                 Text(
                     text = tr("Audit log", "ऑडिट लॉग"),
                     fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BNavyText
                 )
                 Text(
@@ -2414,7 +2414,7 @@ fun AuditLogFullScreen(
                     Text(
                         text = chip,
                         fontSize = 13.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = if (selected) Color.White else BNavyText,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
@@ -2445,7 +2445,7 @@ fun AuditLogFullScreen(
                         Text(
                             text = selectedStaffName,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BNavyText
                         )
                         Icon(
@@ -2486,7 +2486,7 @@ fun AuditLogFullScreen(
                         Text(
                             text = selectedPeriod,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BNavyText
                         )
                         Icon(
@@ -2605,7 +2605,7 @@ fun AuditLogFullScreen(
                                     Text(
                                         text = cardTitle,
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = BNavyText
                                     )
                                     Text(
@@ -2623,7 +2623,7 @@ fun AuditLogFullScreen(
                                         text = log.performedByUserName.ifBlank { "Admin" },
                                         fontSize = 13.sp,
                                         color = BSubtleText,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                     Surface(
                                         shape = RoundedCornerShape(50),
@@ -2632,7 +2632,7 @@ fun AuditLogFullScreen(
                                         Text(
                                             text = roleLabel,
                                             fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = roleFg,
                                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 2.dp)
                                         )
@@ -2650,7 +2650,7 @@ fun AuditLogFullScreen(
                                     text = detailLine,
                                     fontSize = 13.5.sp,
                                     color = BNavyText,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.SemiBold
                                 )
 
                                 if (log.reason.isNotBlank() &&
@@ -2683,7 +2683,7 @@ fun AuditLogFullScreen(
                         Text(
                             text = tr("Load older entries", "पुराने लॉग लोड करें"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -2786,7 +2786,7 @@ fun BillShareScreen(
                 Text(
                     text = "Bill #${billData.billNumber}",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BNavyText
                 )
                 Text(
@@ -2834,7 +2834,7 @@ fun BillShareScreen(
                                 Text(
                                     text = label,
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (active) Color.White else BNavyText
                                 )
                             }
@@ -2860,7 +2860,7 @@ fun BillShareScreen(
                         Text(
                             text = "BILL LINK",
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BSubtleText,
                             letterSpacing = 0.6.sp
                         )
@@ -2878,7 +2878,7 @@ fun BillShareScreen(
                                 Text(
                                     text = if (isLinkRevoked) "Link revoked" else activeLink,
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isLinkRevoked) BCrimsonRed else BNavyText,
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                                 )
@@ -2902,7 +2902,7 @@ fun BillShareScreen(
                             ) {
                                 Text(
                                     text = if (isLinkRevoked) "New link" else "Copy",
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
                             }
@@ -2920,7 +2920,7 @@ fun BillShareScreen(
                 Text(
                     text = "LINK EXPIRES",
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = BSubtleText,
                     letterSpacing = 0.6.sp
                 )
@@ -2941,7 +2941,7 @@ fun BillShareScreen(
                             Text(
                                 text = opt,
                                 fontSize = 13.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (active) Color.White else BNavyText,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                             )
@@ -2978,7 +2978,7 @@ fun BillShareScreen(
                             Text(
                                 text = "Allow PDF download",
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                             Text(
@@ -3005,7 +3005,7 @@ fun BillShareScreen(
                             Text(
                                 text = "Show Pay by UPI button",
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                             Text(
@@ -3032,7 +3032,7 @@ fun BillShareScreen(
                             Text(
                                 text = "Show outstanding balance",
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                             Text(
@@ -3054,7 +3054,7 @@ fun BillShareScreen(
             Text(
                 text = "WHAT THE CUSTOMER SEES",
                 fontSize = 11.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = BSubtleText,
                 letterSpacing = 0.6.sp
             )
@@ -3077,9 +3077,9 @@ fun BillShareScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = shopName.ifBlank { "Khal Bhandaar 12" },
+                            text = shopName.ifBlank { "Shop Name" },
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BNavyText
                         )
                         Text(
@@ -3092,7 +3092,7 @@ fun BillShareScreen(
                     Text(
                         text = CurrencyUtils.formatInr(billData.subtotal),
                         fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BNavyText
                     )
 
@@ -3132,7 +3132,7 @@ fun BillShareScreen(
                                 Text(
                                     text = "Pay ${CurrencyUtils.formatInr(billData.udhariAmount)}",
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -3152,7 +3152,7 @@ fun BillShareScreen(
                                 Text(
                                     text = "Download PDF",
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -3179,7 +3179,7 @@ fun BillShareScreen(
                             Text(
                                 text = if (isLinkRevoked) "Link revoked" else "Viewed 2 times",
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BNavyText
                             )
                             Text(
@@ -3192,7 +3192,7 @@ fun BillShareScreen(
                         Text(
                             text = if (isLinkRevoked) "Restore link" else "Revoke link",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (isLinkRevoked) BBrandGreen else BCrimsonRed,
                             modifier = Modifier.clickable {
                                 isLinkRevoked = !isLinkRevoked
@@ -3255,7 +3255,7 @@ fun BillShareScreen(
                     Text(
                         text = tr("Send on WhatsApp", "व्हाट्सएप पर भेजें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -3278,7 +3278,7 @@ fun BillShareScreen(
                     Text(
                         text = tr("Share", "शेयर"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }

@@ -324,7 +324,7 @@ fun EstimateCalculatorScreen(
         budgetSplitResult.rows.any { it.allocatedKg > BigDecimal.ZERO }
     }
 
-    val shareTitleLabel = tr("Share Estimate", "पर्चा शेयर करें")
+    val shareTitleLabel = tr("Share estimate", "पर्चा शेयर करें")
     val draftSavedMsg = tr("Draft saved!", "ड्राफ्ट सेव हो गया!")
     val creditBlockedMsg = tr("Credit blocked: Customer exceeds credit limit!", "उधारी ब्लॉक: ग्राहक की क्रेडिट सीमा पार हो गई है!")
 
@@ -448,7 +448,7 @@ fun EstimateCalculatorScreen(
                                 text = CurrencyUtils.formatWeight(activeTotalWeight),
                                 fontSize = 20.sp,
                                 color = FlatTextPrimary,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -464,7 +464,7 @@ fun EstimateCalculatorScreen(
                                 text = CurrencyUtils.formatInr(activeTotalPrice),
                                 fontSize = 26.sp,
                                 color = EstimateBrandGreen,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 modifier = Modifier.testTag("calculator_total_amount")
                             )
                         }
@@ -555,7 +555,7 @@ fun EstimateCalculatorScreen(
                             )
                         ) {
                             Text(
-                                text = tr("Make Sale", "बिक्री बनाएं"),
+                                text = tr("Make sale", "बिक्री बनाएं"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1
@@ -585,7 +585,7 @@ fun EstimateCalculatorScreen(
                         text = tr("Estimate", "एस्टीमेट (पर्चा)"),
                         fontSize = 24.sp,
                         color = FlatTextPrimary,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -680,10 +680,10 @@ fun EstimateCalculatorScreen(
                                     }
                                 } else {
                                     if (calcMode == CalculatorTabMode.BUDGET) {
-                                        "₹${budgetAmountText.ifBlank { "500" }} budget"
+                                        if (budgetAmountText.isBlank()) "Budget estimate" else "₹$budgetAmountText budget"
                                     } else {
-                                        val firstCust = customers.firstOrNull()?.name?.trim()?.split(Regex("\\s+"))?.firstOrNull() ?: "Ramesh"
-                                        "$firstCust · feed"
+                                        val firstCust = customers.firstOrNull()?.name?.trim()?.split(Regex("\\s+"))?.firstOrNull().orEmpty()
+                                        if (firstCust.isBlank()) "Feed estimate" else "$firstCust · feed"
                                     }
                                 }
                                 showSaveDraftDialog = true
@@ -699,7 +699,7 @@ fun EstimateCalculatorScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Outlined.Save,
-                                contentDescription = tr("Save Draft", "ड्राफ्ट सेव"),
+                                contentDescription = tr("Save draft", "ड्राफ्ट सेव"),
                                 tint = if (hasValidSaleItems) FlatTextPrimary else FlatTextSecondary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -876,7 +876,7 @@ fun EstimateCalculatorScreen(
                                     Text(
                                         text = tr("TOTAL BUDGET", "कुल बजट"),
                                         fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextSecondary,
                                         letterSpacing = 0.5.sp
                                     )
@@ -900,7 +900,7 @@ fun EstimateCalculatorScreen(
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         textStyle = LocalTextStyle.current.copy(
                                             fontSize = 20.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary
                                         ),
                                         modifier = Modifier
@@ -927,7 +927,7 @@ fun EstimateCalculatorScreen(
                                     Text(
                                         text = tr("ROUND WEIGHT DOWN TO", "वजन राउंड डाउन करें"),
                                         fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextSecondary,
                                         letterSpacing = 0.5.sp
                                     )
@@ -948,7 +948,7 @@ fun EstimateCalculatorScreen(
                                                 Text(
                                                     text = currentStepLabel,
                                                     fontSize = 14.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = EstimateBrandGreen
                                                 )
                                                 Icon(
@@ -971,7 +971,7 @@ fun EstimateCalculatorScreen(
                                                     text = {
                                                         Text(
                                                             text = label,
-                                                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                                             color = if (isSelected) EstimateBrandGreen else FlatTextPrimary
                                                         )
                                                     },
@@ -991,7 +991,7 @@ fun EstimateCalculatorScreen(
                                     Text(
                                         text = tr("SPLIT BY", "बांटने का तरीका"),
                                         fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextSecondary,
                                         letterSpacing = 0.5.sp
                                     )
@@ -1111,13 +1111,13 @@ fun EstimateCalculatorScreen(
                                 text = tr("Loose items (${budgetRows.size}/3)", "खुला सामान (${budgetRows.size}/3)"),
                                 fontSize = 17.sp,
                                 color = FlatTextPrimary,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                             if (budgetRows.size < 3 && looseEligibleProducts.size > budgetRows.size) {
                                 Text(
                                     text = "+ ${tr("Add loose item", "खुला सामान जोड़ें")}",
                                     color = EstimateBrandGreen,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
@@ -1221,7 +1221,7 @@ fun EstimateCalculatorScreen(
                                 Text(
                                     text = summaryText,
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (budgetSplitResult.isOverBudget) CRedUdhari else EstimateBrandGreen,
                                     modifier = Modifier.testTag("budget_split_summary_text")
                                 )
@@ -1339,7 +1339,7 @@ fun EstimateCalculatorScreen(
             SearchableProductPickerDialog(
                 products = availableToAdd,
                 recentProductIds = recentProductIds,
-                title = tr("Select Loose Item", "खुला सामान चुनें"),
+                title = tr("Select loose item", "खुला सामान चुनें"),
                 onDismiss = { showBudgetProductPicker = false },
                 onSelectProduct = { prod ->
                     if (budgetRows.size < 3) {
@@ -1586,7 +1586,7 @@ fun EstimateCalculatorScreen(
                 containerColor = FlatDarkCard,
                 title = {
                     Text(
-                        text = tr("Make Sale", "बिक्री बनाएं"),
+                        text = tr("Make sale", "बिक्री बनाएं"),
                         color = FlatTextPrimary,
                         fontWeight = FontWeight.Bold
                     )
@@ -1606,8 +1606,8 @@ fun EstimateCalculatorScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(tr("Total Bill Amount", "कुल बिल राशि"), color = FlatTextSecondary, style = MaterialTheme.typography.bodyMedium)
-                                Text(CurrencyUtils.formatInr(activeTotalPrice), color = CGreen, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                                Text(tr("Total bill amount", "कुल बिल राशि"), color = FlatTextSecondary, style = MaterialTheme.typography.bodyMedium)
+                                Text(CurrencyUtils.formatInr(activeTotalPrice), color = CGreen, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -1623,7 +1623,7 @@ fun EstimateCalculatorScreen(
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
-                                        text = tr("⚠️ Rate / Stock Changes Detected", "⚠️ भाव / स्टॉक में बदलाव मिला"),
+                                        text = tr("Rate or stock has changed", "भाव / स्टॉक में बदलाव मिला"),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = CRedUdhari,
                                         fontWeight = FontWeight.Bold
@@ -1658,7 +1658,7 @@ fun EstimateCalculatorScreen(
                             FilterChip(
                                 selected = !useWalkInCustomer,
                                 onClick = { useWalkInCustomer = false },
-                                label = { Text(tr("Select Customer", "ग्राहक चुनें"), fontWeight = FontWeight.Bold) },
+                                label = { Text(tr("Select customer", "ग्राहक चुनें"), fontWeight = FontWeight.Bold) },
                                 modifier = Modifier.testTag("select_customer_chip")
                             )
                         }
@@ -1674,7 +1674,7 @@ fun EstimateCalculatorScreen(
                         }
 
                         Text(
-                            text = tr("Payment Received", "प्राप्त भुगतान"),
+                            text = tr("Payment received", "प्राप्त भुगतान"),
                             style = MaterialTheme.typography.labelMedium,
                             color = FlatTextSecondary,
                             fontWeight = FontWeight.Bold
@@ -1765,7 +1765,7 @@ fun EstimateCalculatorScreen(
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(tr("Confirm Sale", "बिक्री पक्की करें"), fontWeight = FontWeight.Bold)
+                        Text(tr("Confirm sale", "बिक्री पक्की करें"), fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -1781,7 +1781,7 @@ fun EstimateCalculatorScreen(
                     containerColor = FlatDarkCard,
                     title = {
                         Text(
-                            text = tr("Credit Limit Exceeded", "उधारी सीमा पार"),
+                            text = tr("Credit limit exceeded", "उधारी सीमा पार"),
                             color = FlatTextPrimary,
                             fontWeight = FontWeight.Bold
                         )
@@ -1985,7 +1985,7 @@ private fun EstimateItemRowCard(
                         text = CurrencyUtils.formatInr(subTotal),
                         fontSize = 16.sp,
                         color = FlatTextPrimary,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
@@ -2039,7 +2039,7 @@ private fun EstimateItemRowCard(
                                 "${prod.feedName} · ${prod.kgPerBag.stripTrailingZeros().toPlainString()} kg bag"
                             }
                         } else {
-                            tr("Select Item", "सामान चुनें")
+                            tr("Select item", "सामान चुनें")
                         }
                         Text(
                             text = selectorTitle,
@@ -2064,11 +2064,11 @@ private fun EstimateItemRowCard(
                     Spacer(modifier = Modifier.width(6.dp))
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(44.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = tr("Remove Item", "सामान हटाएं"),
+                            contentDescription = tr("Remove item", "सामान हटाएं"),
                             tint = CRedUdhari
                         )
                     }
@@ -2114,7 +2114,7 @@ private fun EstimateItemRowCard(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.Remove,
-                                        contentDescription = tr("Decrease Bags", "बोरी घटाएं"),
+                                        contentDescription = tr("Decrease bags", "बोरी घटाएं"),
                                         tint = FlatTextPrimary,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -2124,7 +2124,7 @@ private fun EstimateItemRowCard(
                                 text = item.bags.toString(),
                                 fontSize = 22.sp,
                                 color = FlatTextPrimary,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                             Surface(
                                 onClick = { onUpdate(item.copy(bags = item.bags + 1)) },
@@ -2137,7 +2137,7 @@ private fun EstimateItemRowCard(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.Add,
-                                        contentDescription = tr("Increase Bags", "बोरी बढ़ाएं"),
+                                        contentDescription = tr("Increase bags", "बोरी बढ़ाएं"),
                                         tint = Color.White,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -2182,7 +2182,7 @@ private fun EstimateItemRowCard(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Remove,
-                                    contentDescription = tr("Decrease Loose Kg", "खुला किलो घटाएं"),
+                                    contentDescription = tr("Decrease loose kg", "खुला किलो घटाएं"),
                                     tint = FlatTextPrimary,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -2193,7 +2193,7 @@ private fun EstimateItemRowCard(
                             text = item.looseKg.ifBlank { "0" },
                             fontSize = 22.sp,
                             color = FlatTextPrimary,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .weight(1f)
@@ -2214,7 +2214,7 @@ private fun EstimateItemRowCard(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = tr("Increase Loose Kg", "खुला किलो बढ़ाएं"),
+                                    contentDescription = tr("Increase loose kg", "खुला किलो बढ़ाएं"),
                                     tint = Color.White,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -2234,7 +2234,7 @@ private fun EstimateItemRowCard(
                     text = tr("Quick kg", "त्वरित किलो"),
                     fontSize = 12.sp,
                     color = FlatTextSecondary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 val quickKgOptions = listOf(
@@ -2276,13 +2276,13 @@ private fun EstimateItemRowCard(
                     text = "${tr("Weight", "वजन")}: ${CurrencyUtils.formatWeight(itemWeight)}",
                     fontSize = 13.5.sp,
                     color = FlatTextSecondary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = CurrencyUtils.formatInr(subTotal),
                     fontSize = 18.sp,
                     color = FlatTextPrimary,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -2333,14 +2333,14 @@ private fun BudgetSplitRowCard(
                         text = rowResult.productName,
                         fontSize = 15.5.sp,
                         color = FlatTextPrimary,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "${CurrencyUtils.formatInr(rowResult.ratePerKg)} / kg · ${CurrencyUtils.formatInr(rowResult.targetAmount)}",
                         fontSize = 13.sp,
                         color = FlatTextSecondary,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
@@ -2353,7 +2353,7 @@ private fun BudgetSplitRowCard(
                             text = "${CurrencyUtils.formatWeight(rowResult.allocatedKg)} kg",
                             fontSize = 15.5.sp,
                             color = FlatTextPrimary,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -2367,12 +2367,12 @@ private fun BudgetSplitRowCard(
                     IconButton(
                         onClick = onToggleLock,
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(44.dp)
                             .testTag("lock_budget_row_${rowResult.productId}")
                     ) {
                         Icon(
                             imageVector = if (rowResult.isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                            contentDescription = if (rowResult.isLocked) tr("Unlock Row", "अनलॉक करें") else tr("Lock Row", "लॉक करें"),
+                            contentDescription = if (rowResult.isLocked) tr("Unlock row", "अनलॉक करें") else tr("Lock row", "लॉक करें"),
                             tint = if (rowResult.isLocked) CAmber else FlatTextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -2397,7 +2397,7 @@ private fun BudgetSplitRowCard(
                                 if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) onRatioChange(it)
                             },
                             enabled = !rowState.isLocked,
-                            label = { Text(tr("Ratio Share", "अनुपात हिस्सा")) },
+                            label = { Text(tr("Ratio share", "अनुपात हिस्सा")) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),

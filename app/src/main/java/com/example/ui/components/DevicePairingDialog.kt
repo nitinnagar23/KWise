@@ -289,14 +289,14 @@ fun DevicePairingDialog(
                                 Column {
                                     Text(
                                         text = "6-DIGIT PAIRING PIN",
-                                        fontSize = 10.sp,
+                                        fontSize = 11.sp,
                                         letterSpacing = 1.sp,
                                         color = FlatTextMuted
                                     )
                                     Text(
                                         text = displayPin,
                                         fontSize = 24.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace,
                                         letterSpacing = 2.sp,
                                         color = if (isExpired) Color(0xFFEF4444) else Color(0xFF06B6D4)
@@ -337,7 +337,7 @@ fun DevicePairingDialog(
                             Text(
                                 text = if (isExpired) "Code expired (10 min timeout)" else "Expires in $timeFormatted",
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = if (isExpired) Color(0xFFEF4444) else Color(0xFFF59E0B)
                             )
                         }

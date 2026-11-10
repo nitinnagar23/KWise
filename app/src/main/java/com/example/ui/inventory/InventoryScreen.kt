@@ -453,7 +453,7 @@ fun InventoryScreen(
                     },
                     onConfirmAdjust = { deltaKg, reason, note, photoUri, stockLossCost, addToExpenses ->
                         val newStock = product.currentStockKg.add(deltaKg).max(BigDecimal.ZERO)
-                        val actorName = currentUser?.name?.takeIf { it.isNotBlank() } ?: "Ramesh"
+                        val actorName = currentUser?.name?.takeIf { it.isNotBlank() } ?: "Admin"
                         InventoryMetaPrefs.recordAdjustment(
                             context = context,
                             record = StockAdjustmentRecord(
@@ -512,7 +512,7 @@ fun InventoryScreen(
 
         is InventorySubScreen.ReorderList -> {
             val settings by repository.settingsFlow.collectAsState(initial = null)
-            val shopTitle = settings?.shopName?.ifBlank { "Khal Bhandaar 12" } ?: "Khal Bhandaar 12"
+            val shopTitle = settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name"
             BackHandler { subScreen = InventorySubScreen.ListScreen }
             ReorderListScreen(
                 products = products,
@@ -728,7 +728,7 @@ private fun InventoryListView(
                         Text(
                             text = tr("Item", "आइटम"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -777,14 +777,14 @@ private fun InventoryListView(
                             Text(
                                 text = tr("Inventory", "इन्वेंटरी"),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
                                 text = "${products.size} ${tr("items", "आइटम")} · ${tr("Stock value", "स्टॉक मूल्य")} ${CurrencyUtils.formatInr(totalStockValue)}",
                                 fontSize = 13.sp,
                                 color = FlatTextSecondary,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.testTag("inventory_stock_value_subtitle")
                             )
                         }
@@ -1076,7 +1076,7 @@ private fun SummaryStatusCard(
             Text(
                 text = count.toString(),
                 fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = contentColor
             )
             Text(
@@ -1130,7 +1130,7 @@ private fun InventoryItemCard(
                     Text(
                         text = formatProductCardTitle(product),
                         fontSize = 16.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -1149,7 +1149,7 @@ private fun InventoryItemCard(
                     Text(
                         text = formatProductQuantityLabel(product),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     InventoryStatusBadge(status = status)

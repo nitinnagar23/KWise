@@ -392,7 +392,7 @@ fun CloseDayScreen(
                             val record = ClosedDayRecord(
                                 dayStartMillis = dayStartMillis,
                                 closedAtMillis = System.currentTimeMillis(),
-                                closedByName = closedByName.ifBlank { "Ramesh" },
+                                closedByName = closedByName.ifBlank { "Admin" },
                                 openingCash = openingCash,
                                 cashIn = dayCashIn,
                                 cashOut = dayCashOut,
@@ -421,7 +421,7 @@ fun CloseDayScreen(
                         Text(
                             text = tr("Close day", "दिन बंद करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -464,7 +464,7 @@ fun CloseDayScreen(
                         Text(
                             text = tr("Close day", "दिन बंद करें"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -499,7 +499,7 @@ fun CloseDayScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(expectedCash),
                                 fontSize = 30.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -525,7 +525,7 @@ fun CloseDayScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(openingCash),
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                 }
@@ -548,7 +548,7 @@ fun CloseDayScreen(
                                     Text(
                                         text = "+${CurrencyUtils.formatInr(dayCashIn)}",
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = CbBrandGreen
                                     )
                                 }
@@ -571,7 +571,7 @@ fun CloseDayScreen(
                                     Text(
                                         text = "−${CurrencyUtils.formatInr(dayCashOut)}",
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = CbCrimsonRed
                                     )
                                 }
@@ -591,7 +591,7 @@ fun CloseDayScreen(
                     Text(
                         text = tr("Count your cash", "अपना कैश गिनें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -635,7 +635,7 @@ fun CloseDayScreen(
                                     directTotalInput = raw.filter { it.isDigit() }.take(9)
                                 },
                                 leadingIcon = {
-                                    Text("₹", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = CbBrandGreen)
+                                    Text("₹", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CbBrandGreen)
                                 },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 singleLine = true,
@@ -663,7 +663,7 @@ fun CloseDayScreen(
                                         Text(
                                             text = "₹$denom",
                                             fontSize = 14.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary,
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.padding(vertical = 8.dp)
@@ -690,7 +690,7 @@ fun CloseDayScreen(
                                             },
                                             textStyle = TextStyle(
                                                 fontSize = 15.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 textAlign = TextAlign.Center
                                             ),
@@ -707,7 +707,7 @@ fun CloseDayScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(lineTotal),
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         textAlign = TextAlign.End,
                                         modifier = Modifier.width(86.dp)
@@ -726,13 +726,13 @@ fun CloseDayScreen(
                             Text(
                                 text = tr("Cash counted", "गिना गया कैश"),
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(countedCash),
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = CbBrandGreen,
                                 modifier = Modifier.testTag("close_day_counted_cash_text")
                             )
@@ -771,7 +771,7 @@ fun CloseDayScreen(
                             Text(
                                 text = tr("Difference", "अंतर"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = textColor
                             )
                             Text(
@@ -784,7 +784,7 @@ fun CloseDayScreen(
                         Text(
                             text = diffLabel,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = textColor,
                             modifier = Modifier.testTag("close_day_diff_text")
                         )
@@ -887,7 +887,7 @@ fun CloseDayScreen(
                             Text(
                                 text = "Start tomorrow with ${CurrencyUtils.formatInr(countedCash)}",
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1013,7 +1013,7 @@ fun DayClosedSummaryScreen(
                             Text(
                                 text = tr("Reopen day", "दिन फिर से खोलें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -1061,7 +1061,7 @@ fun DayClosedSummaryScreen(
                     Text(
                         text = tr("Day closed", "दिन बंद हो गया"),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
 
@@ -1207,7 +1207,7 @@ fun DayClosedSummaryScreen(
                             Text(
                                 text = tr("UPI received", "UPI प्राप्त"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1220,7 +1220,7 @@ fun DayClosedSummaryScreen(
                         Text(
                             text = CurrencyUtils.formatInr(record.upiReceived),
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -1245,7 +1245,7 @@ private fun DayClosedKeyValueRow(
         Text(
             text = label,
             fontSize = 14.sp,
-            fontWeight = if (labelBold) FontWeight.ExtraBold else FontWeight.Medium,
+            fontWeight = if (labelBold) FontWeight.Bold else FontWeight.SemiBold,
             color = if (labelBold) FlatTextPrimary else FlatTextSecondary,
             modifier = Modifier
                 .weight(1f)
@@ -1254,7 +1254,7 @@ private fun DayClosedKeyValueRow(
         Text(
             text = value,
             fontSize = 14.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = valueColor
         )
     }
@@ -1350,7 +1350,7 @@ fun ExpenseCategoriesScreen(
                         Text(
                             text = tr("+ Add category", "+ श्रेणी जोड़ें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -1393,7 +1393,7 @@ fun ExpenseCategoriesScreen(
                         Text(
                             text = tr("Expense categories", "ख़र्च श्रेणियां"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -1458,7 +1458,7 @@ fun ExpenseCategoriesScreen(
                                             Text(
                                                 text = cat.name,
                                                 fontSize = 15.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary
                                             )
                                             if (cat.isSystem) {
@@ -1543,7 +1543,7 @@ fun ExpenseCategoriesScreen(
                         Text(
                             text = tr("New category", "नई श्रेणी"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(

@@ -459,7 +459,7 @@ fun LoginScreen(
                     Text(
                         text = if (currentLanguage == "hi") "English" else "हिंदी",
                         fontSize = 13.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = LoginNavyText,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
                     )
@@ -553,7 +553,7 @@ fun LoginScreen(
                                     Text(
                                         text = tr("Store owner", "दुकान मालिक"),
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (!isPairingMode) LoginBrandGreen else LoginSubtleText
                                     )
                                 }
@@ -578,7 +578,7 @@ fun LoginScreen(
                                     Text(
                                         text = tr("Staff device", "स्टाफ डिवाइस"),
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (isPairingMode) LoginBrandGreen else LoginSubtleText
                                     )
                                 }
@@ -616,8 +616,8 @@ fun LoginScreen(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = tr("Authentication Notice", "प्रमाणीकरण सूचना"),
-                                        fontWeight = FontWeight.ExtraBold,
+                                        text = tr("Authentication notice", "प्रमाणीकरण सूचना"),
+                                        fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp,
                                         color = Color(0xFF991B1B)
                                     )
@@ -654,7 +654,7 @@ fun LoginScreen(
                         Text(
                             text = tr("Welcome back", "वापसी पर स्वागत है"),
                             fontSize = 21.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginNavyText
                         )
 
@@ -722,7 +722,7 @@ fun LoginScreen(
                                     Text(
                                         text = tr("Connecting to Google...", "Google से जुड़ रहा है..."),
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = LoginNavyText
                                     )
                                 } else {
@@ -737,7 +737,7 @@ fun LoginScreen(
                                             Text(
                                                 text = "G",
                                                 fontSize = 14.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = Color(0xFF4285F4)
                                             )
                                         }
@@ -746,7 +746,7 @@ fun LoginScreen(
                                     Text(
                                         text = tr("Continue with Google", "Google के साथ जारी रखें"),
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = LoginNavyText
                                     )
                                 }
@@ -788,7 +788,7 @@ fun LoginScreen(
                         Text(
                             text = tr("Connect this phone", "इस फ़ोन को जोड़ें"),
                             fontSize = 21.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginNavyText
                         )
 
@@ -871,7 +871,7 @@ fun LoginScreen(
                             Text(
                                 text = tr("Connect device", "डिवाइस जोड़ें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -903,7 +903,7 @@ fun LoginScreen(
                                 Text(
                                     text = tr("Scan QR instead", "इसके बजाय QR स्कैन करें"),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = LoginNavyText
                                 )
                             }
@@ -953,7 +953,7 @@ fun LoginScreen(
             title = {
                 Text(
                     text = tr("Scan or enter QR code", "QR कोड स्कैन या दर्ज करें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = LoginNavyText
                 )
             },
@@ -992,7 +992,7 @@ fun LoginScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(tr("Use Code", "कोड उपयोग करें"), fontWeight = FontWeight.ExtraBold)
+                    Text(tr("Use code", "कोड उपयोग करें"), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1162,7 +1162,7 @@ private fun StoreOwnerFeatureRow(
             text = text,
             fontSize = 14.sp,
             color = Color(0xFF334155),
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

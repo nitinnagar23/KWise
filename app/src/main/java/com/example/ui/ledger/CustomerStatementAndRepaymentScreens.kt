@@ -286,7 +286,7 @@ fun CustomerStatementScreen(
     val shopName = settings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"
     val shopAddress = settings?.shopAddress?.ifBlank { customer.village } ?: customer.village
     val shopPhone = settings?.shopPhone.orEmpty()
-    val shopUpi = settings?.shopUpiId?.ifBlank { "shop@upi" } ?: "shop@upi"
+    val shopUpi = settings?.shopUpiId?.trim().orEmpty()
 
     val periodRangeLabel = remember(filteredRowsAsc, fullDateFmt) {
         if (filteredRowsAsc.isEmpty()) {
@@ -349,7 +349,7 @@ fun CustomerStatementScreen(
                     Text(
                         text = tr("Statement", "स्टेटमेंट"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KhataNavyText
                     )
                     Text(
@@ -367,7 +367,7 @@ fun CustomerStatementScreen(
                 Text(
                     text = "A4",
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = KhataNavyText,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
@@ -411,7 +411,7 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = label,
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (selected) Color.White else KhataNavyText
                                 )
                             }
@@ -522,7 +522,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = shopName,
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = KhataNavyText
                                         )
                                         val addrPhone = listOf(
@@ -550,7 +550,7 @@ fun CustomerStatementScreen(
                                     Text(
                                         text = "STATEMENT",
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = KhataBrandGreen,
                                         letterSpacing = 0.6.sp
                                     )
@@ -588,7 +588,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = customer.name,
                                             fontSize = 14.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = KhataNavyText
                                         )
                                         val custSub = listOf(customer.village, customer.phone)
@@ -613,7 +613,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = periodRangeLabel,
                                             fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = KhataNavyText
                                         )
                                     }
@@ -630,11 +630,11 @@ fun CustomerStatementScreen(
                                     .padding(horizontal = 8.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("DATE", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = KhataSubtleText, modifier = Modifier.width(48.dp))
-                                Text("DETAILS", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = KhataSubtleText, modifier = Modifier.weight(1f))
-                                Text("DEBIT", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = KhataSubtleText, textAlign = TextAlign.End, modifier = Modifier.width(54.dp))
-                                Text("CREDIT", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = KhataSubtleText, textAlign = TextAlign.End, modifier = Modifier.width(54.dp))
-                                Text("BALANCE", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = KhataSubtleText, textAlign = TextAlign.End, modifier = Modifier.width(58.dp))
+                                Text("DATE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = KhataSubtleText, modifier = Modifier.width(48.dp))
+                                Text("DETAILS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = KhataSubtleText, modifier = Modifier.weight(1f))
+                                Text("DEBIT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = KhataSubtleText, textAlign = TextAlign.End, modifier = Modifier.width(54.dp))
+                                Text("CREDIT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = KhataSubtleText, textAlign = TextAlign.End, modifier = Modifier.width(54.dp))
+                                Text("BALANCE", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = KhataSubtleText, textAlign = TextAlign.End, modifier = Modifier.width(58.dp))
                             }
 
                             if (filteredRowsAsc.isEmpty()) {
@@ -667,7 +667,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = row.title,
                                             fontSize = 12.sp,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = KhataNavyText,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
@@ -691,7 +691,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = CurrencyUtils.formatInr(row.runningBalance).removePrefix("₹").trim(),
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = KhataNavyText,
                                             textAlign = TextAlign.End,
                                             modifier = Modifier.width(58.dp)
@@ -713,14 +713,14 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = tr("Total", "कुल"),
                                     fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataNavyText,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     text = CurrencyUtils.formatInr(totalDebit).removePrefix("₹").trim(),
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataNavyText,
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.width(54.dp)
@@ -728,7 +728,7 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(totalCredit).removePrefix("₹").trim(),
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataBrandGreen,
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.width(54.dp)
@@ -744,6 +744,7 @@ fun CustomerStatementScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                if (shopUpi.isNotBlank()) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -756,7 +757,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = tr("Scan to pay", "भुगतान के लिए स्कैन करें"),
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = KhataNavyText
                                         )
                                         Text(
@@ -765,6 +766,7 @@ fun CustomerStatementScreen(
                                             color = KhataSubtleText
                                         )
                                     }
+                                }
                                 }
 
                                 Column(horizontalAlignment = Alignment.End) {
@@ -776,7 +778,7 @@ fun CustomerStatementScreen(
                                     Text(
                                         text = CurrencyUtils.formatInr(customer.totalUdhari),
                                         fontSize = 24.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (customer.totalUdhari > BigDecimal.ZERO) KhataCrimsonRed else KhataBrandGreen
                                     )
                                 }
@@ -841,7 +843,7 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = shopName,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                             }
@@ -871,7 +873,7 @@ fun CustomerStatementScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(customer.totalUdhari),
                                 fontSize = 36.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
@@ -886,7 +888,7 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = tr("RECENT ENTRIES", "हाल की एंट्री"),
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataSubtleText,
                                     letterSpacing = 0.6.sp
                                 )
@@ -907,7 +909,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = entry.title,
                                             fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.Medium,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = KhataNavyText,
                                             modifier = Modifier.weight(1f)
                                         )
@@ -916,7 +918,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = (if (isDebit) "+" else "−") + CurrencyUtils.formatInr(amt),
                                             fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (isDebit) KhataCrimsonRed else KhataBrandGreen
                                         )
                                     }
@@ -925,7 +927,7 @@ fun CustomerStatementScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
 
-                            if (showUpiQrCode) {
+                            if (showUpiQrCode && shopUpi.isNotBlank()) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -938,7 +940,7 @@ fun CustomerStatementScreen(
                                         Text(
                                             text = "Pay ${CurrencyUtils.formatInr(customer.totalUdhari)} by UPI",
                                             fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = KhataNavyText
                                         )
                                         Text(
@@ -981,7 +983,7 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = tr("Last 4 entries", "अंतिम 4 एंट्री"),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataNavyText
                                 )
                                 Text(
@@ -1013,7 +1015,7 @@ fun CustomerStatementScreen(
                                 Text(
                                     text = tr("UPI QR code", "UPI QR कोड"),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataNavyText
                                 )
                                 Text(
@@ -1089,7 +1091,7 @@ fun CustomerStatementScreen(
                     Text(
                         text = if (!isImageMode) tr("Share PDF", "PDF शेयर करें") else tr("Share image", "इमेज शेयर करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1136,7 +1138,7 @@ fun CustomerStatementScreen(
                         Text(
                             text = if (!isImageMode) tr("Save", "सेव करें") else tr("Save to gallery", "गैलरी में सेव करें"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KhataBrandGreen
                         )
                     }
@@ -1439,7 +1441,7 @@ fun CollectUdhariScreen(
                 Text(
                     text = tr("Collect udhari", "उधारी वसूली"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = KhataNavyText
                 )
                 Text(
@@ -1485,7 +1487,7 @@ fun CollectUdhariScreen(
                                 Text(
                                     text = customer.getInitials(),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = KhataNavyText
                                 )
                             }
@@ -1494,7 +1496,7 @@ fun CollectUdhariScreen(
                             Text(
                                 text = customer.name,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = KhataNavyText
                             )
                             val sub = buildList {
@@ -1517,14 +1519,14 @@ fun CollectUdhariScreen(
                         Text(
                             text = "OUTSTANDING",
                             fontSize = 10.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KhataSubtleText,
                             letterSpacing = 0.5.sp
                         )
                         Text(
                             text = CurrencyUtils.formatInr(outstanding),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KhataCrimsonRed
                         )
                     }
@@ -1536,7 +1538,7 @@ fun CollectUdhariScreen(
                 Text(
                     text = tr("AMOUNT RECEIVED", "प्राप्त राशि"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = KhataSubtleText,
                     letterSpacing = 0.6.sp
                 )
@@ -1557,7 +1559,7 @@ fun CollectUdhariScreen(
                         Text(
                             text = "₹ ",
                             fontSize = 26.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KhataBrandGreen
                         )
                         BasicTextField(
@@ -1571,7 +1573,7 @@ fun CollectUdhariScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             textStyle = TextStyle(
                                 fontSize = 28.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = KhataBrandGreen
                             ),
                             modifier = Modifier
@@ -1609,7 +1611,7 @@ fun CollectUdhariScreen(
                         Text(
                             text = chipLabel,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (isSelected) Color.White else KhataNavyText,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
@@ -1622,7 +1624,7 @@ fun CollectUdhariScreen(
                 Text(
                     text = tr("PAYMENT MODE", "भुगतान माध्यम"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = KhataSubtleText,
                     letterSpacing = 0.6.sp
                 )
@@ -1651,7 +1653,7 @@ fun CollectUdhariScreen(
                                     Text(
                                         text = mode,
                                         fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (selected) Color.White else KhataNavyText
                                     )
                                 }
@@ -1673,7 +1675,7 @@ fun CollectUdhariScreen(
                     Text(
                         text = tr("DATE", "तारीख"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KhataSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -1721,7 +1723,7 @@ fun CollectUdhariScreen(
                     Text(
                         text = tr("TIME", "समय"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KhataSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -1767,7 +1769,7 @@ fun CollectUdhariScreen(
                 Text(
                     text = tr("NOTE (OPTIONAL)", "नोट (वैकल्पिक)"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = KhataSubtleText,
                     letterSpacing = 0.6.sp
                 )
@@ -1827,7 +1829,7 @@ fun CollectUdhariScreen(
                         Text(
                             text = CurrencyUtils.formatInr(balanceAfter),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KhataBrandGreen
                         )
                     }
@@ -1864,7 +1866,7 @@ fun CollectUdhariScreen(
                                     Text(
                                         text = tr("Set a promise date for the rest", "बाकी उधारी के लिए वायदा तारीख तय करें"),
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = KhataNavyText
                                     )
                                     Text(
@@ -1924,7 +1926,7 @@ fun CollectUdhariScreen(
                                             Text(
                                                 text = label,
                                                 fontSize = 13.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = if (selected) Color.White else KhataNavyText,
                                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                                             )
@@ -1948,7 +1950,7 @@ fun CollectUdhariScreen(
                             Text(
                                 text = tr("Send receipt on WhatsApp", "व्हाट्सएप पर रसीद भेजें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = KhataNavyText
                             )
                             Text(
@@ -1998,7 +2000,7 @@ fun CollectUdhariScreen(
                         Text(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KhataNavyText
                         )
                     }
@@ -2034,7 +2036,7 @@ fun CollectUdhariScreen(
                     Text(
                         text = "${tr("Collect", "वसूलें")} ${CurrencyUtils.formatInr(parsedAmount)}",
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -2088,7 +2090,7 @@ fun RepaymentReceivedSuccessScreen(
         Text(
             text = "${CurrencyUtils.formatInr(receipt.amountReceived)} ${tr("received", "प्राप्त हुए")}",
             fontSize = 28.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = KhataNavyText,
             textAlign = TextAlign.Center
         )
@@ -2130,7 +2132,7 @@ fun RepaymentReceivedSuccessScreen(
                     Text(
                         text = CurrencyUtils.formatInr(receipt.outstandingBefore),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KhataNavyText
                     )
                 }
@@ -2148,7 +2150,7 @@ fun RepaymentReceivedSuccessScreen(
                     Text(
                         text = "−${CurrencyUtils.formatInr(receipt.amountReceived)}",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KhataBrandGreen
                     )
                 }
@@ -2163,13 +2165,13 @@ fun RepaymentReceivedSuccessScreen(
                     Text(
                         text = tr("Balance now", "अब शेष उधारी"),
                         fontSize = 16.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KhataNavyText
                     )
                     Text(
                         text = CurrencyUtils.formatInr(receipt.balanceNow),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = if (receipt.balanceNow > BigDecimal.ZERO) KhataCrimsonRed else KhataBrandGreen
                     )
                 }
@@ -2192,7 +2194,7 @@ fun RepaymentReceivedSuccessScreen(
                     Text(
                         text = tr("Promise date set", "वायदा तारीख तय की गई"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = Color(0xFF1E3A8A)
                     )
                     Text(
@@ -2221,7 +2223,7 @@ fun RepaymentReceivedSuccessScreen(
             Text(
                 text = tr("Share receipt on WhatsApp", "व्हाट्सएप पर रसीद शेयर करें"),
                 fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -2231,7 +2233,7 @@ fun RepaymentReceivedSuccessScreen(
             Text(
                 text = tr("View khata", "खाता देखें"),
                 fontSize = 15.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = KhataBrandGreen
             )
         }

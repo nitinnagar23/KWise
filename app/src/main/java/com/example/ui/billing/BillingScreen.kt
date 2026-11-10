@@ -364,9 +364,9 @@ fun BillingScreen(
                     }
                     Column {
                         Text(
-                            text = tr("New Sale Bill", "नया बिक्री बिल"),
+                            text = tr("New sale bill", "नया बिक्री बिल"),
                             fontSize = 19.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -438,7 +438,7 @@ fun BillingScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(grandTotal),
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -489,7 +489,7 @@ fun BillingScreen(
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     textStyle = TextStyle(
                                         fontSize = 15.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     ),
                                     cursorBrush = SolidColor(BillBrandGreen),
@@ -516,7 +516,7 @@ fun BillingScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(effectiveUdhari),
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (effectiveUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary
                             )
                         }
@@ -571,7 +571,7 @@ fun BillingScreen(
                                 )
                             },
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -606,7 +606,7 @@ fun BillingScreen(
                             Text(
                                 text = tr("1 · CUSTOMER", "1 · ग्राहक"),
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.6.sp
                             )
@@ -710,7 +710,7 @@ fun BillingScreen(
                                         ) {
                                             Text(
                                                 text = initials,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 fontSize = 14.5.sp,
                                                 color = BillAvatarText
                                             )
@@ -722,7 +722,7 @@ fun BillingScreen(
                                             Text(
                                                 text = cust.name,
                                                 fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
@@ -751,7 +751,7 @@ fun BillingScreen(
                                                 Text(
                                                     text = CurrencyUtils.formatInr(cust.totalUdhari),
                                                     fontSize = 15.5.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else BillBrandGreen
                                                 )
                                             }
@@ -805,7 +805,7 @@ fun BillingScreen(
                                         Text(
                                             text = if (showCustomerPicker) tr("Hide list", "सूची छुपाएं") else tr("Change", "बदलें"),
                                             fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = BillBrandGreen,
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(8.dp))
@@ -931,7 +931,7 @@ fun BillingScreen(
                                     } else {
                                         tr("Credit Limit Warning!", "उधारी सीमा (Credit Limit) चेतावनी!")
                                     },
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = CRedUdhari
                                 )
                                 Text(
@@ -967,7 +967,7 @@ fun BillingScreen(
                         Text(
                             text = tr("2 · ADD FEED / GRAIN", "2 · पशु आहार / अनाज जोड़ें"),
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp
                         )
@@ -992,7 +992,7 @@ fun BillingScreen(
                             trailingIcon = {
                                 if (productSearchQuery.isNotEmpty()) {
                                     IconButton(onClick = { productSearchQuery = "" }) {
-                                        Icon(Icons.Default.Close, contentDescription = null, tint = FlatTextSecondary)
+                                        Icon(Icons.Default.Close, contentDescription = tr("Close", "बंद करें"), tint = FlatTextSecondary)
                                     }
                                 }
                             },
@@ -1012,7 +1012,7 @@ fun BillingScreen(
                         Text(
                             text = tr("Frequently sold", "अक्सर बिकने वाले"),
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                             color = FlatTextSecondary
                         )
 
@@ -1069,7 +1069,7 @@ fun BillingScreen(
                         Text(
                             text = tr("BILL ITEMS", "बिल के सामान"),
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp
                         )
@@ -1135,7 +1135,7 @@ fun BillingScreen(
                                             Text(
                                                 text = product.feedName,
                                                 fontSize = 15.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
@@ -1210,7 +1210,7 @@ fun BillingScreen(
                                             Text(
                                                 text = qtyDisplayText,
                                                 fontSize = 14.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 textAlign = TextAlign.Center,
                                                 modifier = Modifier.widthIn(min = 54.dp)
@@ -1248,7 +1248,7 @@ fun BillingScreen(
                                         Text(
                                             text = CurrencyUtils.formatInr(lineTotal),
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary,
                                             textAlign = TextAlign.End,
                                             modifier = Modifier.widthIn(min = 66.dp)
@@ -1280,7 +1280,7 @@ fun BillingScreen(
                                                     )
                                                     IconButton(
                                                         onClick = { cartLines.removeAt(index) },
-                                                        modifier = Modifier.size(28.dp)
+                                                        modifier = Modifier.size(44.dp)
                                                     ) {
                                                         Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = BillCrimson, modifier = Modifier.size(18.dp))
                                                     }
@@ -1363,7 +1363,7 @@ fun BillingScreen(
                         FilterChip(
                             selected = selectedPayMode == "FULL",
                             onClick = { billingViewModel.setPayMode("FULL", grandTotal) },
-                            label = { Text(tr("Full Paid", "पूरा नकद"), fontWeight = FontWeight.Bold) },
+                            label = { Text(tr("Full paid", "पूरा नकद"), fontWeight = FontWeight.Bold) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = BillMintPillBg,
                                 selectedLabelColor = BillBrandGreen
@@ -1387,7 +1387,7 @@ fun BillingScreen(
                         FilterChip(
                             selected = selectedPayMode == "UDHARI",
                             onClick = { billingViewModel.setPayMode("UDHARI", grandTotal) },
-                            label = { Text(tr("Full Udhari", "पूरी उधारी"), fontWeight = FontWeight.Bold) },
+                            label = { Text(tr("Full udhari", "पूरी उधारी"), fontWeight = FontWeight.Bold) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = BillCrimsonSoftBg,
                                 selectedLabelColor = BillCrimson
@@ -1453,7 +1453,7 @@ fun BillingScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(if (isManager) Icons.Default.Lock else Icons.Default.Warning, contentDescription = null, tint = CRedUdhari)
                     Text(
-                        text = if (isManager) tr("Admin Approval Required", "एडमिन की अनुमति आवश्यक") else tr("Credit Limit Exceeded", "उधारी सीमा पार!"),
+                        text = if (isManager) tr("Admin approval required", "एडमिन की अनुमति आवश्यक") else tr("Credit limit exceeded", "उधारी सीमा पार!"),
                         color = CRedUdhari,
                         fontWeight = FontWeight.Bold
                     )
@@ -1599,7 +1599,7 @@ fun BillingScreen(
                     ) {
                         Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(tr("Receipt Image", "पर्ची फोटो"), fontWeight = FontWeight.Bold)
+                        Text(tr("Receipt image", "पर्ची फोटो"), fontWeight = FontWeight.Bold)
                     }
                 }
             },

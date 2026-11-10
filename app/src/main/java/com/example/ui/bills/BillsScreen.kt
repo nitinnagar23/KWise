@@ -369,7 +369,7 @@ fun BillsScreen(
                     Text(
                         text = tr("Bills", "बिल"),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -487,10 +487,10 @@ fun BillsScreen(
             ) {
                 Text(
                     text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = FlatTextPrimary)) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
                             append(summaryDateTitle)
                         }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Medium, color = FlatTextSecondary)) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = FlatTextSecondary)) {
                             append(" · ${summarySales.size} bills · ${CurrencyUtils.formatInr(summaryTotalAmount)}")
                         }
                     },
@@ -588,7 +588,7 @@ fun BillsScreen(
                             Text(
                                 text = tr("YESTERDAY", "कल"),
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.8.sp,
                                 modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
@@ -618,7 +618,7 @@ fun BillsScreen(
                                     dateHeader
                                 },
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.8.sp,
                                 modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
@@ -731,7 +731,7 @@ private fun BillSummaryCard(
                 Text(
                     text = customerName,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -752,7 +752,7 @@ private fun BillSummaryCard(
                 Text(
                     text = CurrencyUtils.formatInr(bill.totalSalePrice),
                     fontSize = 16.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
 
@@ -767,7 +767,7 @@ private fun BillSummaryCard(
                         Text(
                             text = primaryBadgeLabel,
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = primaryBadgeText,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                         )
@@ -781,7 +781,7 @@ private fun BillSummaryCard(
                             Text(
                                 text = "Edited",
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BillsEditedText,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                             )
@@ -811,8 +811,8 @@ private fun BillDetailAndAuditScreen(
 
     val customer = customerMap[sale.customerId]
     val customerName = customer?.name?.takeIf { it.isNotBlank() } ?: "Walk-in"
-    val customerVillage = customer?.village?.takeIf { it.isNotBlank() } ?: "Rampur"
-    val customerPhone = customer?.phone?.takeIf { it.isNotBlank() } ?: "98765 43210"
+    val customerVillage = customer?.village?.takeIf { it.isNotBlank() } ?: ""
+    val customerPhone = customer?.phone?.takeIf { it.isNotBlank() } ?: ""
 
     // Group sibling line items created in the same checkout batch (same customer within 2.5 seconds)
     val siblingItems = remember(sale, allSales) {
@@ -984,7 +984,7 @@ private fun BillDetailAndAuditScreen(
                 Text(
                     text = "Bill #$shortBillNo",
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -1051,7 +1051,7 @@ private fun BillDetailAndAuditScreen(
                             Text(
                                 text = customerInitials(customerName),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = BillsAvatarText
                             )
                         }
@@ -1060,14 +1060,19 @@ private fun BillDetailAndAuditScreen(
                             Text(
                                 text = customerName,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
-                            Text(
-                                text = "$customerVillage · $customerPhone",
-                                fontSize = 13.sp,
-                                color = FlatTextSecondary
-                            )
+                            val customerSubline = listOf(customerVillage, customerPhone)
+                                .filter { it.isNotBlank() }
+                                .joinToString(" · ")
+                            if (customerSubline.isNotBlank()) {
+                                Text(
+                                    text = customerSubline,
+                                    fontSize = 13.sp,
+                                    color = FlatTextSecondary
+                                )
+                            }
                         }
                     }
 
@@ -1082,7 +1087,7 @@ private fun BillDetailAndAuditScreen(
                             Text(
                                 text = primaryBadgeLabel,
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = primaryBadgeText,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                             )
@@ -1096,7 +1101,7 @@ private fun BillDetailAndAuditScreen(
                                 Text(
                                     text = "Edited",
                                     fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = BillsEditedText,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                 )
@@ -1121,7 +1126,7 @@ private fun BillDetailAndAuditScreen(
                     Text(
                         text = tr("ITEMS", "आइटम"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.8.sp
                     )
@@ -1147,7 +1152,7 @@ private fun BillDetailAndAuditScreen(
                                 Text(
                                     text = itemTitle,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -1160,7 +1165,7 @@ private fun BillDetailAndAuditScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(itemSale.totalSalePrice),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -1191,13 +1196,13 @@ private fun BillDetailAndAuditScreen(
                         Text(
                             text = tr("Total", "कुल राशि"),
                             fontSize = 16.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
                             text = CurrencyUtils.formatInr(billTotal),
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -1218,7 +1223,7 @@ private fun BillDetailAndAuditScreen(
                         Text(
                             text = CurrencyUtils.formatInr(billPaid),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BillsGreen
                         )
                     }
@@ -1234,13 +1239,13 @@ private fun BillDetailAndAuditScreen(
                         Text(
                             text = tr("Udhari due", "बाकी उधारी"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BillsRed
                         )
                         Text(
                             text = CurrencyUtils.formatInr(billUdhari),
                             fontSize = 16.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = BillsRed
                         )
                     }
@@ -1276,7 +1281,7 @@ private fun BillDetailAndAuditScreen(
                     Text(
                         text = tr("Share", "शेयर"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BillsGreen
                     )
                 }
@@ -1305,7 +1310,7 @@ private fun BillDetailAndAuditScreen(
                     Text(
                         text = tr("Edit", "बदलें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BillsGreen
                     )
                 }
@@ -1334,7 +1339,7 @@ private fun BillDetailAndAuditScreen(
                     Text(
                         text = tr("Return", "वापसी"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = BillsRed
                     )
                 }
@@ -1361,7 +1366,7 @@ private fun BillDetailAndAuditScreen(
                         Text(
                             text = tr("Audit trail", "ऑडिट ट्रेल"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(

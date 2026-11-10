@@ -147,14 +147,14 @@ internal fun ReportsProfitViewTab(
                     Text(
                         text = tr("GROSS PROFIT", "सकल मुनाफा"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
                     Text(
                         text = CurrencyUtils.formatInr(totalGrossProfit),
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepGreen
                     )
                     Text(
@@ -178,14 +178,14 @@ internal fun ReportsProfitViewTab(
                     Text(
                         text = tr("NET PROFIT", "शुद्ध मुनाफा"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
                     Text(
                         text = CurrencyUtils.formatInr(netProfitAfterExpenses),
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = if (netProfitAfterExpenses >= BigDecimal.ZERO) RepGreen else RepRed
                     )
                     Text(
@@ -209,7 +209,7 @@ internal fun ReportsProfitViewTab(
                 Text(
                     text = tr("Product-wise margin", "आइटम के अनुसार मुनाफा"),
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -231,7 +231,7 @@ internal fun ReportsProfitViewTab(
                         else -> "By profit ▾"
                     },
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                 )
@@ -293,7 +293,7 @@ internal fun ReportsProfitViewTab(
                                 Text(
                                     text = displayName,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -310,7 +310,7 @@ internal fun ReportsProfitViewTab(
                                 Text(
                                     text = CurrencyUtils.formatInr(pp.grossProfit),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isLowMargin) RepAmber else RepGreen
                                 )
                                 Text(
@@ -367,10 +367,10 @@ internal fun ReportsProfitViewTab(
                     )
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = Color(0xFF78350F))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF78350F))) {
                                 append("${candidate.feedName} margin is ${candidate.marginPercent}%. ")
                             }
-                            withStyle(SpanStyle(fontWeight = FontWeight.Medium, color = Color(0xFF78350F))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = Color(0xFF78350F))) {
                                 append("Raising the 1 kg rate by ₹1 would add about ${CurrencyUtils.formatInr(extraGain)} this month.")
                             }
                         },
@@ -387,7 +387,7 @@ internal fun ReportsProfitViewTab(
         Text(
             text = tr("Daily revenue & margin", "दैनिक बिक्री और मुनाफा"),
             fontSize = 17.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary
         )
 
@@ -408,7 +408,7 @@ internal fun ReportsProfitViewTab(
                     Text(
                         text = "DAY",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp,
                         modifier = Modifier.weight(1.3f)
@@ -416,7 +416,7 @@ internal fun ReportsProfitViewTab(
                     Text(
                         text = "REVENUE",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp,
                         textAlign = TextAlign.End,
@@ -425,7 +425,7 @@ internal fun ReportsProfitViewTab(
                     Text(
                         text = "PROFIT",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp,
                         textAlign = TextAlign.End,
@@ -434,7 +434,7 @@ internal fun ReportsProfitViewTab(
                     Text(
                         text = "%",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp,
                         textAlign = TextAlign.End,
@@ -467,14 +467,14 @@ internal fun ReportsProfitViewTab(
                             Text(
                                 text = dayTableFormat.format(Date(dp.dayStartMillis)),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.weight(1.3f)
                             )
                             Text(
                                 text = CurrencyUtils.formatInr(dp.totalRevenue),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = FlatTextPrimary,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.weight(1f)
@@ -482,7 +482,7 @@ internal fun ReportsProfitViewTab(
                             Text(
                                 text = CurrencyUtils.formatInr(dp.grossProfit),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepGreen,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.weight(1f)
@@ -553,7 +553,7 @@ internal fun ReportsCustomerInsightsTab(
                     Text(
                         text = tr("TOTAL UDHARI\nOUTSTANDING", "कुल बकाया उधारी"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         lineHeight = 14.sp,
                         letterSpacing = 0.6.sp
@@ -561,7 +561,7 @@ internal fun ReportsCustomerInsightsTab(
                     Text(
                         text = CurrencyUtils.formatInr(totalUdhariOutstanding),
                         fontSize = 25.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepRed
                     )
                     Text(
@@ -585,7 +585,7 @@ internal fun ReportsCustomerInsightsTab(
                     Text(
                         text = tr("COLLECTED · MONTH", "वसूली · इस महीने"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
@@ -593,7 +593,7 @@ internal fun ReportsCustomerInsightsTab(
                     Text(
                         text = CurrencyUtils.formatInr(totalCollectedMonth),
                         fontSize = 25.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepGreen
                     )
                     Text(
@@ -611,7 +611,7 @@ internal fun ReportsCustomerInsightsTab(
         Text(
             text = tr("Village-wise outstanding udhari", "गाँव के अनुसार बकाया उधारी"),
             fontSize = 17.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary
         )
 
@@ -653,7 +653,7 @@ internal fun ReportsCustomerInsightsTab(
                                     Text(
                                         text = vs.villageName,
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     Text(
@@ -666,7 +666,7 @@ internal fun ReportsCustomerInsightsTab(
                                 Text(
                                     text = CurrencyUtils.formatInr(vs.totalUdhari),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = RepRed
                                 )
                             }
@@ -703,7 +703,7 @@ internal fun ReportsCustomerInsightsTab(
             Text(
                 text = tr("Top buyers & trust scores", "शीर्ष खरीदार और ट्रस्ट स्कोर"),
                 fontSize = 17.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary
             )
             Text(
@@ -734,7 +734,7 @@ internal fun ReportsCustomerInsightsTab(
                             ci.trustScore >= 60 -> Triple(RepAmberSoft, Color(0xFF8A4B08), "Good")
                             else -> Triple(RepRedSoft, RepRed, "Risky")
                         }
-                        val village = ci.customer.village.ifBlank { "Rampur" }
+                        val village = ci.customer.village
 
                         Row(
                             modifier = Modifier
@@ -745,7 +745,7 @@ internal fun ReportsCustomerInsightsTab(
                             Text(
                                 text = "${idx + 1}",
                                 fontSize = 13.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 modifier = Modifier.width(20.dp)
                             )
@@ -760,7 +760,7 @@ internal fun ReportsCustomerInsightsTab(
                                 Text(
                                     text = customerInitialsForReports(ci.customer.name),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = RepAvatarText
                                 )
                             }
@@ -776,7 +776,7 @@ internal fun ReportsCustomerInsightsTab(
                                 Text(
                                     text = ci.customer.name,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -801,7 +801,7 @@ internal fun ReportsCustomerInsightsTab(
                                     Text(
                                         text = "${ci.trustScore}",
                                         fontSize = 12.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = scoreColor,
                                         modifier = Modifier.padding(horizontal = 11.dp, vertical = 3.dp)
                                     )
@@ -840,10 +840,10 @@ internal fun ReportsCustomerInsightsTab(
                 ) {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = Color(0xFF7F1D1D))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF7F1D1D))) {
                                 append(overdueCust.customer.name)
                             }
-                            withStyle(SpanStyle(fontWeight = FontWeight.Medium, color = Color(0xFF7F1D1D))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = Color(0xFF7F1D1D))) {
                                 append(" has ${CurrencyUtils.formatInr(overdueCust.currentUdhari)} overdue for $days days. Consider pausing new udhari.")
                             }
                         },
@@ -868,7 +868,7 @@ internal fun ReportsCustomerInsightsTab(
                             Text(
                                 text = tr("Collect", "वसूली"),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -967,7 +967,7 @@ internal fun ReportsExportAndBackupScreen(
                 Text(
                     text = tr("Export & backup", "एक्सपोर्ट और बैकअप"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -1002,14 +1002,14 @@ internal fun ReportsExportAndBackupScreen(
                         Text(
                             text = "PERIOD",
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp
                         )
                         Text(
                             text = "${selectedPeriod.label} · $periodRangeText",
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -1017,7 +1017,7 @@ internal fun ReportsExportAndBackupScreen(
                     Text(
                         text = tr("Change", "बदलें"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepGreen,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -1044,7 +1044,7 @@ internal fun ReportsExportAndBackupScreen(
                         Text(
                             text = tr("GST accountant export", "GST अकाउंटेंट एक्सपोर्ट"),
                             fontSize = 16.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -1092,7 +1092,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = "Excel / CSV",
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -1129,7 +1129,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = "GST PDF",
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = RepGreen
                             )
                         }
@@ -1145,7 +1145,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr("Sales with HSN code", "HSN कोड के साथ बिक्री"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1173,7 +1173,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr("Margin statement", "मुनाफा विवरण"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1201,7 +1201,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr("Purchase bills", "खरीद बिल"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1229,7 +1229,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr("Expenses & charges", "खर्च और भाड़ा"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1269,7 +1269,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr("Google Drive backup", "Google Drive बैकअप"),
                                 fontSize = 16.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1286,7 +1286,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = daysSinceBackup,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color(0xFF8A4B08),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
@@ -1324,7 +1324,7 @@ internal fun ReportsExportAndBackupScreen(
                         Text(
                             text = tr("Back up now", "अभी बैकअप लें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -1337,7 +1337,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr("Auto backup", "ऑटो बैकअप"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1365,7 +1365,7 @@ internal fun ReportsExportAndBackupScreen(
             title = {
                 Text(
                     text = tr("Select report period", "रिपोर्ट अवधि चुनें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1384,7 +1384,7 @@ internal fun ReportsExportAndBackupScreen(
                             Text(
                                 text = tr(period.label, period.labelHi),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (selectedPeriod == period) RepGreen else FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                             )

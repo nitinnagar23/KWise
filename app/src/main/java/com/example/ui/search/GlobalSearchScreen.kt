@@ -548,7 +548,7 @@ fun GlobalSearchScreen(
                             Text(
                                 text = tr("RECENT SEARCHES", "हाल की खोजें"),
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.6.sp,
                                 color = SearchSubtleText
                             )
@@ -640,7 +640,7 @@ fun GlobalSearchScreen(
                     Text(
                         text = tr("QUICK FIND", "त्वरित खोज (QUICK FIND)"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         letterSpacing = 0.6.sp,
                         color = SearchSubtleText
                     )
@@ -725,7 +725,7 @@ fun GlobalSearchScreen(
                         Text(
                             text = tr("You can search by", "आप इनसे खोज सकते हैं"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = SearchNavyText
                         )
                         Text(
@@ -1106,7 +1106,7 @@ private fun QuickFindTileCard(
                 Text(
                     text = title,
                     fontSize = 14.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = SearchNavyText
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -1134,7 +1134,7 @@ private fun SearchSectionHeader(
         Text(
             text = title,
             fontSize = 11.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             letterSpacing = 0.6.sp,
             color = SearchSubtleText
         )
@@ -1186,7 +1186,7 @@ private fun InitialsAvatarCircle(name: String) {
             Text(
                 text = initials,
                 fontSize = 13.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = SearchAvatarText
             )
         }
@@ -1241,7 +1241,7 @@ private fun CustomerSearchResultRow(
                 Text(
                     text = buildHighlightedAnnotatedString(customer.name, highlightQuery),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = SearchNavyText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1326,7 +1326,7 @@ private fun BillSearchResultRow(
                 Text(
                     text = buildHighlightedAnnotatedString(titleText, highlightQuery),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = SearchNavyText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1389,7 +1389,7 @@ private fun SupplierSearchResultRow(
                 Text(
                     text = buildHighlightedAnnotatedString(supplier.name, highlightQuery),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = SearchNavyText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1472,7 +1472,7 @@ private fun ItemSearchResultRow(
                 Text(
                     text = buildHighlightedAnnotatedString(product.feedName, highlightQuery),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = SearchNavyText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1527,7 +1527,7 @@ private fun buildHighlightedAnnotatedString(
                 style = SpanStyle(
                     background = SearchGreenSoft,
                     color = SearchGreen,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 ),
                 start = startIndex,
                 end = endIndex

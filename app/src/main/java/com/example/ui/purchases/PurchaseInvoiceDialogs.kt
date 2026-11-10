@@ -162,7 +162,7 @@ internal fun DashedActionButton(
             Text(
                 text = text,
                 fontSize = 14.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = SupGreen
             )
         }
@@ -272,7 +272,7 @@ fun AddEditSupplierScreen(
                 Text(
                     text = if (isEditing) tr("Edit supplier", "सप्लायर बदलें") else tr("Add supplier", "नया सप्लायर"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -300,14 +300,14 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("SUPPLIER / FIRM NAME ", "सप्लायर / फर्म का नाम "),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
                     Text(
                         text = "*",
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = SupRed
                     )
                 }
@@ -317,7 +317,7 @@ fun AddEditSupplierScreen(
                         firmName = it
                         errorMsg = null
                     },
-                    placeholder = { Text("Sharma Traders", color = FlatTextMuted) },
+                    placeholder = { Text("Supplier name", color = FlatTextMuted) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = fieldColors,
@@ -332,14 +332,14 @@ fun AddEditSupplierScreen(
                 Text(
                     text = tr("CONTACT PERSON", "संपर्क व्यक्ति"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.7.sp
                 )
                 OutlinedTextField(
                     value = contactPerson,
                     onValueChange = { contactPerson = it },
-                    placeholder = { Text("Mahesh Sharma", color = FlatTextMuted) },
+                    placeholder = { Text("Contact person", color = FlatTextMuted) },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = fieldColors,
@@ -359,7 +359,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("MOBILE NUMBERS", "मोबाइल नंबर"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -439,7 +439,7 @@ fun AddEditSupplierScreen(
                                         Text(
                                             text = "Primary",
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = SupGreen,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                         )
@@ -461,7 +461,7 @@ fun AddEditSupplierScreen(
                                         Text(
                                             text = tagOption,
                                             fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (isSelected) Color.White else FlatTextPrimary,
                                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                                         )
@@ -493,7 +493,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("CITY / AREA", "शहर / मंडी"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -515,7 +515,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("GSTIN (OPTIONAL)", "जीएसटी नंबर"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -536,7 +536,7 @@ fun AddEditSupplierScreen(
                 Text(
                     text = tr("ITEMS SUPPLIED", "सप्लाई किए जाने वाले आइटम"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.7.sp
                 )
@@ -559,7 +559,7 @@ fun AddEditSupplierScreen(
                             Text(
                                 text = itemLabel,
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (isSelected) Color.White else FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                             )
@@ -576,7 +576,7 @@ fun AddEditSupplierScreen(
                             Text(
                                 text = "+ Add item",
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupGreen,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                             )
@@ -590,7 +590,7 @@ fun AddEditSupplierScreen(
                 Text(
                     text = tr("CREDIT PERIOD", "उधार अवधि (क्रेडिट)"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.7.sp
                 )
@@ -620,7 +620,7 @@ fun AddEditSupplierScreen(
                                 Text(
                                     text = label,
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else FlatTextPrimary
                                 )
                             }
@@ -634,7 +634,7 @@ fun AddEditSupplierScreen(
                 Text(
                     text = tr("NOTES", "नोट्स"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
@@ -668,7 +668,7 @@ fun AddEditSupplierScreen(
                             Text(
                                 text = tr("Active supplier", "सक्रिय सप्लायर"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -704,7 +704,7 @@ fun AddEditSupplierScreen(
                             Text(
                                 text = tr("Remind me before due date", "देय तिथि से पहले याद दिलाएं"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -757,7 +757,7 @@ fun AddEditSupplierScreen(
                             Text(
                                 text = CurrencyUtils.formatInr(lockedOpenBal),
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -776,7 +776,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("OPENING BALANCE (YOU OWE)", "शुरुआती बकाया (देना है)"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
@@ -806,7 +806,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("Delete supplier", "सप्लायर हटाएं"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = SupRed,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -870,7 +870,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -919,7 +919,7 @@ fun AddEditSupplierScreen(
                     Text(
                         text = if (isEditing) tr("Save changes", "बदलाव सेव करें") else tr("Save supplier", "सप्लायर सेव करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -933,7 +933,7 @@ fun AddEditSupplierScreen(
             title = {
                 Text(
                     text = tr("Delete supplier?", "सप्लायर हटाएं?"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -972,7 +972,7 @@ fun AddEditSupplierScreen(
             title = {
                 Text(
                     text = tr("Add item supplied", "नया आइटम जोड़ें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1038,7 +1038,7 @@ fun NewPurchaseBillScreen(
         mutableStateOf(
             preselectedSupplier?.takeIf { it.isNotBlank() }
                 ?: existingSuppliers.firstOrNull()
-                ?: "Sharma Traders"
+                ?: "Supplier 1"
         )
     }
     var supplierDropdownExpanded by remember { mutableStateOf(false) }
@@ -1177,7 +1177,7 @@ fun NewPurchaseBillScreen(
                 Text(
                     text = tr("New purchase bill", "नया खरीद बिल"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -1207,7 +1207,7 @@ fun NewPurchaseBillScreen(
                     Text(
                         text = tr("SUPPLIER", "सप्लायर"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -1232,7 +1232,7 @@ fun NewPurchaseBillScreen(
                                 Text(
                                     text = selectedSupplier,
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -1250,7 +1250,7 @@ fun NewPurchaseBillScreen(
                             expanded = supplierDropdownExpanded,
                             onDismissRequest = { supplierDropdownExpanded = false }
                         ) {
-                            val supplierChoices = (existingSuppliers + listOf("Sharma Traders", "Gupta Oil Mill", "Shree Cattle Feed Co.")).distinct()
+                            val supplierChoices = existingSuppliers.distinct()
                             supplierChoices.forEach { supName ->
                                 DropdownMenuItem(
                                     text = { Text(supName, fontWeight = FontWeight.SemiBold) },
@@ -1279,7 +1279,7 @@ fun NewPurchaseBillScreen(
                     Text(
                         text = tr("DATE", "तारीख"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -1315,7 +1315,7 @@ fun NewPurchaseBillScreen(
                             Text(
                                 text = "Today, ${dateFormat.format(Date(billDateMillis))}",
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 maxLines = 1
                             )
@@ -1340,7 +1340,7 @@ fun NewPurchaseBillScreen(
                     Text(
                         text = tr("ITEMS", "आइटम"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.8.sp
                     )
@@ -1374,7 +1374,7 @@ fun NewPurchaseBillScreen(
                                 Text(
                                     text = prodTitle,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -1391,7 +1391,7 @@ fun NewPurchaseBillScreen(
                                 Text(
                                     text = CurrencyUtils.formatInr(itemTotal),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Icon(
@@ -1451,7 +1451,7 @@ fun NewPurchaseBillScreen(
                         Text(
                             text = tr("EXTRA CHARGES", "अतिरिक्त खर्च (भाड़ा / मजदूरी)"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.8.sp
                         )
@@ -1481,7 +1481,7 @@ fun NewPurchaseBillScreen(
                             Text(
                                 text = "LABOUR · LADAAN (LOAD)",
                                 fontSize = 10.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary
                             )
                             OutlinedTextField(
@@ -1506,7 +1506,7 @@ fun NewPurchaseBillScreen(
                             Text(
                                 text = "LABOUR · UTAAR (UNLOAD)",
                                 fontSize = 10.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary
                             )
                             OutlinedTextField(
@@ -1537,7 +1537,7 @@ fun NewPurchaseBillScreen(
                             Text(
                                 text = "DELIVERY / CUSTOM CHARGE",
                                 fontSize = 10.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary
                             )
                             OutlinedTextField(
@@ -1558,7 +1558,7 @@ fun NewPurchaseBillScreen(
                             Text(
                                 text = "AMOUNT",
                                 fontSize = 10.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary
                             )
                             OutlinedTextField(
@@ -1609,7 +1609,7 @@ fun NewPurchaseBillScreen(
                     Text(
                         text = tr("+ Add another charge", "+ एक और खर्च जोड़ें"),
                         fontSize = 13.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = SupGreen,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
@@ -1648,7 +1648,7 @@ fun NewPurchaseBillScreen(
                         Text(
                             text = CurrencyUtils.formatInr(grandTotal),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -1689,7 +1689,7 @@ fun NewPurchaseBillScreen(
                                     Text(
                                         text = label,
                                         fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (isSelected) Color.White else FlatTextPrimary
                                     )
                                 }
@@ -1710,7 +1710,7 @@ fun NewPurchaseBillScreen(
                         Text(
                             text = CurrencyUtils.formatInr(paidAmount),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = SupGreen
                         )
                     }
@@ -1728,7 +1728,7 @@ fun NewPurchaseBillScreen(
                         Text(
                             text = CurrencyUtils.formatInr(addedToKhata),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (addedToKhata > BigDecimal.ZERO) SupRed else FlatTextPrimary
                         )
                     }
@@ -1774,7 +1774,7 @@ fun NewPurchaseBillScreen(
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -1834,7 +1834,7 @@ fun NewPurchaseBillScreen(
                     Text(
                         text = tr("Save purchase bill", "खरीद बिल सेव करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -1854,7 +1854,7 @@ fun NewPurchaseBillScreen(
                 ) {
                     Text(
                         text = if (isAddingNewItem) tr("Add item", "आइटम जोड़ें") else tr("Edit item", "आइटम बदलें"),
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     if (!isAddingNewItem && itemsState.size > 1) {
@@ -1968,7 +1968,7 @@ fun NewPurchaseBillScreen(
             title = {
                 Text(
                     text = tr("Supplier name", "सप्लायर का नाम"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1976,7 +1976,7 @@ fun NewPurchaseBillScreen(
                 OutlinedTextField(
                     value = customSupplierInput,
                     onValueChange = { customSupplierInput = it },
-                    placeholder = { Text("Sharma Traders") },
+                    placeholder = { Text("Supplier name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -2051,7 +2051,7 @@ fun RecordSupplierPaymentDialog(
 ) {
     var chosenSupplier by remember(wholesalerName, availableSuppliers) {
         mutableStateOf(
-            wholesalerName.ifBlank { availableSuppliers.firstOrNull() ?: "Sharma Traders" }
+            wholesalerName.ifBlank { availableSuppliers.firstOrNull() ?: "Supplier 1" }
         )
     }
     var supplierDropdownOpen by remember { mutableStateOf(false) }
@@ -2069,7 +2069,7 @@ fun RecordSupplierPaymentDialog(
             Column {
                 Text(
                     text = tr("Pay supplier", "सप्लायर भुगतान"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -2131,7 +2131,7 @@ fun RecordSupplierPaymentDialog(
                             Text("You owe", fontSize = 13.sp, color = SupRed, fontWeight = FontWeight.SemiBold)
                             Text(
                                 text = CurrencyUtils.formatInr(outstandingBalance),
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupRed
                             )
                         }
@@ -2169,7 +2169,7 @@ fun RecordSupplierPaymentDialog(
                                 Text(
                                     text = label,
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else FlatTextPrimary
                                 )
                             }
@@ -2237,7 +2237,7 @@ fun PurchaseInvoiceDetailsDialog(
                 Column {
                     Text(
                         text = "Purchase #$shortNo",
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -2255,7 +2255,7 @@ fun PurchaseInvoiceDetailsDialog(
                         text = if (isPaid) "Paid" else if (invoice.paidAmount > BigDecimal.ZERO) "Part paid" else "Unpaid",
                         color = if (isPaid) SupGreen else SupRed,
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
@@ -2283,7 +2283,7 @@ fun PurchaseInvoiceDetailsDialog(
                         Text(
                             text = CurrencyUtils.formatInr(item.itemCost),
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -2307,8 +2307,8 @@ fun PurchaseInvoiceDetailsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Total", fontWeight = FontWeight.ExtraBold, color = FlatTextPrimary)
-                    Text(CurrencyUtils.formatInr(invoice.totalInvoiceCost), fontWeight = FontWeight.ExtraBold, color = FlatTextPrimary)
+                    Text("Total", fontWeight = FontWeight.Bold, color = FlatTextPrimary)
+                    Text(CurrencyUtils.formatInr(invoice.totalInvoiceCost), fontWeight = FontWeight.Bold, color = FlatTextPrimary)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -2323,7 +2323,7 @@ fun PurchaseInvoiceDetailsDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Added to supplier khata", fontSize = 13.sp, color = SupRed, fontWeight = FontWeight.Bold)
-                        Text(CurrencyUtils.formatInr(invoice.balanceAmount), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = SupRed)
+                        Text(CurrencyUtils.formatInr(invoice.balanceAmount), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = SupRed)
                     }
                 }
             }

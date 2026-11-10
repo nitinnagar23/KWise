@@ -208,7 +208,7 @@ internal fun InventoryItemDetailView(
                     Text(
                         text = product.feedName,
                         fontSize = 21.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -290,7 +290,7 @@ internal fun InventoryItemDetailView(
                 Text(
                     text = formatProductQuantityLabel(product),
                     fontSize = 30.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     modifier = Modifier.testTag("detail_current_stock_text")
                 )
@@ -519,7 +519,7 @@ internal fun InventoryItemDetailView(
                             text = tr("Only you", "केवल आप"),
                             fontSize = 12.5.sp,
                             color = FlatTextSecondary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -539,7 +539,7 @@ internal fun InventoryItemDetailView(
                         Text(
                             text = CurrencyUtils.formatInr(costPerBagOrKg),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             modifier = Modifier.testTag("detail_cost_value_text")
                         )
@@ -555,7 +555,7 @@ internal fun InventoryItemDetailView(
                         Text(
                             text = marginPercentStr,
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             modifier = Modifier.testTag("detail_margin_value_text")
                         )
@@ -569,9 +569,9 @@ internal fun InventoryItemDetailView(
                         )
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
-                            text = meta.supplierName.ifBlank { "Sharma Traders" },
+                            text = meta.supplierName.ifBlank { tr("Not set", "सेट नहीं") },
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -680,7 +680,7 @@ internal fun InventoryItemDetailView(
                                     Text(
                                         text = symbolText,
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = symbolColor
                                     )
                                 }
@@ -704,7 +704,7 @@ internal fun InventoryItemDetailView(
                             Text(
                                 text = mov.quantityDeltaLabel,
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = qtyColor
                             )
                         }
@@ -760,7 +760,7 @@ private fun RatePillBox(
             Text(
                 text = priceText,
                 fontSize = 16.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary,
                 maxLines = 1
             )
@@ -794,7 +794,7 @@ internal fun QuickSellingRatesDialog(
         title = {
             Text(
                 text = "${tr("Set selling rates", "बिक्री भाव सेट करें")} · $productName",
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = FlatTextPrimary
             )
@@ -814,7 +814,7 @@ internal fun QuickSellingRatesDialog(
                     text = "5 kg rate: ${CurrencyUtils.formatInr(parsed1Kg.multiply(BigDecimal(5)))}",
                     fontSize = 13.sp,
                     color = FlatTextSecondary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
                 if (isBagged) {
                     OutlinedTextField(
@@ -822,7 +822,7 @@ internal fun QuickSellingRatesDialog(
                         onValueChange = { bagPriceInput = it },
                         label = {
                             Text(
-                                "${tr("Bag Rate", "बोरी भाव")} (${CurrencyUtils.formatWeight(kgPerBag)} kg) (₹)"
+                                "${tr("Bag rate", "बोरी भाव")} (${CurrencyUtils.formatWeight(kgPerBag)} kg) (₹)"
                             )
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -942,11 +942,10 @@ internal fun InventoryAddOrEditItemView(
     var costInput by remember { mutableStateOf(initialCostDisplay) }
 
     val supplierOptions = remember(availableSuppliers) {
-        val defaults = listOf("Sharma Traders", "Goyal Feeds", "Kisan Agro", "Mandi Wholesaler")
-        (availableSuppliers + defaults).filter { it.isNotBlank() }.distinctBy { it.lowercase() }
+        availableSuppliers.filter { it.isNotBlank() }.distinctBy { it.lowercase() }
     }
     var supplierName by remember {
-        mutableStateOf(existingMeta?.supplierName ?: supplierOptions.firstOrNull() ?: "Sharma Traders")
+        mutableStateOf(existingMeta?.supplierName ?: supplierOptions.firstOrNull() ?: "")
     }
     var supplierDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -1037,7 +1036,7 @@ internal fun InventoryAddOrEditItemView(
                                 openBags,
                                 openLoose,
                                 cleanedCost,
-                                supplierName.trim().ifBlank { "Sharma Traders" },
+                                supplierName.trim(),
                                 looseRate1Kg,
                                 if (isLooseOnly) null else bagSellingPrice
                             )
@@ -1055,7 +1054,7 @@ internal fun InventoryAddOrEditItemView(
                         Text(
                             text = tr("Save item", "आइटम सेव करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -1098,7 +1097,7 @@ internal fun InventoryAddOrEditItemView(
                     Text(
                         text = if (isEditing) tr("Edit item", "आइटम संपादित करें") else tr("Add item", "आइटम जोड़ें"),
                         fontSize = 21.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1563,10 +1562,10 @@ internal fun InventoryUpdateStockView(
     }
 
     val supplierOptions = remember(availableSuppliers, meta) {
-        val defaults = listOf(meta.supplierName, "Sharma Traders", "Goyal Feeds", "Kisan Agro")
+        val defaults = listOf(meta.supplierName)
         (defaults + availableSuppliers).filter { it.isNotBlank() }.distinctBy { it.lowercase() }
     }
-    var selectedSupplier by remember { mutableStateOf(meta.supplierName.ifBlank { "Sharma Traders" }) }
+    var selectedSupplier by remember { mutableStateOf(meta.supplierName) }
     var supplierDropdownExpanded by remember { mutableStateOf(false) }
 
     var selectedPayment by remember { mutableStateOf(StockInPaymentMode.CASH) }
@@ -1732,7 +1731,7 @@ internal fun InventoryUpdateStockView(
                                     if (isBagged) bagsCount else 0,
                                     BigDecimal(looseKgCount),
                                     unitCost,
-                                    selectedSupplier.trim().ifBlank { "Sharma Traders" },
+                                    selectedSupplier.trim(),
                                     selectedPayment
                                 )
                             },
@@ -1752,7 +1751,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = "Add $removeQtyDesc to stock",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     } else if (isCountCorrection) {
@@ -1781,7 +1780,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = tr("Save count", "गिनती सेव करें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     } else {
@@ -1836,7 +1835,7 @@ internal fun InventoryUpdateStockView(
                                 Text(
                                     text = "Remove $removeQtyDesc",
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -1885,7 +1884,7 @@ internal fun InventoryUpdateStockView(
                             tr("Update stock", "स्टॉक अपडेट करें")
                         },
                         fontSize = 21.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1977,7 +1976,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = formatProductQuantityLabel(product),
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -1999,7 +1998,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = afterStockLabel,
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvBrandGreen,
                                 modifier = Modifier.testTag("after_stock_entry_text")
                             )
@@ -2208,12 +2207,12 @@ internal fun InventoryUpdateStockView(
                             text = tr("Purchase total (only you)", "कुल खरीद राशि (केवल आप)"),
                             fontSize = 14.sp,
                             color = FlatTextSecondary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = CurrencyUtils.formatInr(purchaseTotal),
                             fontSize = 19.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             modifier = Modifier.testTag("stock_in_purchase_total_text")
                         )
@@ -2247,7 +2246,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = formatProductQuantityLabel(product),
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -2269,7 +2268,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = afterStockLabel,
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvRustButton,
                                 modifier = Modifier.testTag("after_stock_entry_text")
                             )
@@ -2396,7 +2395,7 @@ internal fun InventoryUpdateStockView(
                 ) {
                     Text(
                         text = if (attachedPhotoUri != null) {
-                            tr("✓ Photo attached", "✓ फ़ोटो जुड़ गई")
+                            tr("Photo attached", "फ़ोटो जुड़ गई")
                         } else {
                             tr("+ Attach photo", "+ फ़ोटो जोड़ें")
                         },
@@ -2429,7 +2428,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = CurrencyUtils.formatInr(stockLossAtCost),
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvRedText,
                                 modifier = Modifier.testTag("adjust_stock_loss_cost_text")
                             )
@@ -2453,7 +2452,7 @@ internal fun InventoryUpdateStockView(
                                 Text(
                                     text = tr("Add to expenses as Stock loss", "स्टॉक नुकसान के रूप में ख़र्च में जोड़ें"),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -2521,14 +2520,14 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = tr("SYSTEM SAYS", "सिस्टम स्टॉक"),
                                 fontSize = 11.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.6.sp
                             )
                             Text(
                                 text = formatProductQuantityLabel(product),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -2536,7 +2535,7 @@ internal fun InventoryUpdateStockView(
                         Text(
                             text = "${CurrencyUtils.formatWeight(systemStockKg)} KG",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary
                         )
                     }
@@ -2558,7 +2557,7 @@ internal fun InventoryUpdateStockView(
                         Text(
                             text = tr("YOU COUNTED", "आपने गिना"),
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp
                         )
@@ -2588,7 +2587,7 @@ internal fun InventoryUpdateStockView(
                                             },
                                             textStyle = TextStyle(
                                                 fontSize = 18.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary
                                             ),
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -2602,7 +2601,7 @@ internal fun InventoryUpdateStockView(
                                             text = "bags",
                                             fontSize = 14.sp,
                                             color = FlatTextSecondary,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                     }
                                 }
@@ -2628,7 +2627,7 @@ internal fun InventoryUpdateStockView(
                                         },
                                         textStyle = TextStyle(
                                             fontSize = 18.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary
                                         ),
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -2642,7 +2641,7 @@ internal fun InventoryUpdateStockView(
                                         text = "kg",
                                         fontSize = 14.sp,
                                         color = FlatTextSecondary,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                             }
@@ -2679,7 +2678,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = "$diffSign${CurrencyUtils.formatWeight(countDiffKg.abs())} kg",
                                 fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = diffColor,
                                 modifier = Modifier.testTag("count_difference_text")
                             )
@@ -2693,13 +2692,13 @@ internal fun InventoryUpdateStockView(
                                 text = "Counted ${CurrencyUtils.formatWeight(countedTotalKg)} kg",
                                 fontSize = 13.sp,
                                 color = Color(0xFF4B1D1D),
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "System ${CurrencyUtils.formatWeight(systemStockKg)} kg",
                                 fontSize = 13.sp,
                                 color = Color(0xFF4B1D1D),
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -2728,7 +2727,7 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = CurrencyUtils.formatInr(stockLossAtCost),
                                 fontSize = 17.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvRedText
                             )
                         }
@@ -2751,7 +2750,7 @@ internal fun InventoryUpdateStockView(
                                 Text(
                                     text = tr("Add to expenses as Stock loss", "स्टॉक नुकसान के रूप में ख़र्च में जोड़ें"),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -2802,7 +2801,7 @@ internal fun InventoryUpdateStockView(
                     Text(
                         text = tr("Start full stock count for all items", "सभी आइटम की पूरी स्टॉक गिनती शुरू करें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = InvBrandGreen,
                         modifier = Modifier
                             .clickable {
@@ -2880,7 +2879,7 @@ private fun QuantityStepperBox(
                     },
                     textStyle = TextStyle(
                         fontSize = 23.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         textAlign = TextAlign.Center
                     ),

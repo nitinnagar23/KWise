@@ -191,7 +191,7 @@ fun PurchasesScreen(
                     Text(
                         "Access restricted",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         color = FlatTextPrimary
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -249,7 +249,7 @@ fun PurchasesScreen(
                     Text(
                         text = "Protected financial data",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
                         color = FlatTextPrimary
                     )
 
@@ -557,7 +557,7 @@ fun PurchasesScreen(
                         Text(
                             text = tr("Suppliers", "सप्लायर"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -589,7 +589,7 @@ fun PurchasesScreen(
                             Text(
                                 text = "Biometric",
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupAvatarText
                             )
                         }
@@ -636,7 +636,7 @@ fun PurchasesScreen(
                                 Text(
                                     text = title,
                                     fontSize = 14.sp,
-                                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isSelected) SupGreen else FlatTextSecondary,
                                     maxLines = 1
                                 )
@@ -821,7 +821,7 @@ private fun SuppliersHomeTabView(
                     Text(
                         text = tr("YOU OWE SUPPLIERS", "सप्लायरों को देना है"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -834,7 +834,7 @@ private fun SuppliersHomeTabView(
                         Text(
                             text = CurrencyUtils.formatInr(totalPayable),
                             fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (totalPayable > BigDecimal.ZERO) SupRed else SupGreen
                         )
                         Text(
@@ -866,7 +866,7 @@ private fun SuppliersHomeTabView(
                             Text(
                                 text = tr("Purchase bill", "खरीद बिल"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -886,7 +886,7 @@ private fun SuppliersHomeTabView(
                             Text(
                                 text = tr("Pay supplier", "भुगतान करें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupGreen
                             )
                         }
@@ -914,14 +914,14 @@ private fun SuppliersHomeTabView(
                         Text(
                             text = tr("PURCHASES · 30 DAYS", "खरीद · 30 दिन"),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp
                         )
                         Text(
                             text = CurrencyUtils.formatInr(purchases30DaysTotal),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -945,14 +945,14 @@ private fun SuppliersHomeTabView(
                         Text(
                             text = tr("PAID · 30 DAYS", "भुगतान · 30 दिन"),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp
                         )
                         Text(
                             text = CurrencyUtils.formatInr(paid30DaysTotal),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = SupGreen
                         )
                         Text(
@@ -978,13 +978,13 @@ private fun SuppliersHomeTabView(
                     Text(
                         text = tr("Payments due", "बकाया भुगतान"),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
                         text = tr("See all →", "सभी देखें →"),
                         fontSize = 13.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = SupGreen,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
@@ -1040,7 +1040,7 @@ private fun SuppliersHomeTabView(
                                 Text(
                                     text = supplierInitials(summary.wholesalerName),
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = SupAvatarText
                                 )
                             }
@@ -1049,7 +1049,7 @@ private fun SuppliersHomeTabView(
                                 Text(
                                     text = summary.wholesalerName,
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -1071,7 +1071,7 @@ private fun SuppliersHomeTabView(
                             Text(
                                 text = CurrencyUtils.formatInr(summary.balancePayable),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupRed
                             )
                             Surface(
@@ -1081,7 +1081,7 @@ private fun SuppliersHomeTabView(
                                 Text(
                                     text = pillLabel,
                                     fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isLate) SupRed else SupBlue,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                 )
@@ -1105,13 +1105,13 @@ private fun SuppliersHomeTabView(
                     Text(
                         text = tr("Recent purchases", "हाल की खरीद"),
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
                         text = tr("See all →", "सभी देखें →"),
                         fontSize = 13.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = SupGreen,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))

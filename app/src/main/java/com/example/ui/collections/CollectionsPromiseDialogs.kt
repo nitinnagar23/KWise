@@ -216,7 +216,7 @@ internal fun SetPromiseDateDialog(
                     Text(
                         text = tr("Set promise date", "भुगतान वादा तारीख़"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Surface(
@@ -275,7 +275,7 @@ internal fun SetPromiseDateDialog(
                                     Text(
                                         text = computeCustomerInitials(customer.name),
                                         fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = ColBlue
                                     )
                                 }
@@ -283,7 +283,7 @@ internal fun SetPromiseDateDialog(
                                     Text(
                                         text = customer.name,
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -317,7 +317,7 @@ internal fun SetPromiseDateDialog(
                                 Text(
                                     text = CurrencyUtils.formatInr(customer.totalUdhari),
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = ColCrimson,
                                     modifier = Modifier.testTag("set_promise_outstanding_text")
                                 )
@@ -392,7 +392,7 @@ internal fun SetPromiseDateDialog(
                                 Text(
                                     text = fullDateFormatter.format(Date(selectedDateMillis)),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color(0xFF0F4C81)
                                 )
                             }
@@ -489,7 +489,7 @@ internal fun SetPromiseDateDialog(
                                 Text(
                                     text = tr("WhatsApp reminder", "व्हाट्सएप रिमाइंडर"),
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -561,7 +561,7 @@ internal fun SetPromiseDateDialog(
                         Text(
                             text = tr("Save promise", "वादा सेव करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -633,9 +633,9 @@ internal fun CollectPaymentDialog(
                 ) {
                     Column {
                         Text(
-                            text = tr("Collect Payment", "भुगतान प्राप्त करें"),
+                            text = tr("Collect payment", "भुगतान प्राप्त करें"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -753,8 +753,8 @@ internal fun CollectPaymentDialog(
                             .testTag("confirm_collect_payment_btn")
                     ) {
                         Text(
-                            text = tr("Record Payment", "भुगतान सेव करें"),
-                            fontWeight = FontWeight.ExtraBold
+                            text = tr("Record payment", "भुगतान सेव करें"),
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }

@@ -400,7 +400,7 @@ fun DailyRatesScreen(
                         Text(
                             text = tr("Today's rates", "आज के भाव"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
@@ -581,7 +581,7 @@ private fun CommodityRateCard(
                 Text(
                     text = product.feedName,
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -678,7 +678,7 @@ private fun RateUnitTile(
             text = label,
             fontSize = 12.sp,
             color = FlatTextSecondary,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -686,7 +686,7 @@ private fun RateUnitTile(
             text = priceText,
             fontSize = 17.sp,
             color = FlatTextPrimary,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -878,7 +878,7 @@ private fun EditRateFullScreen(
                     Text(
                         text = if (isNew) tr("Add rate", "नया भाव जोड़ें") else tr("Edit rate", "भाव बदलें"),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -951,7 +951,7 @@ private fun EditRateFullScreen(
                             Text(
                                 text = "1 kg",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1018,7 +1018,7 @@ private fun EditRateFullScreen(
                             Text(
                                 text = "5 kg",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1081,7 +1081,7 @@ private fun EditRateFullScreen(
                             Text(
                                 text = tr("Per bag", "प्रति बोरी"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -1191,7 +1191,7 @@ private fun EditRateFullScreen(
                         Text(
                             text = tr("In stock", "स्टॉक में उपलब्ध"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -1255,7 +1255,7 @@ private fun CompactRateInputBox(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 textStyle = TextStyle(
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 ),
                 cursorBrush = SolidColor(RatesBrandGreen),

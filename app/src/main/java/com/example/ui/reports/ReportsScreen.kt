@@ -334,7 +334,7 @@ fun ReportsScreen(
             title = {
                 Text(
                     text = tr("Custom date range", "कस्टम तारीख सीमा"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -342,7 +342,7 @@ fun ReportsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = tr("From Date", "शुरुआती तारीख"),
+                            text = tr("From date", "शुरुआती तारीख"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary
@@ -379,7 +379,7 @@ fun ReportsScreen(
                             Text(
                                 text = dateFmt.format(Date(customStartMillis)),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                             )
@@ -388,7 +388,7 @@ fun ReportsScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = tr("To Date", "अंतिम तारीख"),
+                            text = tr("To date", "अंतिम तारीख"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary
@@ -425,7 +425,7 @@ fun ReportsScreen(
                             Text(
                                 text = dateFmt.format(Date(customEndMillis)),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                             )
@@ -445,7 +445,7 @@ fun ReportsScreen(
                     ),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(tr("Apply", "लागू करें"), fontWeight = FontWeight.ExtraBold)
+                    Text(tr("Apply", "लागू करें"), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -567,7 +567,7 @@ fun ReportsScreen(
                 Text(
                     text = tr("Reports & Insights", "रिपोर्ट और विश्लेषण"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -581,7 +581,7 @@ fun ReportsScreen(
         // 3-Tab Row: Overview | Profit View | Customers
         val tabs = listOf(
             Triple(0, tr("Overview", "सारांश"), "reports_tab_overview"),
-            Triple(1, tr("Profit View", "मुनाफा रिपोर्ट"), "reports_tab_profit"),
+            Triple(1, tr("Profit view", "मुनाफा रिपोर्ट"), "reports_tab_profit"),
             Triple(2, tr("Customers", "ग्राहक"), "reports_tab_insights")
         )
 
@@ -615,7 +615,7 @@ fun ReportsScreen(
                         Text(
                             text = title,
                             fontSize = 14.sp,
-                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                             color = if (isSelected) RepGreen else FlatTextSecondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -662,7 +662,7 @@ fun ReportsScreen(
                             Text(
                                 text = tr(period.label, period.labelHi),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (isSelected) Color.White else FlatTextPrimary
                             )
                         }
@@ -808,7 +808,7 @@ private fun ReportsOverviewTab(
                         Text(
                             text = label,
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = RepGreen,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -836,14 +836,14 @@ private fun ReportsOverviewTab(
                     Text(
                         text = tr("TOTAL REVENUE", "कुल बिक्री"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
                     Text(
                         text = CurrencyUtils.formatInr(totalRevenue),
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -867,14 +867,14 @@ private fun ReportsOverviewTab(
                     Text(
                         text = tr("GROSS PROFIT", "सकल मुनाफा"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
                     Text(
                         text = CurrencyUtils.formatInr(totalGrossProfit),
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepGreen
                     )
                     Text(
@@ -902,7 +902,7 @@ private fun ReportsOverviewTab(
                 Text(
                     text = tr("NET PROFIT (AFTER EXPENSES)", "शुद्ध मुनाफा (खर्च घटाकर)"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
@@ -915,7 +915,7 @@ private fun ReportsOverviewTab(
                     Text(
                         text = CurrencyUtils.formatInr(netProfitAfterExpenses),
                         fontSize = 30.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = if (netProfitAfterExpenses >= BigDecimal.ZERO) RepGreen else RepRed
                     )
 
@@ -926,7 +926,7 @@ private fun ReportsOverviewTab(
                         Text(
                             text = "$netProfitPercent% net",
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = RepGreen,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                         )
@@ -1008,14 +1008,14 @@ private fun ReportsOverviewTab(
                     Text(
                         text = tr("NEW CREDIT GIVEN", "नई उधारी दी गई"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
                     Text(
                         text = CurrencyUtils.formatInr(totalUdhariExtended),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepRed
                     )
                 }
@@ -1034,14 +1034,14 @@ private fun ReportsOverviewTab(
                     Text(
                         text = tr("COLLECTIONS RECEIVED", "वसूली प्राप्त"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
                     Text(
                         text = CurrencyUtils.formatInr(totalCollectedRepayments),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = RepGreen
                     )
                 }
@@ -1054,7 +1054,7 @@ private fun ReportsOverviewTab(
         Text(
             text = tr("How customers paid", "ग्राहकों ने कैसे भुगतान किया"),
             fontSize = 17.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary
         )
 
@@ -1137,7 +1137,7 @@ private fun ReportsOverviewTab(
             Text(
                 text = tr("Revenue vs gross profit", "बिक्री बनाम सकल मुनाफा"),
                 fontSize = 17.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary
             )
             Text(
@@ -1155,7 +1155,7 @@ private fun ReportsOverviewTab(
         Text(
             text = tr("Export & backup", "एक्सपोर्ट और बैकअप"),
             fontSize = 17.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary
         )
 
@@ -1181,7 +1181,7 @@ private fun ReportsOverviewTab(
                     Text(
                         text = tr("GST export · Drive backup", "GST एक्सपोर्ट · Drive बैकअप"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1206,7 +1206,7 @@ private fun ReportsOverviewTab(
                     Text(
                         text = tr("Open", "खोलें"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -1229,13 +1229,13 @@ private fun PnlLineRow(
         Text(
             text = label,
             fontSize = 14.sp,
-            fontWeight = if (labelBold) FontWeight.ExtraBold else FontWeight.Medium,
+            fontWeight = if (labelBold) FontWeight.Bold else FontWeight.SemiBold,
             color = if (labelBold) FlatTextPrimary else FlatTextSecondary
         )
         Text(
             text = value,
             fontSize = 15.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = valueColor
         )
     }
@@ -1272,7 +1272,7 @@ private fun PaymentLegendColumn(
         Text(
             text = amount,
             fontSize = 15.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary
         )
         Text(

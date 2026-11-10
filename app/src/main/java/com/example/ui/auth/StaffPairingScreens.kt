@@ -99,7 +99,7 @@ internal fun StaffSixDigitCodeInput(
                         Text(
                             text = charStr,
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginBrandGreen,
                             textAlign = TextAlign.Center
                         )
@@ -182,7 +182,7 @@ internal fun StaffConfirmAndJoinScreen(
                 Text(
                     text = tr("Join this shop", "इस दुकान से जुड़ें"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = LoginNavyText
                 )
             }
@@ -218,7 +218,7 @@ internal fun StaffConfirmAndJoinScreen(
                             Text(
                                 text = shopInitial,
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                         }
@@ -229,7 +229,7 @@ internal fun StaffConfirmAndJoinScreen(
                             Text(
                                 text = resolvedShopName,
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = LoginNavyText
                             )
                             Spacer(modifier = Modifier.height(2.dp))
@@ -247,7 +247,7 @@ internal fun StaffConfirmAndJoinScreen(
                             Text(
                                 text = roleLabel,
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = LoginNavyText,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
@@ -270,7 +270,7 @@ internal fun StaffConfirmAndJoinScreen(
                         Text(
                             text = tr("We found these details", "हमें ये विवरण मिले"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginNavyText
                         )
                         Spacer(modifier = Modifier.height(3.dp))
@@ -315,7 +315,7 @@ internal fun StaffConfirmAndJoinScreen(
                         Text(
                             text = tr("Use a different Google account", "किसी दूसरे Google खाते का उपयोग करें"),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginBrandGreen,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
@@ -372,7 +372,7 @@ internal fun StaffConfirmAndJoinScreen(
                 Text(
                     text = tr("Confirm & join shop", "पुष्टि करें और दुकान से जुड़ें"),
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
 
@@ -389,7 +389,7 @@ internal fun StaffConfirmAndJoinScreen(
                 Text(
                     text = tr("Cancel", "रद्द करें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = LoginSubtleText
                 )
             }
@@ -415,7 +415,7 @@ private fun StaffAutoDetailRow(
         Text(
             text = value,
             fontSize = 15.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = LoginNavyText,
             modifier = Modifier
                 .weight(1f)
@@ -527,7 +527,7 @@ internal fun StaffWaitingForApprovalScreen(
             Text(
                 text = tr("Waiting for approval", "मंज़ूरी की प्रतीक्षा है"),
                 fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = LoginNavyText,
                 textAlign = TextAlign.Center
             )
@@ -574,7 +574,7 @@ internal fun StaffWaitingForApprovalScreen(
                         Text(
                             text = staffInitials,
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginNavyAvatarBg
                         )
                     }
@@ -585,7 +585,7 @@ internal fun StaffWaitingForApprovalScreen(
                         Text(
                             text = resolvedStaffName,
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = LoginNavyText
                         )
                         Text(
@@ -607,7 +607,7 @@ internal fun StaffWaitingForApprovalScreen(
                         Text(
                             text = tr("Pending", "लंबित"),
                             fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = Color(0xFFB45309),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
@@ -640,7 +640,7 @@ internal fun StaffWaitingForApprovalScreen(
                     Text(
                         text = tr("Remind admin on WhatsApp", "WhatsApp पर एडमिन को याद दिलाएं"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = LoginBrandGreen
                     )
                 }
@@ -661,7 +661,7 @@ internal fun StaffWaitingForApprovalScreen(
                 Text(
                     text = tr("Cancel request", "अनुरोध रद्द करें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = Color(0xFFB91C1C)
                 )
             }

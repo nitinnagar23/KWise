@@ -163,7 +163,7 @@ internal fun StaffDevicesTabContent(
                     Text(
                         text = tr("Pair counter device", "काउंटर डिवाइस जोड़ें"),
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
 
@@ -174,7 +174,7 @@ internal fun StaffDevicesTabContent(
                         Text(
                             text = tr("10-min code", "10-मिनट कोड"),
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StaffBluePillText,
                             maxLines = 1,
                             softWrap = false,
@@ -200,7 +200,7 @@ internal fun StaffDevicesTabContent(
                 Text(
                     text = tr("DEVICE ROLE", "डिवाइस भूमिका"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.8.sp
                 )
@@ -232,7 +232,7 @@ internal fun StaffDevicesTabContent(
                                 Text(
                                     text = tr("Cashier", "कैशियर"),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isCashier) Color.White else FlatTextSecondary
                                 )
                             }
@@ -250,7 +250,7 @@ internal fun StaffDevicesTabContent(
                                 Text(
                                     text = tr("Manager", "मैनेजर"),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (!isCashier) Color.White else FlatTextSecondary
                                 )
                             }
@@ -281,7 +281,7 @@ internal fun StaffDevicesTabContent(
                             Text(
                                 text = ch,
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StaffBrandGreen
                             )
                         }
@@ -315,7 +315,7 @@ internal fun StaffDevicesTabContent(
                     Text(
                         text = "${tr("Expires in", "समाप्त होगा")} $formattedCountdown",
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StaffAmberPillText
                     )
                 }
@@ -347,7 +347,7 @@ internal fun StaffDevicesTabContent(
                             Text(
                                 text = tr("Copy code", "कोड कॉपी करें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StaffBrandGreen
                             )
                         }
@@ -378,7 +378,7 @@ internal fun StaffDevicesTabContent(
                         Text(
                             text = tr("Share on WhatsApp", "WhatsApp पर भेजें"),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
                     }
@@ -398,7 +398,7 @@ internal fun StaffDevicesTabContent(
                     Text(
                         text = tr("Generate new code", "नया कोड बनाएं"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = StaffBrandGreen
                     )
                 }
@@ -409,7 +409,7 @@ internal fun StaffDevicesTabContent(
         Text(
             text = "${tr("Paired devices", "जुड़े हुए डिवाइस")} (${pairedDevices.size})",
             fontSize = 16.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary
         )
 
@@ -436,7 +436,7 @@ internal fun StaffDevicesTabContent(
                     Text(
                         text = tr("No counter devices paired yet", "अभी तक कोई काउंटर डिवाइस नहीं जुड़ा है"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         textAlign = TextAlign.Center
                     )
@@ -486,7 +486,7 @@ internal fun StaffDevicesTabContent(
                             Text(
                                 text = device.title,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             if (device.modelAndDate.isNotBlank()) {
@@ -506,7 +506,7 @@ internal fun StaffDevicesTabContent(
                                 Text(
                                     text = device.statusText,
                                     fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (device.isActiveNow) StaffBrandGreen else FlatTextSecondary
                                 )
                             }
@@ -515,7 +515,7 @@ internal fun StaffDevicesTabContent(
                         Text(
                             text = tr("Unpair", "अनपेयर"),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StaffCrimson,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
@@ -584,7 +584,7 @@ internal fun StaffRolesTabContent(
                     Text(
                         text = tr("WHAT EACH ROLE\nCAN DO", "प्रत्येक भूमिका\nक्या कर सकती है"),
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         lineHeight = 14.sp,
                         letterSpacing = 0.4.sp,
@@ -616,7 +616,7 @@ internal fun StaffRolesTabContent(
                         Text(
                             text = row.label,
                             fontSize = 13.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             lineHeight = 18.sp,
                             modifier = Modifier.weight(1f)
@@ -643,7 +643,7 @@ internal fun StaffRolesTabContent(
         ) {
             Text(
                 text = buildAnnotatedString {
-                    withStyle(SpanStyle(fontWeight = FontWeight.ExtraBold, color = FlatTextPrimary)) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
                         append(tr("Limited", "Limited"))
                     }
                     append(
@@ -680,7 +680,7 @@ internal fun StaffRolesTabContent(
                     Text(
                         text = tr("Custom permissions", "कस्टम अनुमतियाँ"),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -721,7 +721,7 @@ private fun RoleMatrixCell(status: String) {
                 Text(
                     text = tr("Limited", "सीमित"),
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StaffAmberPillText,
                     maxLines = 1,
                     softWrap = false,
@@ -809,7 +809,7 @@ internal fun StaffDetailsApprovalScreen(
                 Text(
                     text = tr("Staff details", "स्टाफ विवरण"),
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -847,7 +847,7 @@ internal fun StaffDetailsApprovalScreen(
                         Text(
                             text = tr("From Google & this phone", "Google और इस फ़ोन से"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Surface(
@@ -905,7 +905,7 @@ internal fun StaffDetailsApprovalScreen(
                         "कस्टम नाम (ऐप, बिल और ऑडिट में दिखाया गया)"
                     ),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
@@ -916,7 +916,7 @@ internal fun StaffDetailsApprovalScreen(
                     singleLine = true,
                     textStyle = TextStyle(
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     ),
                     shape = RoundedCornerShape(14.dp),
@@ -946,7 +946,7 @@ internal fun StaffDetailsApprovalScreen(
                 Text(
                     text = tr("ROLE", "भूमिका"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
@@ -1002,7 +1002,7 @@ internal fun StaffDetailsApprovalScreen(
                 Text(
                     text = tr("LOGIN PIN", "लॉगिन पिन"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextSecondary,
                     letterSpacing = 0.6.sp
                 )
@@ -1046,7 +1046,7 @@ internal fun StaffDetailsApprovalScreen(
                                         Text(
                                             text = displaySymbol,
                                             fontSize = 20.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = FlatTextPrimary,
                                             textAlign = TextAlign.Center
                                         )
@@ -1081,7 +1081,7 @@ internal fun StaffDetailsApprovalScreen(
                             Text(
                                 text = tr("Auto-generate", "ऑटो-जनरेट"),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StaffBrandGreen
                             )
                         }
@@ -1106,7 +1106,7 @@ internal fun StaffDetailsApprovalScreen(
                         Text(
                             text = tr("Allow biometric login", "बायोमेट्रिक लॉगिन की अनुमति दें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -1140,7 +1140,7 @@ internal fun StaffDetailsApprovalScreen(
                         Text(
                             text = tr("Active", "सक्रिय"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -1186,7 +1186,7 @@ internal fun StaffDetailsApprovalScreen(
                         Text(
                             text = if (staff.isPendingApproval) tr("Reject", "अस्वीकार करें") else tr("Remove", "हटाएं"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StaffCrimson
                         )
                     }
@@ -1211,7 +1211,7 @@ internal fun StaffDetailsApprovalScreen(
                 Text(
                     text = if (staff.isPendingApproval) tr("Approve & save", "मंज़ूरी दें और सेव करें") else tr("Approve & save", "सेव करें"),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -1236,7 +1236,7 @@ private fun StaffTelemetryRow(
         Text(
             text = value,
             fontSize = 14.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = FlatTextPrimary,
             modifier = Modifier.weight(1f)
         )
@@ -1319,7 +1319,7 @@ private fun StaffRoleSelectionCard(
                             Text(
                                 text = cap,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color(0xFF334155),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
@@ -1348,7 +1348,7 @@ internal fun StaffRoleBadgePill(
         Text(
             text = label,
             fontSize = if (compact) 11.5.sp else 12.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = fg,
             maxLines = 1,
             softWrap = false,

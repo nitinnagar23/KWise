@@ -339,7 +339,7 @@ fun SuppliersDirectoryTabView(
                             Text(
                                 text = CurrencyUtils.formatInr(totalPayable),
                                 fontSize = 28.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (totalPayable > BigDecimal.ZERO) SupRed else SupGreen
                             )
                         }
@@ -351,7 +351,7 @@ fun SuppliersDirectoryTabView(
                             Text(
                                 text = "$toPayCount to pay",
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = if (toPayCount > 0) SupRed else SupGreen,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                             )
@@ -432,7 +432,7 @@ fun SuppliersDirectoryTabView(
                                 Text(
                                     text = tr("All", "सभी"),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isAll) Color.White else FlatTextPrimary
                                 )
                             }
@@ -453,7 +453,7 @@ fun SuppliersDirectoryTabView(
                                 Text(
                                     text = tr("You owe", "देना बाकी"),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isYouOwe) Color.White else SupRed
                                 )
                             }
@@ -474,7 +474,7 @@ fun SuppliersDirectoryTabView(
                                 Text(
                                     text = tr("Settled", "चुकता"),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (isSettled) Color.White else SupGreen
                                 )
                             }
@@ -500,7 +500,7 @@ fun SuppliersDirectoryTabView(
                                     else -> "↓↑ Sort"
                                 },
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                         }
@@ -574,7 +574,7 @@ fun SuppliersDirectoryTabView(
                                     Text(
                                         text = supplierInitials(summary.wholesalerName),
                                         fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = SupAvatarText
                                     )
                                 }
@@ -583,7 +583,7 @@ fun SuppliersDirectoryTabView(
                                     Text(
                                         text = if (city.isNotBlank()) "${summary.wholesalerName} · $city" else summary.wholesalerName,
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -612,7 +612,7 @@ fun SuppliersDirectoryTabView(
                                 Text(
                                     text = CurrencyUtils.formatInr(summary.balancePayable),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (hasPayable) SupRed else SupGreen
                                 )
                                 Surface(
@@ -622,7 +622,7 @@ fun SuppliersDirectoryTabView(
                                     Text(
                                         text = if (hasPayable) tr("You owe", "देना है") else tr("Settled", "चुकता"),
                                         fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (hasPayable) SupRed else SupGreen,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                                     )
@@ -655,7 +655,7 @@ fun SuppliersDirectoryTabView(
                 Text(
                     text = tr("Supplier", "सप्लायर"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -765,7 +765,7 @@ fun SupplierKhataScreen(
                 Text(
                     text = summary.wholesalerName,
                     fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -866,7 +866,7 @@ fun SupplierKhataScreen(
                     Text(
                         text = tr("YOU OWE", "देना बाकी"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.7.sp
                     )
@@ -879,7 +879,7 @@ fun SupplierKhataScreen(
                         Text(
                             text = CurrencyUtils.formatInr(summary.balancePayable),
                             fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = if (summary.balancePayable > BigDecimal.ZERO) SupRed else SupGreen
                         )
 
@@ -933,7 +933,7 @@ fun SupplierKhataScreen(
                                 Text(
                                     text = "Next due ${shortDateFormat.format(Date(nextDueDateMillis))}",
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = SupBlue,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                                 )
@@ -965,7 +965,7 @@ fun SupplierKhataScreen(
                     Text(
                         text = tr("Purchase bill", "खरीद बिल"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -985,7 +985,7 @@ fun SupplierKhataScreen(
                     Text(
                         text = tr("Pay supplier", "भुगतान करें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = SupGreen
                     )
                 }
@@ -1009,7 +1009,7 @@ fun SupplierKhataScreen(
                         Text(
                             text = tr("Khata", "खाता"),
                             fontSize = 16.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Row(
@@ -1019,7 +1019,7 @@ fun SupplierKhataScreen(
                             Text(
                                 text = tr("Statement", "स्टेटमेंट"),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = SupGreen,
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
@@ -1088,7 +1088,7 @@ fun SupplierKhataScreen(
                                             Text(
                                                 text = "Payment · $modeTitle",
                                                 fontSize = 15.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary
                                             )
                                             Text(
@@ -1105,7 +1105,7 @@ fun SupplierKhataScreen(
                                             Text(
                                                 text = "−${CurrencyUtils.formatInr(pay.amount)}",
                                                 fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = SupGreen
                                             )
                                             Text(
@@ -1155,7 +1155,7 @@ fun SupplierKhataScreen(
                                             Text(
                                                 text = "Purchase #$shortNo",
                                                 fontSize = 15.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary
                                             )
                                             Text(
@@ -1177,7 +1177,7 @@ fun SupplierKhataScreen(
                                                     "₹0"
                                                 },
                                                 fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = if (addedKhata > BigDecimal.ZERO) SupRed else FlatTextPrimary
                                             )
                                             Text(

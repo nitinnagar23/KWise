@@ -527,7 +527,7 @@ fun StaffManagementScreen(
                     Text(
                         text = tr("Staff & Devices", "स्टाफ और डिवाइस"),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -575,7 +575,7 @@ fun StaffManagementScreen(
                             Text(
                                 text = title,
                                 fontSize = 14.5.sp,
-                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                 color = if (isSelected) StaffBrandGreen else FlatTextSecondary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -624,7 +624,7 @@ fun StaffManagementScreen(
                                                 "1 व्यक्ति मंज़ूरी की प्रतीक्षा कर रहा है"
                                             ),
                                             fontSize = 14.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = Color(0xFF78350F)
                                         )
                                     }
@@ -645,7 +645,7 @@ fun StaffManagementScreen(
                                             Text(
                                                 text = staffInitials(pending.displayName),
                                                 fontSize = 14.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = StaffNavyPill
                                             )
                                         }
@@ -656,7 +656,7 @@ fun StaffManagementScreen(
                                             Text(
                                                 text = pending.displayName,
                                                 fontSize = 16.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary
                                             )
                                             if (pending.email.isNotBlank()) {
@@ -699,7 +699,7 @@ fun StaffManagementScreen(
                                                 Text(
                                                     text = tr("Reject", "अस्वीकार करें"),
                                                     fontSize = 14.5.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = FlatTextPrimary
                                                 )
                                             }
@@ -720,7 +720,7 @@ fun StaffManagementScreen(
                                             Text(
                                                 text = tr("Review & approve", "समीक्षा और मंज़ूरी दें"),
                                                 fontSize = 14.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 maxLines = 1
                                             )
                                         }
@@ -771,7 +771,7 @@ fun StaffManagementScreen(
                                 Text(
                                     text = "${tr("Team", "टीम")} (${teamProfiles.size})",
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -850,7 +850,7 @@ fun StaffManagementScreen(
                 Text(
                     text = tr("Add staff", "स्टाफ जोड़ें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -872,7 +872,7 @@ fun StaffManagementScreen(
                 Text(
                     text = tr("Add staff member", "नया स्टाफ सदस्य जोड़ें"),
                     color = FlatTextPrimary,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.Bold
                 )
             },
             text = {
@@ -962,7 +962,7 @@ fun StaffManagementScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(tr("Add staff", "स्टाफ जोड़ें"), fontWeight = FontWeight.ExtraBold)
+                    Text(tr("Add staff", "स्टाफ जोड़ें"), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -993,14 +993,14 @@ private fun RoleCountSummaryCard(
             Text(
                 text = count.toString(),
                 fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = textColor
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = label,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 color = textColor.copy(alpha = 0.85f)
             )
         }
@@ -1041,7 +1041,7 @@ private fun TeamMemberCard(
                 Text(
                     text = staffInitials(member.displayName),
                     fontSize = 14.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = StaffNavyPill
                 )
             }
@@ -1053,7 +1053,7 @@ private fun TeamMemberCard(
                     Text(
                         text = member.displayName,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     if (member.isCurrentUser) {
@@ -1061,7 +1061,7 @@ private fun TeamMemberCard(
                         Text(
                             text = tr("(You)", "(आप)"),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = StaffBrandGreen
                         )
                     }
@@ -1093,7 +1093,7 @@ private fun TeamMemberCard(
                             Text(
                                 text = tr("PIN set", "पिन सेट"),
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = StaffBrandGreen,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
@@ -1106,7 +1106,7 @@ private fun TeamMemberCard(
                             Text(
                                 text = tr("No PIN · Set now", "कोई पिन नहीं · अभी सेट करें"),
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color(0xFF92400E),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )

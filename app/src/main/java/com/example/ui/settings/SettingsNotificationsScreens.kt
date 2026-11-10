@@ -327,7 +327,7 @@ fun NotificationsSubScreen(
 
     val sendCustomerReminder: (Customer) -> Unit = { cust ->
         val shopName = settings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"
-        val upi = settings?.shopUpiId?.ifBlank { "shop@upi" } ?: "shop@upi"
+        val upi = settings?.shopUpiId?.trim().orEmpty()
         val template = extraPrefs.getTemplateBody("overdue_notice", if (settings?.language == "hi") "hi" else "en")
         val rendered = template
             .replace("{name}", cust.name)
@@ -436,7 +436,7 @@ fun NotificationsSubScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Tune,
-                                contentDescription = tr("Reminders Settings", "रिमाइंडर सेटिंग्स"),
+                                contentDescription = tr("Reminders settings", "रिमाइंडर सेटिंग्स"),
                                 tint = KwTextPrimary,
                                 modifier = Modifier.size(19.dp)
                             )
@@ -528,7 +528,7 @@ fun NotificationsSubScreen(
                         Text(
                             text = tr("All caught up!", "सब अपडेटेड है!"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KwTextPrimary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -653,7 +653,7 @@ private fun NotificationCardRow(
                     Text(
                         text = item.title,
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KwTextPrimary,
                         modifier = Modifier.weight(1f)
                     )
@@ -1099,17 +1099,17 @@ fun EditMessageTemplateSubScreen(
 
     val variables = listOf("{name}", "{amount}", "{date}", "{shop}", "{upi}", "{balance}")
 
-    val shopNameForPreview = settings?.shopName?.ifBlank { "Khal Bhandaar 12" } ?: "Khal Bhandaar 12"
-    val upiForPreview = settings?.shopUpiId?.ifBlank { "9999999999@okaxis" } ?: "9999999999@okaxis"
+    val shopNameForPreview = settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name"
+    val upiForPreview = settings?.shopUpiId?.ifBlank { "shop@upi" } ?: "shop@upi"
 
     val renderedSamplePreview = remember(messageBody, shopNameForPreview, upiForPreview) {
         messageBody
-            .replace("{name}", "Ramesh")
-            .replace("{amount}", "5,400")
-            .replace("{date}", "20 Apr")
+            .replace("{name}", "Customer 1")
+            .replace("{amount}", "0")
+            .replace("{date}", java.text.SimpleDateFormat("d MMM", java.util.Locale.ENGLISH).format(java.util.Date()))
             .replace("{shop}", shopNameForPreview)
             .replace("{upi}", upiForPreview)
-            .replace("{balance}", "5,400")
+            .replace("{balance}", "0")
     }
 
     val charCount = renderedSamplePreview.length
@@ -1241,9 +1241,9 @@ fun EditMessageTemplateSubScreen(
                 }
             }
 
-            // PREVIEW WITH SAMPLE DATA (WhatsApp style bubble)
+            // Message preview (WhatsApp style bubble)
             Column {
-                FieldSectionLabel(text = tr("PREVIEW WITH SAMPLE DATA", "सैंपल डेटा के साथ प्रीव्यू"))
+                FieldSectionLabel(text = tr("Message preview", "मैसेज प्रीव्यू"))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -1269,8 +1269,8 @@ fun EditMessageTemplateSubScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "2:30 PM",
-                                    fontSize = 10.5.sp,
+                                    text = java.text.SimpleDateFormat("h:mm a", java.util.Locale.ENGLISH).format(java.util.Date()),
+                                    fontSize = 11.sp,
                                     color = KwTextMuted,
                                     modifier = Modifier.align(Alignment.End)
                                 )

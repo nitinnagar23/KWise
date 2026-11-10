@@ -210,7 +210,7 @@ fun AddOrEditCustomerScreen(
                 Text(
                     text = if (isEdit) tr("Edit customer", "ग्राहक संपादित करें") else tr("Add customer", "नया ग्राहक जोड़ें"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = EditNavyText
                 )
                 if (nameInput.isNotBlank()) {
@@ -258,7 +258,7 @@ fun AddOrEditCustomerScreen(
                     Text(
                         text = tr("MOBILE NUMBERS", "मोबाइल नंबर"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = EditSubtleText,
                         letterSpacing = 0.6.sp
                     )
@@ -317,7 +317,7 @@ fun AddOrEditCustomerScreen(
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                             textStyle = TextStyle(
                                                 fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = EditNavyText
                                             ),
                                             modifier = Modifier
@@ -364,7 +364,7 @@ fun AddOrEditCustomerScreen(
                                         Text(
                                             text = tr("Primary", "मुख्य"),
                                             fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = EditBrandGreen,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                         )
@@ -386,7 +386,7 @@ fun AddOrEditCustomerScreen(
                                         Text(
                                             text = tag,
                                             fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (selected) Color.White else EditNavyText,
                                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                                         )
@@ -423,7 +423,7 @@ fun AddOrEditCustomerScreen(
                     Text(
                         text = tr("+ Add another number", "+ एक और नंबर जोड़ें"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = EditBrandGreen
                     )
                 }
@@ -455,7 +455,7 @@ fun AddOrEditCustomerScreen(
                         Text(
                             text = tr("Credit limit", "उधारी सीमा"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditNavyText
                         )
                         Text(
@@ -485,7 +485,7 @@ fun AddOrEditCustomerScreen(
                                 Text(
                                     text = label,
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (selected) Color.White else EditNavyText,
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                                 )
@@ -567,7 +567,7 @@ fun AddOrEditCustomerScreen(
                         Text(
                             text = tr("Auto-block at limit", "सीमा पूरी होने पर ऑटो-ब्लॉक"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditNavyText
                         )
                         val limStr = if (effectiveLimit > BigDecimal.ZERO) CurrencyUtils.formatInr(effectiveLimit) else "limit"
@@ -610,7 +610,7 @@ fun AddOrEditCustomerScreen(
                         Text(
                             text = tr("Block udhari now", "अभी उधारी बंद करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditCrimsonRed
                         )
                         Text(
@@ -639,7 +639,7 @@ fun AddOrEditCustomerScreen(
                 Text(
                     text = tr("REMINDERS", "रिमाइंडर"),
                     fontSize = 11.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = EditSubtleText,
                     letterSpacing = 0.6.sp
                 )
@@ -668,7 +668,7 @@ fun AddOrEditCustomerScreen(
                                     Text(
                                         text = ch,
                                         fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (selected) Color.White else EditNavyText
                                     )
                                 }
@@ -702,7 +702,7 @@ fun AddOrEditCustomerScreen(
                         Text(
                             text = tr("Delete customer", "ग्राहक हटाएं"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditCrimsonRed
                         )
                     }
@@ -749,7 +749,7 @@ fun AddOrEditCustomerScreen(
                         Text(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditNavyText
                         )
                     }
@@ -802,7 +802,7 @@ fun AddOrEditCustomerScreen(
                     Text(
                         text = if (isEdit) tr("Save changes", "बदलाव सेव करें") else tr("Save customer", "ग्राहक सेव करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -822,7 +822,7 @@ private fun CustomerFormInputSection(
         Text(
             text = label,
             fontSize = 11.5.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.Bold,
             color = EditSubtleText,
             letterSpacing = 0.6.sp
         )
@@ -1033,7 +1033,7 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = tr("Import customers", "ग्राहक इम्पोर्ट करें"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditNavyText
                         )
                         Text(
@@ -1101,7 +1101,7 @@ fun ImportCustomersFlowScreen(
                                     Text(
                                         text = tr("From phone contacts", "फ़ोन कॉन्टैक्ट्स से"),
                                         fontSize = 16.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = EditNavyText
                                     )
                                     Text(
@@ -1159,7 +1159,7 @@ fun ImportCustomersFlowScreen(
                                     Text(
                                         text = tr("From Excel or CSV", "Excel या CSV से"),
                                         fontSize = 16.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = EditNavyText
                                     )
                                     Text(
@@ -1193,7 +1193,7 @@ fun ImportCustomersFlowScreen(
                             Text(
                                 text = tr("Using Excel?", "Excel का उपयोग कर रहे हैं?"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = EditNavyText
                             )
                             Text(
@@ -1219,7 +1219,7 @@ fun ImportCustomersFlowScreen(
                                     Text(
                                         text = tr("Download sample template", "सैंपल टेम्पलेट डाउनलोड करें"),
                                         fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = EditBrandGreen
                                     )
                                 }
@@ -1291,7 +1291,7 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = tr("Pick contacts", "कॉन्टैक्ट्स चुनें"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditNavyText
                         )
                         Text(
@@ -1361,7 +1361,7 @@ fun ImportCustomersFlowScreen(
                     Text(
                         text = tr("Select all", "सभी चुनें"),
                         fontSize = 13.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = EditBrandGreen,
                         modifier = Modifier.clickable {
                             selectedContactIds = if (selectedContactIds.size == selectableContacts.size) {
@@ -1445,7 +1445,7 @@ fun ImportCustomersFlowScreen(
                                             Text(
                                                 text = item.initials(),
                                                 fontSize = 13.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = EditNavyText.copy(alpha = if (item.alreadyAdded) 0.5f else 1f)
                                             )
                                         }
@@ -1455,7 +1455,7 @@ fun ImportCustomersFlowScreen(
                                         Text(
                                             text = item.name,
                                             fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = EditNavyText.copy(alpha = if (item.alreadyAdded) 0.5f else 1f)
                                         )
                                         Text(
@@ -1528,7 +1528,7 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = "Add ${selectedContactIds.size} customers",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -1603,7 +1603,7 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = tr("Import from Excel", "Excel से इम्पोर्ट करें"),
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = EditNavyText
                         )
                         Text(
@@ -1638,7 +1638,7 @@ fun ImportCustomersFlowScreen(
                                 Text(
                                     text = tr("Match your columns", "अपने कॉलम मिलाएं"),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = EditNavyText
                                 )
                                 Text(
@@ -1681,7 +1681,7 @@ fun ImportCustomersFlowScreen(
                                 Text(
                                     text = tr("Preview", "प्रीव्यू"),
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = EditNavyText
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1689,7 +1689,7 @@ fun ImportCustomersFlowScreen(
                                         Text(
                                             text = "${readyRows.size} ready",
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = EditBrandGreen,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                         )
@@ -1699,7 +1699,7 @@ fun ImportCustomersFlowScreen(
                                             Text(
                                                 text = "$duplicateCount",
                                                 fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = Color(0xFFB45309),
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                             )
@@ -1710,7 +1710,7 @@ fun ImportCustomersFlowScreen(
                                             Text(
                                                 text = "$noNameCount",
                                                 fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = EditCrimsonRed,
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                             )
@@ -1724,11 +1724,11 @@ fun ImportCustomersFlowScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
                             ) {
-                                Text("NAME", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText, modifier = Modifier.weight(1.1f))
-                                Text("MOBILE", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText, modifier = Modifier.weight(1.1f))
-                                Text("VILLAGE", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText, modifier = Modifier.weight(0.9f))
-                                Text("UDHARI", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText, textAlign = TextAlign.End, modifier = Modifier.weight(0.8f))
-                                Text("STATUS", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText, textAlign = TextAlign.End, modifier = Modifier.weight(0.9f))
+                                Text("NAME", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, modifier = Modifier.weight(1.1f))
+                                Text("MOBILE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, modifier = Modifier.weight(1.1f))
+                                Text("VILLAGE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, modifier = Modifier.weight(0.9f))
+                                Text("UDHARI", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, textAlign = TextAlign.End, modifier = Modifier.weight(0.8f))
+                                Text("STATUS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, textAlign = TextAlign.End, modifier = Modifier.weight(0.9f))
                             }
                             HorizontalDivider(color = Color(0xFFF1F5F9))
 
@@ -1778,7 +1778,7 @@ fun ImportCustomersFlowScreen(
                                             Text(
                                                 text = r.status,
                                                 fontSize = 10.5.sp,
-                                                fontWeight = FontWeight.ExtraBold,
+                                                fontWeight = FontWeight.Bold,
                                                 color = fg,
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                             )
@@ -1848,7 +1848,7 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = "Import ${readyRows.size} customers",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -1889,7 +1889,7 @@ fun ImportCustomersFlowScreen(
                 Text(
                     text = "$lastAddedCount ${tr("customers added", "ग्राहक जोड़े गए")}",
                     fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = EditNavyText
                 )
 
@@ -1915,9 +1915,9 @@ fun ImportCustomersFlowScreen(
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
-                            Text("ADDED", fontSize = 10.5.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText)
+                            Text("ADDED", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = EditSubtleText)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("$lastAddedCount", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = EditBrandGreen)
+                            Text("$lastAddedCount", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = EditBrandGreen)
                         }
                     }
 
@@ -1928,9 +1928,9 @@ fun ImportCustomersFlowScreen(
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
-                            Text("SKIPPED", fontSize = 10.5.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText)
+                            Text("SKIPPED", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = EditSubtleText)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("${lastSkippedRows.size}", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFB45309))
+                            Text("${lastSkippedRows.size}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
                         }
                     }
 
@@ -1941,12 +1941,12 @@ fun ImportCustomersFlowScreen(
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
-                            Text("OPENING\nUDHARI", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = EditSubtleText, lineHeight = 12.sp)
+                            Text("OPENING\nUDHARI", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, lineHeight = 12.sp)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = CurrencyUtils.formatInr(lastTotalOpeningUdhari),
                                 fontSize = 19.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = EditCrimsonRed,
                                 maxLines = 1
                             )
@@ -1971,7 +1971,7 @@ fun ImportCustomersFlowScreen(
                             Text(
                                 text = tr("Skipped rows", "छोड़ी गई पंक्तियां"),
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = EditNavyText
                             )
                             lastSkippedRows.take(5).forEach { skip ->
@@ -1985,7 +1985,7 @@ fun ImportCustomersFlowScreen(
                                         Text(
                                             text = skip.name.ifBlank { "(no name)" },
                                             fontSize = 14.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = EditNavyText
                                         )
                                         val reason = if (skip.status == "Duplicate") "mobile already used" else "name is missing"
@@ -2003,7 +2003,7 @@ fun ImportCustomersFlowScreen(
                                         Text(
                                             text = skip.status,
                                             fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.Bold,
                                             color = if (isDup) Color(0xFFB45309) else EditCrimsonRed,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                         )
@@ -2013,7 +2013,7 @@ fun ImportCustomersFlowScreen(
                             Text(
                                 text = tr("Download skipped rows", "छोड़ी गई पंक्तियां डाउनलोड करें"),
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = EditBrandGreen,
                                 modifier = Modifier
                                     .padding(top = 4.dp)
@@ -2042,7 +2042,7 @@ fun ImportCustomersFlowScreen(
                     Text(
                         text = tr("View customers", "ग्राहक देखें"),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
@@ -2052,7 +2052,7 @@ fun ImportCustomersFlowScreen(
                     Text(
                         text = tr("Import more", "और इम्पोर्ट करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = EditBrandGreen
                     )
                 }

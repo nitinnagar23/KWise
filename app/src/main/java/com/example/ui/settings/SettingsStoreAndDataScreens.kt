@@ -413,7 +413,7 @@ internal fun SettingsSubScreenHeader(
                         Text(
                             text = title,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KwTextPrimary
                         )
                         Text(
@@ -438,7 +438,7 @@ internal fun FieldSectionLabel(text: String) {
     Text(
         text = text,
         fontSize = 11.5.sp,
-        fontWeight = FontWeight.ExtraBold,
+        fontWeight = FontWeight.Bold,
         letterSpacing = 0.6.sp,
         color = KwTextSecondary,
         modifier = Modifier.padding(bottom = 6.dp)
@@ -472,7 +472,7 @@ fun StoreProfileSubScreen(
     val context = LocalContext.current
 
     var shopName by remember(settings) {
-        mutableStateOf(settings?.shopName?.ifBlank { "Khal Bhandaar 12" } ?: "Khal Bhandaar 12")
+        mutableStateOf(settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name")
     }
     var shopType by remember { mutableStateOf(extraPrefs.shopType) }
     var ownerName by remember(currentUser) {
@@ -778,7 +778,7 @@ fun StoreProfileSubScreen(
                             Text(
                                 text = "+91 $ph",
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.SemiBold,
                                 color = KwTextPrimary
                             )
                             Text(
@@ -1483,7 +1483,7 @@ fun UpiAndGstSubScreen(
                                                 Text(
                                                     text = label,
                                                     fontSize = 13.5.sp,
-                                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                                                     color = if (selected) KwTextPrimary else KwTextSecondary,
                                                     textAlign = TextAlign.Center,
                                                     modifier = Modifier.padding(vertical = 9.dp)
@@ -1813,7 +1813,7 @@ fun SyncAndBackupSubScreen(
                                     else -> tr("All synced", "सब सिंक हो गया")
                                 },
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = Color(0xFF065F46)
                             )
                             Text(
@@ -2083,7 +2083,7 @@ fun SyncAndBackupSubScreen(
                                         Text(
                                             text = label,
                                             fontSize = 13.sp,
-                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                                             color = if (selected) KwTextPrimary else KwTextSecondary,
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.padding(vertical = 8.dp)
@@ -2268,7 +2268,7 @@ fun SyncAndBackupSubScreen(
                                 Text(
                                     text = tr("Synced all records", "सभी रिकॉर्ड सिंक किए गए"),
                                     fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = KwTextPrimary
                                 )
                             }
@@ -2301,7 +2301,7 @@ fun SyncAndBackupSubScreen(
                                     Text(
                                         text = tr("Google Drive backup saved", "Google Drive बैकअप सेव हुआ"),
                                         fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = KwTextPrimary
                                     )
                                 }
@@ -2488,7 +2488,7 @@ fun ThemeAndLanguageSubScreen(
                                             Text(
                                                 text = label,
                                                 fontSize = 13.sp,
-                                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                                                 color = if (selected) KwTextPrimary else KwTextSecondary,
                                                 textAlign = TextAlign.Center,
                                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -2557,7 +2557,7 @@ fun ThemeAndLanguageSubScreen(
                         Text(
                             text = if (indianFormat) "₹1,14,500" else "₹114,500",
                             fontSize = previewFontSize,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = KwTextPrimary
                         )
                         Text(
@@ -2757,7 +2757,7 @@ private fun ThemePreviewCard(
             Text(
                 text = title,
                 fontSize = 13.sp,
-                fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 color = if (selected) KwGreenDark else KwTextPrimary
             )
         }
@@ -3439,7 +3439,7 @@ fun SettingsLogoutModalDialog(
                     Text(
                         text = tr("Log out of KhataWise?", "KhataWise से लॉग आउट करें?"),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = KwTextPrimary,
                         textAlign = TextAlign.Center
                     )

@@ -147,20 +147,16 @@ internal fun ReorderListScreen(
                 }
                 val unitCost = if (isBagged) {
                     val bagCost = prod.averagePurchaseCostPerKg.multiply(prod.kgPerBag).setScale(0, RoundingMode.HALF_UP)
-                    if (bagCost > BigDecimal.ZERO) bagCost else BigDecimal("1150")
+                    if (bagCost > BigDecimal.ZERO) bagCost else BigDecimal.ZERO
                 } else {
                     if (prod.averagePurchaseCostPerKg > BigDecimal.ZERO) {
                         prod.averagePurchaseCostPerKg.setScale(0, RoundingMode.HALF_UP)
-                    } else BigDecimal("25")
+                    } else BigDecimal.ZERO
                 }
-                val supName = meta.supplierName.ifBlank { "Sharma Traders" }
+                val supName = meta.supplierName.ifBlank { "Supplier not set" }
                 val supKey = supName.trim().lowercase(Locale.ROOT)
                 val phone = supplierProfiles[supKey]?.primaryPhone?.takeIf { it.isNotBlank() }
-                    ?: when {
-                        supName.contains("Gupta", ignoreCase = true) -> "94140 66320"
-                        supName.contains("Jain", ignoreCase = true) -> "99280 18854"
-                        else -> "98290 40012"
-                    }
+                    ?: ""
                 ReorderEntryItem(
                     product = prod,
                     meta = meta,
@@ -203,7 +199,7 @@ internal fun ReorderListScreen(
         ShareReorderListScreen(
             selectedItems = activeItems,
             orderQtyMap = orderQtyMap,
-            shopName = shopName.ifBlank { "Khal Bhandaar 12" },
+            shopName = shopName.ifBlank { "Shop Name" },
             onBack = { showShareReorderScreen = false },
             onCreateDraftPurchaseBills = {
                 val pairs = activeItems.map { it.product to (orderQtyMap[it.product.id] ?: it.defaultOrderBagsOrKg) }
@@ -241,12 +237,12 @@ internal fun ReorderListScreen(
                             text = tr("Estimated cost (last prices)", "अनुमानित लागत (पिछले भाव)"),
                             fontSize = 14.sp,
                             color = FlatTextSecondary,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = CurrencyUtils.formatInr(totalEstimatedCost),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary,
                             modifier = Modifier.testTag("reorder_estimated_cost_text")
                         )
@@ -278,7 +274,7 @@ internal fun ReorderListScreen(
                             Text(
                                 text = tr("Make purchase bills", "खरीद बिल बनाएं"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvBrandGreen
                             )
                         }
@@ -299,7 +295,7 @@ internal fun ReorderListScreen(
                             Text(
                                 text = tr("Share with suppliers", "सप्लायर को भेजें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -349,7 +345,7 @@ internal fun ReorderListScreen(
                             Text(
                                 text = tr("Reorder list", "री-ऑर्डर सूची"),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -402,7 +398,7 @@ internal fun ReorderListScreen(
                     Text(
                         text = tr("Group by supplier", "सप्लायर के अनुसार"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = InvBrandGreen,
                         modifier = Modifier
                             .clickable { groupBySupplier = !groupBySupplier }
@@ -429,7 +425,7 @@ internal fun ReorderListScreen(
                             Text(
                                 text = tr("All items are well stocked", "सभी आइटम पर्याप्त स्टॉक में हैं"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -459,14 +455,14 @@ internal fun ReorderListScreen(
                             Text(
                                 text = supplierName,
                                 fontSize = 16.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
                                 text = phone,
                                 fontSize = 13.5.sp,
                                 color = FlatTextSecondary,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -526,7 +522,7 @@ internal fun ReorderListScreen(
             title = {
                 Text(
                     text = "Order quantity · ${formatProductCardTitle(item.product)}",
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
                     color = FlatTextPrimary
                 )
@@ -628,7 +624,7 @@ private fun ReorderItemCard(
                     Text(
                         text = formatProductCardTitle(entry.product),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -657,14 +653,14 @@ private fun ReorderItemCard(
                 Text(
                     text = "$orderQty $unitLabel",
                     fontSize = 16.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
                 Text(
                     text = CurrencyUtils.formatInr(estCost),
                     fontSize = 13.sp,
                     color = FlatTextSecondary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -734,7 +730,7 @@ internal fun ShareReorderListScreen(
                     Text(
                         text = tr("Create draft purchase bills", "ड्राफ्ट खरीद बिल बनाएं"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = InvBrandGreen,
                         modifier = Modifier
                             .clickable { onCreateDraftPurchaseBills() }
@@ -754,7 +750,7 @@ internal fun ShareReorderListScreen(
                         Text(
                             text = tr("Done", "हो गया"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                     }
@@ -798,7 +794,7 @@ internal fun ShareReorderListScreen(
                         Text(
                             text = tr("Share reorder list", "री-ऑर्डर सूची भेजें"),
                             fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
                         Text(
@@ -877,14 +873,14 @@ internal fun ShareReorderListScreen(
                                 Text(
                                     text = supplierName,
                                     fontSize = 16.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
                                     text = phone,
                                     fontSize = 13.5.sp,
                                     color = FlatTextSecondary,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
 
@@ -931,7 +927,7 @@ internal fun ShareReorderListScreen(
                                     Text(
                                         text = tr("Send on WhatsApp", "WhatsApp पर भेजें"),
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.ExtraBold
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
 
@@ -951,7 +947,7 @@ internal fun ShareReorderListScreen(
                                     Text(
                                         text = tr("Edit", "बदलें"),
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = InvBrandGreen
                                     )
                                 }
@@ -971,7 +967,7 @@ internal fun ShareReorderListScreen(
             title = {
                 Text(
                     text = "Edit message · $supKey",
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1081,7 +1077,7 @@ internal fun BarcodeScannerScreen(
                 Text(
                     text = tr("Scan barcode", "बारकोड स्कैन करें"),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             }
@@ -1239,7 +1235,7 @@ internal fun BarcodeScannerScreen(
                                 Text(
                                     text = displayProductTitle,
                                     fontSize = 17.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -1257,7 +1253,7 @@ internal fun BarcodeScannerScreen(
                             Text(
                                 text = tr("Found", "मिल गया"),
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvBrandGreen,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
@@ -1313,7 +1309,7 @@ internal fun BarcodeScannerScreen(
                             Text(
                                 text = tr("Add to bill", "बिल में जोड़ें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Bold
                             )
                         }
 
@@ -1337,7 +1333,7 @@ internal fun BarcodeScannerScreen(
                             Text(
                                 text = tr("Stock in", "स्टॉक इन"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvBrandGreen
                             )
                         }
@@ -1362,7 +1358,7 @@ internal fun BarcodeScannerScreen(
                             Text(
                                 text = tr("View", "देखें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvBrandGreen
                             )
                         }
@@ -1375,7 +1371,7 @@ internal fun BarcodeScannerScreen(
                         Text(
                             text = tr("Type code instead", "कोड टाइप करें"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = InvBrandGreen,
                             modifier = Modifier
                                 .clickable { showTypeCodeDialog = true }
@@ -1423,7 +1419,7 @@ internal fun BarcodeScannerScreen(
                                 Text(
                                     text = tr("New barcode", "नया बारकोड"),
                                     fontSize = 17.sp,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )
                                 Text(
@@ -1441,7 +1437,7 @@ internal fun BarcodeScannerScreen(
                             Text(
                                 text = tr("Not found", "नहीं मिला"),
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = InvAmberText,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
@@ -1472,7 +1468,7 @@ internal fun BarcodeScannerScreen(
                         Text(
                             text = tr("Add as new item", "नए आइटम के रूप में जोड़ें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -1492,7 +1488,7 @@ internal fun BarcodeScannerScreen(
                         Text(
                             text = tr("Link to an existing item", "मौजूदा आइटम से जोड़ें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = InvBrandGreen
                         )
                     }
@@ -1528,7 +1524,7 @@ internal fun BarcodeScannerScreen(
             title = {
                 Text(
                     text = tr("Enter barcode number", "बारकोड नंबर दर्ज करें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1573,7 +1569,7 @@ internal fun BarcodeScannerScreen(
             title = {
                 Text(
                     text = tr("Link barcode to item", "बारकोड को आइटम से जोड़ें"),
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
             },
@@ -1647,7 +1643,7 @@ private fun ScannerMetricBox(
             Text(
                 text = value,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary,
                 maxLines = 1
             )
@@ -1776,7 +1772,7 @@ internal fun StockHistoryScreen(
                             Text(
                                 text = tr("Stock history", "स्टॉक हिस्ट्री"),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
+                                fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -2008,7 +2004,7 @@ internal fun StockHistoryScreen(
                         Text(
                             text = dayHeader,
                             fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary,
                             letterSpacing = 0.6.sp,
                             modifier = Modifier.padding(top = 4.dp)
@@ -2094,7 +2090,7 @@ private fun StockHistoryMovementRow(mov: InventoryMovementItem) {
                 Text(
                     text = symbolText,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = symbolColor
                 )
             }
@@ -2103,7 +2099,7 @@ private fun StockHistoryMovementRow(mov: InventoryMovementItem) {
                 Text(
                     text = mov.productTitle.ifBlank { mov.title },
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -2125,7 +2121,7 @@ private fun StockHistoryMovementRow(mov: InventoryMovementItem) {
             Text(
                 text = mov.quantityDeltaLabel,
                 fontSize = 15.5.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = qtyColor
             )
             if (mov.badgeLabel != null) {
@@ -2136,7 +2132,7 @@ private fun StockHistoryMovementRow(mov: InventoryMovementItem) {
                     Text(
                         text = mov.badgeLabel,
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = InvAmberText,
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 2.dp)
                     )
@@ -2215,7 +2211,7 @@ internal fun InventoryCategoriesScreen(
                         Text(
                             text = tr("+ Add category", "+ श्रेणी जोड़ें"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -2258,7 +2254,7 @@ internal fun InventoryCategoriesScreen(
                     Text(
                         text = tr("Categories", "श्रेणियाँ"),
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -2330,7 +2326,7 @@ internal fun InventoryCategoriesScreen(
                                     Text(
                                         text = cat.name,
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     Text(
@@ -2409,7 +2405,7 @@ internal fun InventoryCategoriesScreen(
                         tr("Add category", "श्रेणी जोड़ें")
                     },
                     fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
 
@@ -2418,7 +2414,7 @@ internal fun InventoryCategoriesScreen(
                     Text(
                         text = tr("NAME", "नाम"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
@@ -2446,7 +2442,7 @@ internal fun InventoryCategoriesScreen(
                     Text(
                         text = tr("COLOUR", "रंग"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
@@ -2481,7 +2477,7 @@ internal fun InventoryCategoriesScreen(
                     Text(
                         text = tr("MOVE ITEMS HERE", "आइटम यहाँ ले जाएं"),
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = FlatTextSecondary,
                         letterSpacing = 0.6.sp
                     )
@@ -2530,7 +2526,7 @@ internal fun InventoryCategoriesScreen(
                                     Text(
                                         text = formatProductCardTitle(prod),
                                         fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
+                                        fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary
                                     )
                                     Text(
@@ -2608,7 +2604,7 @@ internal fun InventoryCategoriesScreen(
                         Text(
                             text = tr("Save category", "श्रेणी सेव करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
