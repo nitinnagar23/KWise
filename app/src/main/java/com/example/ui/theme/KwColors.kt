@@ -1,6 +1,9 @@
 package com.example.ui.theme
 
+import android.content.Context
+import android.view.ContextThemeWrapper
 import androidx.compose.ui.graphics.Color
+import com.example.R
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 import kotlin.math.max
@@ -108,3 +111,10 @@ private fun hslToRgb(h: Double, s: Double, l: Double): Triple<Int, Int, Int> {
 
 /** White card/sheet background in light theme, dark surface (§6.1) in dark theme. */
 val KwSurface: Color get() = if (KwThemeState.isDark) Color(0xFF1A2330) else Color.White
+
+/** Context whose theme makes android.app.DatePickerDialog / TimePickerDialog follow the in-app light/dark setting. */
+fun pickerThemedContext(base: Context): Context =
+    ContextThemeWrapper(
+        base,
+        if (KwThemeState.isDark) R.style.Theme_KhataWise_Picker_Dark else R.style.Theme_KhataWise_Picker_Light
+    )

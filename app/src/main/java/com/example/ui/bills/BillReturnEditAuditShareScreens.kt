@@ -2556,13 +2556,13 @@ fun AuditLogFullScreen(
 
                     val detectedRole = userRoleMap[log.performedByUserName.lowercase(Locale.ROOT)]
                     val (roleLabel, roleBg, roleFg) = when (detectedRole) {
-                        Role.ADMINISTRATOR -> Triple("Admin", BNavyText, Color.White)
+                        Role.ADMINISTRATOR -> Triple("Admin", Color(0xFF14305E), Color.White)
                         Role.MANAGER -> Triple("Manager", BInfoBlueBg, BInfoBlueText)
                         Role.STAFF -> Triple("Cashier", kw(0xFFF1F5F9), BSubtleText)
                         null -> if (log.performedByUserName.contains("manager", ignoreCase = true) || log.performedByUserName.contains("rohit", ignoreCase = true)) {
                             Triple("Manager", BInfoBlueBg, BInfoBlueText)
                         } else {
-                            Triple("Admin", BNavyText, Color.White)
+                            Triple("Admin", Color(0xFF14305E), Color.White)
                         }
                     }
 

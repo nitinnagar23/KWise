@@ -1,5 +1,6 @@
 package com.example.ui.purchases
 
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.KwSurface
 import com.example.ui.theme.kw
 import android.app.DatePickerDialog
@@ -659,7 +660,7 @@ fun PaySupplierFlowScreen(
                             onClick = {
                                 val cal = Calendar.getInstance().apply { timeInMillis = paymentTimestamp }
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, y, m, d ->
                                         val updated = Calendar.getInstance().apply {
                                             timeInMillis = paymentTimestamp
@@ -704,7 +705,7 @@ fun PaySupplierFlowScreen(
                             onClick = {
                                 val cal = Calendar.getInstance().apply { timeInMillis = paymentTimestamp }
                                 TimePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, hour, minute ->
                                         val updated = Calendar.getInstance().apply {
                                             timeInMillis = paymentTimestamp
@@ -1618,7 +1619,7 @@ fun SupplierStatementScreen(
                             if (period == "Custom") {
                                 val cal = Calendar.getInstance()
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, y, m, d ->
                                         val picked = Calendar.getInstance().apply {
                                             set(Calendar.YEAR, y)

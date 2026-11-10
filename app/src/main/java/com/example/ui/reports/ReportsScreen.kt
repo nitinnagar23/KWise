@@ -1,5 +1,6 @@
 package com.example.ui.reports
 
+import com.example.ui.theme.pickerThemedContext
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -351,7 +352,7 @@ fun ReportsScreen(
                             onClick = {
                                 val cal = Calendar.getInstance().apply { timeInMillis = customStartMillis }
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, year, month, dayOfMonth ->
                                         val picked = Calendar.getInstance().apply {
                                             set(year, month, dayOfMonth, 0, 0, 0)
@@ -397,7 +398,7 @@ fun ReportsScreen(
                             onClick = {
                                 val cal = Calendar.getInstance().apply { timeInMillis = customEndMillis }
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, year, month, dayOfMonth ->
                                         val picked = Calendar.getInstance().apply {
                                             set(year, month, dayOfMonth, 23, 59, 59)

@@ -106,6 +106,13 @@ class MainActivity : FragmentActivity() {
                         android.graphics.Color.argb(0xE6, 0x0F, 0x17, 0x20)
                     ) { isDarkTheme }
                 )
+                // Window background follows the in-app theme too (no light/dark flash behind the UI).
+                window.setBackgroundDrawable(
+                    android.graphics.drawable.ColorDrawable(
+                        if (isDarkTheme) android.graphics.Color.rgb(0x0F, 0x17, 0x20)
+                        else android.graphics.Color.rgb(0xF6, 0xF8, 0xFB)
+                    )
+                )
                 onDispose { }
             }
             val languageCode = settings?.language ?: "en"

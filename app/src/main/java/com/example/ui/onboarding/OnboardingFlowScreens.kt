@@ -1679,7 +1679,7 @@ private fun TourSlide4Illustration() {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = OnbNavyText
+                        color = Color(0xFF14305E)
                     ) {
                         Text(
                             text = "Admin",

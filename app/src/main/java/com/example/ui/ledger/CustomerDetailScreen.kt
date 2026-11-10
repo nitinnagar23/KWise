@@ -1,5 +1,6 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.KwSurface
 import com.example.ui.theme.kw
 import android.app.DatePickerDialog
@@ -1141,7 +1142,7 @@ fun CustomerDetailScreen(
                                                     cal.timeInMillis = promiseDateMillis
                                                 }
                                                 DatePickerDialog(
-                                                    context,
+                                                    pickerThemedContext(context),
                                                     { _, y, m, d ->
                                                         cal.set(y, m, d, 9, 0, 0)
                                                         val target = cal.timeInMillis

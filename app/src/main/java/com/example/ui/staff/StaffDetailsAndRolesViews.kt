@@ -1,5 +1,6 @@
 package com.example.ui.staff
 
+import com.example.ui.theme.KwSurface
 import com.example.ui.theme.kw
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -79,7 +80,7 @@ import java.util.Locale
 
 internal val StaffBrandGreen: Color get() = kw(0xFF0E6F43)
 internal val StaffMintSoft: Color get() = kw(0xFFDDF3E8)
-internal val StaffNavyPill: Color get() = kw(0xFF0F294A)
+internal val StaffNavyPill: Color get() = Color(0xFF14305E)
 internal val StaffBluePillBg: Color get() = kw(0xFFD6EEFB)
 internal val StaffBluePillText: Color get() = kw(0xFF0C4A6E)
 internal val StaffCashierPillBg: Color get() = kw(0xFFEEF0F6)
@@ -1314,7 +1315,7 @@ private fun StaffRoleSelectionCard(
                     capabilities.forEach { cap ->
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (selected) Color.White else kw(0xFFF1F2F6)
+                            color = if (selected) KwSurface else kw(0xFFF1F2F6)
                         ) {
                             Text(
                                 text = cap,

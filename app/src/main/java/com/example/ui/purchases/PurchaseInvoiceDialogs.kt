@@ -1,5 +1,6 @@
 package com.example.ui.purchases
 
+import com.example.ui.theme.pickerThemedContext
 import android.app.DatePickerDialog
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -1287,7 +1288,7 @@ fun NewPurchaseBillScreen(
                         onClick = {
                             val cal = Calendar.getInstance().apply { timeInMillis = billDateMillis }
                             DatePickerDialog(
-                                context,
+                                pickerThemedContext(context),
                                 { _, y, m, d ->
                                     val picked = Calendar.getInstance().apply {
                                         set(Calendar.YEAR, y)

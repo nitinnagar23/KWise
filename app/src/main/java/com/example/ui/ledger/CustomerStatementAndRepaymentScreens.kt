@@ -1,5 +1,6 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.KwSurface
 import com.example.ui.theme.kw
 import android.app.DatePickerDialog
@@ -435,7 +436,7 @@ fun CustomerStatementScreen(
                             if (chip == StatementPeriodChip.CUSTOM) {
                                 val cal = Calendar.getInstance()
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, y, m, d ->
                                         val startCal = Calendar.getInstance().apply {
                                             set(y, m, d, 0, 0, 0)
@@ -453,7 +454,7 @@ fun CustomerStatementScreen(
                             }
                         },
                         shape = RoundedCornerShape(50),
-                        color = if (selected) KhataBrandGreen else Color.White,
+                        color = if (selected) KhataBrandGreen else KwSurface,
                         border = if (selected) null else BorderStroke(1.dp, KhataCardBorder)
                     ) {
                         Text(
@@ -1684,7 +1685,7 @@ fun CollectUdhariScreen(
                         onClick = {
                             val cal = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
                             DatePickerDialog(
-                                context,
+                                pickerThemedContext(context),
                                 { _, y, m, d ->
                                     cal.set(Calendar.YEAR, y)
                                     cal.set(Calendar.MONTH, m)
@@ -1732,7 +1733,7 @@ fun CollectUdhariScreen(
                         onClick = {
                             val cal = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
                             TimePickerDialog(
-                                context,
+                                pickerThemedContext(context),
                                 { _, h, min ->
                                     cal.set(Calendar.HOUR_OF_DAY, h)
                                     cal.set(Calendar.MINUTE, min)
@@ -1909,7 +1910,7 @@ fun CollectUdhariScreen(
                                                     2 -> {
                                                         val c = Calendar.getInstance().apply { timeInMillis = customPromiseMillis }
                                                         DatePickerDialog(
-                                                            context,
+                                                            pickerThemedContext(context),
                                                             { _, y, m, d ->
                                                                 c.set(y, m, d, 9, 0, 0)
                                                                 customPromiseMillis = c.timeInMillis

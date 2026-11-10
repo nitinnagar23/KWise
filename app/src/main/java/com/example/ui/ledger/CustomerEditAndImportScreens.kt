@@ -1419,7 +1419,7 @@ fun ImportCustomersFlowScreen(
                                         Surface(
                                             modifier = Modifier.size(26.dp),
                                             shape = RoundedCornerShape(7.dp),
-                                            color = if (isChecked) EditBrandGreen else Color.White,
+                                            color = if (isChecked) EditBrandGreen else KwSurface,
                                             border = if (isChecked) null else BorderStroke(1.5.dp, kw(0xFFCBD5E1))
                                         ) {
                                             if (isChecked) {

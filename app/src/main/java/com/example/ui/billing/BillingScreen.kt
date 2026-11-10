@@ -1,5 +1,6 @@
 package com.example.ui.billing
 
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.kw
 import android.app.Activity
 import android.app.DatePickerDialog
@@ -1405,7 +1406,7 @@ fun BillingScreen(
                             onClick = {
                                 val cal = Calendar.getInstance()
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, year, month, dayOfMonth ->
                                         val chosen = Calendar.getInstance().apply {
                                             set(year, month, dayOfMonth, 9, 0, 0)

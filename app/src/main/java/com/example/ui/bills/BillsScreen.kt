@@ -1,5 +1,6 @@
 package com.example.ui.bills
 
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.kw
 import android.app.DatePickerDialog
 import android.widget.Toast
@@ -506,7 +507,7 @@ fun BillsScreen(
                             } else {
                                 val cal = Calendar.getInstance()
                                 DatePickerDialog(
-                                    context,
+                                    pickerThemedContext(context),
                                     { _, y, m, d ->
                                         val picked = Calendar.getInstance().apply {
                                             set(Calendar.YEAR, y)

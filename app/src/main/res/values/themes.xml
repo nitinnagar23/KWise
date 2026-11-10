@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar" />
+
+    <!-- Native date/time pickers follow the in-app theme (see pickerThemedContext in KwColors.kt) -->
+    <style name="Theme.KhataWise.Picker.Light" parent="android:Theme.DeviceDefault.Light.Dialog.Alert">
+        <item name="android:colorAccent">#0B7A55</item>
+    </style>
+    <style name="Theme.KhataWise.Picker.Dark" parent="android:Theme.DeviceDefault.Dialog.Alert">
+        <item name="android:colorAccent">#34D399</item>
+    </style>
 </resources>
