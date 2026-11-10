@@ -219,7 +219,8 @@ object GoogleAuthManager {
 
     private fun getWebClientId(context: Context): String? {
         return try {
-            context.getString(com.example.R.string.default_web_client_id).takeIf { it.isNotBlank() }
+            val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+            if (resId != 0) context.getString(resId).takeIf { it.isNotBlank() } else null
         } catch (e: Exception) {
             null
         }

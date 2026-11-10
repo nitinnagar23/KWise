@@ -964,7 +964,9 @@ fun RemindersSubScreen(
                                 },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -1073,7 +1075,9 @@ private fun ReminderSwitchRow(
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = KwGreen
+                checkedTrackColor = KwGreen,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = kw(0xFFD1D5DB)
             )
         )
     }

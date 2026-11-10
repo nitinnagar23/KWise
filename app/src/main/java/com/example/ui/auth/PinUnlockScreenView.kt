@@ -65,11 +65,11 @@ import java.util.Locale
 
 internal val LoginBrandGreen: Color get() = kw(0xFF0E6F43)
 internal val LoginMintTop: Color get() = kw(0xFFE9F6F0)
-internal val LoginPageBg: Color get() = kw(0xFFF7F8FA)
+internal val LoginPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF7F8FA)
 internal val LoginNavyText: Color get() = kw(0xFF0F172A)
 internal val LoginSubtleText: Color get() = kw(0xFF525866)
 internal val LoginCardBorder: Color get() = kw(0xFFE2E8F0)
-internal val LoginNavyAvatarBg: Color get() = kw(0xFF0F294A)
+internal val LoginNavyAvatarBg: Color get() = Color(0xFF14305E)
 internal val LoginSoftBadgeBg: Color get() = kw(0xFFE8ECF4)
 @Composable
 internal fun PinUnlockFullScreen(

@@ -902,7 +902,9 @@ fun CloseDayScreen(
                             onCheckedChange = { carryForwardOpening = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = CbBrandGreen
+                                checkedTrackColor = CbBrandGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             ),
                             modifier = Modifier.testTag("close_day_carry_forward_switch")
                         )
@@ -1504,7 +1506,9 @@ fun ExpenseCategoriesScreen(
                                         },
                                         colors = SwitchDefaults.colors(
                                             checkedThumbColor = Color.White,
-                                            checkedTrackColor = CbBrandGreen
+                                            checkedTrackColor = CbBrandGreen,
+                                            uncheckedThumbColor = Color.White,
+                                            uncheckedTrackColor = kw(0xFFD1D5DB)
                                         ),
                                         modifier = Modifier.testTag("expense_cat_switch_${cat.name.lowercase().replace(" ", "_")}")
                                     )

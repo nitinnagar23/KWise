@@ -96,14 +96,14 @@ val AmberWheatContainer: Color get() = CAmberContainer
 val OnAmberWheatContainer: Color get() = OnCAmberContainer
 
 // Tertiary terracotta
-val TerracottaTertiary = Color(0xFFB91C1C)
-val TerracottaContainer = Color(0xFFFDE4E4)
+val TerracottaTertiary: Color get() = CRedUdhari
+val TerracottaContainer: Color get() = CRedUdhariBg
 
 // Neutrals
-val CreamBackground = Color(0xFF0F1720)
-val SurfaceWhite = Color(0xFF1A2330)
-val SurfaceVariantWarm = Color(0xFF1A2330)
-val OutlineWarm = Color(0xFF2A3646)
+val CreamBackground: Color get() = pick(0xFFF6F8FB, 0xFF0F1720)
+val SurfaceWhite: Color get() = pick(0xFFFFFFFF, 0xFF1A2330)
+val SurfaceVariantWarm: Color get() = pick(0xFFF1F5F9, 0xFF243040)
+val OutlineWarm: Color get() = pick(0xFFE3E8F0, 0xFF2A3646)
 
 // Dark Palette
 val ForestGreenPrimaryDark: Color get() = CGreen

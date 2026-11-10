@@ -1043,7 +1043,7 @@ internal fun BarcodeScannerScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(kw(0xFF0D171E))
+            .background(Color(0xFF0D171E))
     ) {
         // 1. Dark Scanner Top Header
         Row(
@@ -1060,7 +1060,7 @@ internal fun BarcodeScannerScreen(
                 Surface(
                     onClick = onClose,
                     shape = RoundedCornerShape(12.dp),
-                    color = kw(0xFF1F2A33),
+                    color = Color(0xFF1F2A33),
                     modifier = Modifier
                         .size(44.dp)
                         .testTag("barcode_close_btn")
@@ -1086,7 +1086,7 @@ internal fun BarcodeScannerScreen(
             Surface(
                 onClick = { flashOn = !flashOn },
                 shape = RoundedCornerShape(12.dp),
-                color = if (flashOn) kw(0xFF34D399).copy(alpha = 0.25f) else kw(0xFF1F2A33),
+                color = if (flashOn) Color(0xFF34D399).copy(alpha = 0.25f) else Color(0xFF1F2A33),
                 modifier = Modifier
                     .size(44.dp)
                     .testTag("barcode_flash_btn")
@@ -1095,7 +1095,7 @@ internal fun BarcodeScannerScreen(
                     Icon(
                         imageVector = Icons.Default.FlashOn,
                         contentDescription = tr("Flash", "फ़्लैश"),
-                        tint = if (flashOn) kw(0xFF34D399) else Color.White,
+                        tint = if (flashOn) Color(0xFF34D399) else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -1122,7 +1122,7 @@ internal fun BarcodeScannerScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val bracketColor = kw(0xFF34D399)
+                    val bracketColor = Color(0xFF34D399)
                     val strokeW = 4.dp.toPx()
                     val cornerLen = 36.dp.toPx()
                     val w = size.width
@@ -1184,7 +1184,7 @@ internal fun BarcodeScannerScreen(
                     tr("Point the camera at the barcode on the bag", "बोरी पर दिए गए बारकोड पर कैमरा दिखाएं")
                 },
                 fontSize = 13.5.sp,
-                color = kw(0xFFCBD5E1),
+                color = Color(0xFFCBD5E1),
                 textAlign = TextAlign.Center
             )
         }

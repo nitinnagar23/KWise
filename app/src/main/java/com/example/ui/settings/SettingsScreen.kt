@@ -862,7 +862,7 @@ fun SettingsScreen(
                             }
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = kw(0xFF0F172A)
+                                color = Color(0xFF14305E)
                             ) {
                                 Text(
                                     text = roleBadgeText,

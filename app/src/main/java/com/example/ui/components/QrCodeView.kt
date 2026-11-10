@@ -29,7 +29,7 @@ fun QrCodeView(
     data: String,
     modifier: Modifier = Modifier,
     size: Dp = 180.dp,
-    qrColor: Color = kw(0xFF0B132B),
+    qrColor: Color = Color(0xFF0B132B),
     backgroundColor: Color = Color.White
 ) {
     val gridSize = 21 // standard Version 1 QR matrix

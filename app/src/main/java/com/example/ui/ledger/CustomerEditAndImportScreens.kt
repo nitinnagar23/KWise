@@ -99,7 +99,7 @@ import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.util.UUID
 
-private val EditPageBg: Color get() = kw(0xFFF6F7F9)
+private val EditPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F7F9)
 private val EditCardBorder: Color get() = kw(0xFFE2E8F0)
 private val EditNavyText: Color get() = kw(0xFF0F172A)
 private val EditSubtleText: Color get() = kw(0xFF64748B)
@@ -587,7 +587,9 @@ fun AddOrEditCustomerScreen(
                         onCheckedChange = { autoBlockAtLimit = it },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = EditBrandGreen
+                            checkedTrackColor = EditBrandGreen,
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = kw(0xFFD1D5DB)
                         )
                     )
                 }
@@ -629,7 +631,9 @@ fun AddOrEditCustomerScreen(
                         onCheckedChange = { blockUdhariNow = it },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = EditCrimsonRed
+                            checkedTrackColor = EditCrimsonRed,
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = kw(0xFFD1D5DB)
                         )
                     )
                 }

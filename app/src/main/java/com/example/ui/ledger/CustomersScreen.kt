@@ -73,6 +73,7 @@ import com.example.model.can
 import com.example.model.getCustomerStatusChip
 import com.example.ui.home.QuickAddCustomerDialog
 import com.example.ui.theme.CAmber
+import com.example.ui.theme.CGreenContainer
 import com.example.ui.theme.CAmberBg
 import com.example.ui.theme.CGreen
 import com.example.ui.theme.CRedUdhari
@@ -416,7 +417,7 @@ private fun DirectoryCustomerRow(
     val (chipColor, chipBg) = when (statusChip) {
         CustomerStatusChip.OVER_LIMIT -> Pair(CRedUdhari, CRedUdhariBg)
         CustomerStatusChip.HAS_UDHARI -> Pair(CAmber, CAmberBg)
-        CustomerStatusChip.CLEAR -> Pair(CGreen, kw(0xFF133826))
+        CustomerStatusChip.CLEAR -> Pair(CGreen, CGreenContainer)
     }
 
     Surface(

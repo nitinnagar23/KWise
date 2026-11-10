@@ -94,7 +94,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private val KhataPageBg: Color get() = kw(0xFFF6F7F9)
+private val KhataPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F7F9)
 private val KhataCardBorder: Color get() = kw(0xFFE2E8F0)
 private val KhataNavyText: Color get() = kw(0xFF0F172A)
 private val KhataSubtleText: Color get() = kw(0xFF64748B)
@@ -999,7 +999,9 @@ fun CustomerStatementScreen(
                                 onCheckedChange = { showLast4Entries = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KhataBrandGreen
+                                    checkedTrackColor = KhataBrandGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -1031,7 +1033,9 @@ fun CustomerStatementScreen(
                                 onCheckedChange = { showUpiQrCode = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KhataBrandGreen
+                                    checkedTrackColor = KhataBrandGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -1882,7 +1886,9 @@ fun CollectUdhariScreen(
                                     onCheckedChange = { setPromiseForRest = it },
                                     colors = SwitchDefaults.colors(
                                         checkedThumbColor = Color.White,
-                                        checkedTrackColor = KhataBrandGreen
+                                        checkedTrackColor = KhataBrandGreen,
+                                        uncheckedThumbColor = Color.White,
+                                        uncheckedTrackColor = kw(0xFFD1D5DB)
                                     )
                                 )
                             }
@@ -1966,7 +1972,9 @@ fun CollectUdhariScreen(
                             onCheckedChange = { sendWhatsappReceipt = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = KhataBrandGreen
+                                checkedTrackColor = KhataBrandGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             )
                         )
                     }

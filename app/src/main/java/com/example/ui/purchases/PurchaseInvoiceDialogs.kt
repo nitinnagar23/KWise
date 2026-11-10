@@ -87,6 +87,7 @@ import com.example.ui.theme.FlatDarkCard
 import com.example.ui.theme.FlatTextMuted
 import com.example.ui.theme.FlatTextPrimary
 import com.example.ui.theme.FlatTextSecondary
+import com.example.ui.theme.kw
 import com.example.util.BillGenerator
 import com.example.util.CurrencyUtils
 import com.example.util.tr
@@ -687,7 +688,9 @@ fun AddEditSupplierScreen(
                             onCheckedChange = { isActiveSupplier = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = SupGreen
+                                checkedTrackColor = SupGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             )
                         )
                     }
@@ -723,7 +726,9 @@ fun AddEditSupplierScreen(
                             onCheckedChange = { remindBeforeDueDate = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = SupGreen
+                                checkedTrackColor = SupGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             )
                         )
                     }

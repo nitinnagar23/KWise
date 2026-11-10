@@ -87,7 +87,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private val DetailPageBg: Color get() = kw(0xFFF6F7F9)
+private val DetailPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F7F9)
 private val DetailCardBorder: Color get() = kw(0xFFE2E8F0)
 private val DetailNavyText: Color get() = kw(0xFF0F172A)
 private val DetailSubtleText: Color get() = kw(0xFF64748B)

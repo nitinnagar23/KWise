@@ -2692,13 +2692,13 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = "Counted ${CurrencyUtils.formatWeight(countedTotalKg)} kg",
                                 fontSize = 13.sp,
-                                color = kw(0xFF4B1D1D),
+                                color = diffColor,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "System ${CurrencyUtils.formatWeight(systemStockKg)} kg",
                                 fontSize = 13.sp,
-                                color = kw(0xFF4B1D1D),
+                                color = diffColor,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }

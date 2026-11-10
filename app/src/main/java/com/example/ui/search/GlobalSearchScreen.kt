@@ -159,7 +159,7 @@ private data class SearchSupplierSummary(
 )
 
 // Palette matching the Search PDF design
-private val SearchPageBg: Color get() = kw(0xFFF6F5F0)
+private val SearchPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F5F0)
 private val SearchCardBg: Color get() = kw(0xFFFFFFFF)
 private val SearchBorder: Color get() = kw(0xFFE5E4DC)
 private val SearchGreen: Color get() = kw(0xFF15803D)

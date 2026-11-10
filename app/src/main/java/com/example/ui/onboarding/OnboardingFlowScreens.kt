@@ -88,7 +88,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 // Colors matching KhataWise – Onboarding & states.pdf
-private val OnbPageBg: Color get() = kw(0xFFFBFBF9)
+private val OnbPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFFBFBF9)
 private val OnbCardBorder: Color get() = kw(0xFFE6E8EC)
 private val OnbNavyText: Color get() = kw(0xFF0F1D2E)
 private val OnbSubtleText: Color get() = kw(0xFF5A6578)

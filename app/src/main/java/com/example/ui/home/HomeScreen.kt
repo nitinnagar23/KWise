@@ -82,6 +82,7 @@ import com.example.ui.search.GlobalSearchScreen
 import com.example.ui.theme.CAmber
 import com.example.ui.theme.CGreen
 import com.example.ui.theme.CGreenContainer
+import com.example.ui.theme.CGreenPrimary
 import com.example.ui.theme.CRedUdhari
 import com.example.ui.theme.FlatDarkBg
 import com.example.ui.theme.FlatDarkBorder
@@ -538,8 +539,8 @@ fun HomeScreen(
             Button(
                 onClick = onNavigateToNewBill,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = primaryForestGreen,
-                    contentColor = primaryForestGreenTextOn
+                    containerColor = CGreenPrimary,
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -829,8 +830,8 @@ fun HomeScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryForestGreen,
-                        contentColor = primaryForestGreenTextOn
+                        containerColor = CGreenPrimary,
+                        contentColor = Color.White
                     )
                 ) {
                     Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold)
@@ -963,8 +964,8 @@ fun HomeScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = primaryForestGreen,
-                            contentColor = primaryForestGreenTextOn
+                            containerColor = CGreenPrimary,
+                            contentColor = Color.White
                         ),
                         modifier = Modifier.testTag("confirm_collect_udhari_btn")
                     ) {

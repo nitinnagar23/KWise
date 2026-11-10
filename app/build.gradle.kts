@@ -1,5 +1,6 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import java.time.Duration
+import java.util.Base64
 
 plugins {
   alias(libs.plugins.android.application)
@@ -8,6 +9,15 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
+}
+
+val googleServicesFile = file("google-services.json")
+val googleServicesBase64File = file("google-services.json.base64")
+if (!googleServicesFile.exists() && googleServicesBase64File.exists()) {
+  runCatching {
+    val cleanBase64 = googleServicesBase64File.readText().replace("\\s".toRegex(), "")
+    googleServicesFile.writeBytes(Base64.getDecoder().decode(cleanBase64))
+  }
 }
 
 android {
@@ -47,7 +57,11 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      if (file("${rootDir}/debug.keystore").exists()) {
+        signingConfig = signingConfigs.getByName("debugConfig")
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11

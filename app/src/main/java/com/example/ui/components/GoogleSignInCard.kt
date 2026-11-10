@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.FlatDarkBg
 import com.example.ui.theme.kw
 import android.app.Activity
 import android.widget.Toast
@@ -178,7 +179,7 @@ fun GoogleSignInCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(kw(0xFF0F172A))
+                        .background(FlatDarkBg)
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically

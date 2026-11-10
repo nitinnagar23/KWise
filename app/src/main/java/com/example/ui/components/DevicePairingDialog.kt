@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.ui.theme.CGreenPrimary
 import com.example.ui.theme.kw
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -246,7 +247,10 @@ fun DevicePairingDialog(
                                 }
                             },
                             enabled = !isGenerating,
-                            colors = ButtonDefaults.buttonColors(containerColor = kw(0xFF06B6D4)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF0891B2),
+                                contentColor = Color.White
+                            ),
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -356,7 +360,10 @@ fun DevicePairingDialog(
                                         }
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = kw(0xFF06B6D4)),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF0891B2),
+                                    contentColor = Color.White
+                                ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -378,7 +385,10 @@ fun DevicePairingDialog(
         confirmButton = {
             Button(
                 onClick = onDismissRequest,
-                colors = ButtonDefaults.buttonColors(containerColor = if (isClaimed) CGreen else kw(0xFF1E293B))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isClaimed) CGreenPrimary else Color(0xFF1E293B),
+                    contentColor = Color.White
+                )
             ) {
                 Text(if (isClaimed) "Done" else "Close")
             }

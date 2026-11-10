@@ -352,7 +352,7 @@ class SettingsExtraPrefsStore(context: Context) {
 }
 
 // Shared design tokens matching the PDF's crisp warm off-white surface & forest green palette
-internal val KwPageBg: Color get() = kw(0xFFF6F5F0)
+internal val KwPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F5F0)
 internal val KwCardBg: Color get() = kw(0xFFFFFFFF)
 internal val KwBorder: Color get() = kw(0xFFE5E4DC)
 internal val KwTextPrimary: Color get() = kw(0xFF111827)
@@ -365,7 +365,7 @@ internal val KwAmber: Color get() = kw(0xFFD97706)
 internal val KwAmberSoft: Color get() = kw(0xFFFEF3C7)
 internal val KwRed: Color get() = kw(0xFFDC2626)
 internal val KwRedSoft: Color get() = kw(0xFFFEE2E2)
-internal val KwNavy: Color get() = kw(0xFF0F172A)
+internal val KwNavy: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF14305E) else Color(0xFF0F172A)
 @Composable
 internal fun SettingsSubScreenHeader(
     title: String,
@@ -1166,7 +1166,7 @@ fun UpiAndGstSubScreen(
                                 Surface(
                                     modifier = Modifier.size(56.dp),
                                     shape = RoundedCornerShape(8.dp),
-                                    color = KwCardBg,
+                                    color = Color.White,
                                     border = BorderStroke(1.dp, KwBorder)
                                 ) {
                                     Canvas(
@@ -1175,7 +1175,7 @@ fun UpiAndGstSubScreen(
                                             .padding(8.dp)
                                     ) {
                                         val s = size.width / 5f
-                                        val color = KwNavy
+                                        val color = Color(0xFF0F172A)
                                         // Top-left finder
                                         drawRect(color, Offset(0f, 0f), Size(s * 2f, s * 2f))
                                         drawRect(Color.White, Offset(s * 0.4f, s * 0.4f), Size(s * 1.2f, s * 1.2f))
@@ -1232,7 +1232,9 @@ fun UpiAndGstSubScreen(
                                 onCheckedChange = { showPayNowQr = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -1315,7 +1317,9 @@ fun UpiAndGstSubScreen(
                             onCheckedChange = { hasGstin = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = KwGreen
+                                checkedTrackColor = KwGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             )
                         )
                     }
@@ -1533,7 +1537,9 @@ fun UpiAndGstSubScreen(
                                 onCheckedChange = { pricesIncludeGst = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -1565,7 +1571,9 @@ fun UpiAndGstSubScreen(
                                 onCheckedChange = { showGstSplit = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -1887,7 +1895,9 @@ fun SyncAndBackupSubScreen(
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = KwGreen
+                                checkedTrackColor = KwGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             )
                         )
                     }
@@ -1922,7 +1932,9 @@ fun SyncAndBackupSubScreen(
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = KwGreen
+                                checkedTrackColor = KwGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
                             )
                         )
                     }
@@ -2112,7 +2124,9 @@ fun SyncAndBackupSubScreen(
                                 },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -2524,7 +2538,9 @@ fun ThemeAndLanguageSubScreen(
                                 onCheckedChange = { indianFormat = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -2674,7 +2690,7 @@ private fun ThemePreviewCard(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(KwNavy)
+                                .background(Color(0xFF0F1720))
                                 .padding(8.dp),
                             verticalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
@@ -2730,7 +2746,7 @@ private fun ThemePreviewCard(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxSize()
-                                    .background(KwNavy)
+                                    .background(Color(0xFF0F1720))
                                     .padding(6.dp),
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
@@ -2887,7 +2903,9 @@ fun AppLockAndSecuritySubScreen(
                         onCheckedChange = { lockApp = it },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = KwGreen
+                            checkedTrackColor = KwGreen,
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = kw(0xFFD1D5DB)
                         )
                     )
                 }
@@ -2928,7 +2946,9 @@ fun AppLockAndSecuritySubScreen(
                                 onCheckedChange = { useFingerprint = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -3036,7 +3056,9 @@ fun AppLockAndSecuritySubScreen(
                                 onCheckedChange = { askPinReportsCashbook = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -3068,7 +3090,9 @@ fun AppLockAndSecuritySubScreen(
                                 onCheckedChange = { adminPinDeletesReturns = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }
@@ -3100,7 +3124,9 @@ fun AppLockAndSecuritySubScreen(
                                 onCheckedChange = { blockScreenshots = it },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
-                                    checkedTrackColor = KwGreen
+                                    checkedTrackColor = KwGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 )
                             )
                         }

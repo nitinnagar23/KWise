@@ -1930,7 +1930,9 @@ fun SaveAsDraftBottomSheet(
                     onCheckedChange = { lockTodayRates = it },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = VoiceGreen
+                        checkedTrackColor = VoiceGreen,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = kw(0xFFD1D5DB)
                     )
                 )
             }

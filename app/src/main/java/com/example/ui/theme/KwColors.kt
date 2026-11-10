@@ -37,13 +37,19 @@ private fun toDark(argb: Long): Long {
     val r = ((argb shr 16) and 0xFF).toInt()
     val g = ((argb shr 8) and 0xFF).toInt()
     val b = (argb and 0xFF).toInt()
-    if (a == 0 || (r == 0 && g == 0 && b == 0) || (r == 255 && g == 255 && b == 255)) return argb
+    if (a == 0 || (r == 0 && g == 0 && b == 0)) return argb
 
     val mx = max(r, max(g, b)); val mn = min(r, min(g, b))
     val chroma = (mx - mn) / 255.0
     val y = lum(r, g, b)
+    val (h, s, l0) = rgbToHsl(r, g, b)
 
-    val (nr, ng, nb) = if (chroma <= 0.17) {
+    // Light pastel semantic tints (green, red, amber, blue, purple) have low RGB chroma
+    // because of high lightness, so detect them via HSL saturation / green dominance before
+    // falling back to the neutral gray ramp.
+    val isColored = chroma > 0.17 || (y >= 0.55 && chroma >= 0.03 && (s >= 0.43 || (g > r && g > b)))
+
+    val (nr, ng, nb) = if (!isColored) {
         val v = when {
             y >= 0.97 -> 0x1A2330
             y >= 0.80 -> 0x243040
@@ -54,13 +60,12 @@ private fun toDark(argb: Long): Long {
         }
         Triple((v shr 16) and 0xFF, (v shr 8) and 0xFF, v and 0xFF)
     } else {
-        val (h, s, _) = rgbToHsl(r, g, b)
         when {
-            y >= 0.80 -> hslToRgb(h, min(s * 0.5, 0.40), 0.16)
-            y >= 0.55 -> hslToRgb(h, min(s * 0.5, 0.40), 0.27)
+            y >= 0.80 -> hslToRgb(h, min(max(s * 0.5, 0.35), 0.45), 0.16)
+            y >= 0.55 -> hslToRgb(h, min(max(s * 0.5, 0.35), 0.45), 0.27)
             y >= 0.215 -> Triple(r, g, b)
             else -> {
-                var l = rgbToHsl(r, g, b).third
+                var l = l0
                 var out = Triple(r, g, b)
                 val sat = min(s, 0.75)
                 while (l < 0.75) {
