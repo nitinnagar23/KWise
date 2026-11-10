@@ -1,5 +1,6 @@
 package com.example.ui.rates
 
+import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
@@ -93,16 +94,15 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
-private val RatesBrandGreen = Color(0xFF0E6F43)
-private val RatesMintBg = Color(0xFFE1F5EB)
-private val RatesLowStockBg = Color(0xFFFDEFD9)
-private val RatesLowStockText = Color(0xFFB45309)
-private val RatesCrimson = Color(0xFFB91C1C)
-private val RatesCrimsonSoftBg = Color(0xFFFDE8E8)
-private val RatesEditBtnBg = Color(0xFFF1EFF7)
-private val RatesInfoBoxBg = Color(0xFFF1F1F8)
-private val RatesInfoBoxBorder = Color(0xFFE2E2F0)
-
+private val RatesBrandGreen: Color get() = kw(0xFF0E6F43)
+private val RatesMintBg: Color get() = kw(0xFFE1F5EB)
+private val RatesLowStockBg: Color get() = kw(0xFFFDEFD9)
+private val RatesLowStockText: Color get() = kw(0xFFB45309)
+private val RatesCrimson: Color get() = kw(0xFFB91C1C)
+private val RatesCrimsonSoftBg: Color get() = kw(0xFFFDE8E8)
+private val RatesEditBtnBg: Color get() = kw(0xFFF1EFF7)
+private val RatesInfoBoxBg: Color get() = kw(0xFFF1F1F8)
+private val RatesInfoBoxBorder: Color get() = kw(0xFFE2E2F0)
 enum class CommodityFilter {
     ALL,
     LOOSE_ONLY,

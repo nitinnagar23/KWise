@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.ui.theme.kw
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -121,13 +122,13 @@ fun DevicePairingDialog(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(if (isClaimed) CGreen.copy(alpha = 0.2f) else Color(0xFF06B6D4).copy(alpha = 0.2f)),
+                        .background(if (isClaimed) CGreen.copy(alpha = 0.2f) else kw(0xFF06B6D4).copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isClaimed) Icons.Default.CheckCircle else Icons.Default.Smartphone,
                         contentDescription = null,
-                        tint = if (isClaimed) CGreen else Color(0xFF06B6D4),
+                        tint = if (isClaimed) CGreen else kw(0xFF06B6D4),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -157,7 +158,7 @@ fun DevicePairingDialog(
                         modifier = Modifier
                             .padding(24.dp)
                             .size(36.dp),
-                        color = Color(0xFF06B6D4)
+                        color = kw(0xFF06B6D4)
                     )
                     Text("Generating secure pairing key...", color = FlatTextMuted)
                 } else if (isClaimed) {
@@ -205,8 +206,8 @@ fun DevicePairingDialog(
                             onClick = { selectedRole = "CASHIER" },
                             label = { Text("Cashier (Sales Only)", maxLines = 1, softWrap = false) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF06B6D4).copy(alpha = 0.2f),
-                                selectedLabelColor = Color(0xFF06B6D4)
+                                selectedContainerColor = kw(0xFF06B6D4).copy(alpha = 0.2f),
+                                selectedLabelColor = kw(0xFF06B6D4)
                             )
                         )
                         Spacer(Modifier.width(8.dp))
@@ -215,8 +216,8 @@ fun DevicePairingDialog(
                             onClick = { selectedRole = "MANAGER" },
                             label = { Text("Manager (Full Access)", maxLines = 1, softWrap = false) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF10B981).copy(alpha = 0.2f),
-                                selectedLabelColor = Color(0xFF10B981)
+                                selectedContainerColor = kw(0xFF10B981).copy(alpha = 0.2f),
+                                selectedLabelColor = kw(0xFF10B981)
                             )
                         )
                     }
@@ -245,7 +246,7 @@ fun DevicePairingDialog(
                                 }
                             },
                             enabled = !isGenerating,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF06B6D4)),
+                            colors = ButtonDefaults.buttonColors(containerColor = kw(0xFF06B6D4)),
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -299,7 +300,7 @@ fun DevicePairingDialog(
                                         fontWeight = FontWeight.Bold,
                                         fontFamily = FontFamily.Monospace,
                                         letterSpacing = 2.sp,
-                                        color = if (isExpired) Color(0xFFEF4444) else Color(0xFF06B6D4)
+                                        color = if (isExpired) kw(0xFFEF4444) else kw(0xFF06B6D4)
                                     )
                                 }
 
@@ -331,14 +332,14 @@ fun DevicePairingDialog(
                             Icon(
                                 imageVector = Icons.Default.HourglassTop,
                                 contentDescription = null,
-                                tint = if (isExpired) Color(0xFFEF4444) else Color(0xFFF59E0B),
+                                tint = if (isExpired) kw(0xFFEF4444) else kw(0xFFF59E0B),
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = if (isExpired) "Code expired (10 min timeout)" else "Expires in $timeFormatted",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (isExpired) Color(0xFFEF4444) else Color(0xFFF59E0B)
+                                color = if (isExpired) kw(0xFFEF4444) else kw(0xFFF59E0B)
                             )
                         }
 
@@ -355,7 +356,7 @@ fun DevicePairingDialog(
                                         }
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF06B6D4)),
+                                colors = ButtonDefaults.buttonColors(containerColor = kw(0xFF06B6D4)),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
                                 Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -377,7 +378,7 @@ fun DevicePairingDialog(
         confirmButton = {
             Button(
                 onClick = onDismissRequest,
-                colors = ButtonDefaults.buttonColors(containerColor = if (isClaimed) CGreen else Color(0xFF1E293B))
+                colors = ButtonDefaults.buttonColors(containerColor = if (isClaimed) CGreen else kw(0xFF1E293B))
             ) {
                 Text(if (isClaimed) "Done" else "Close")
             }

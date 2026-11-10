@@ -1,5 +1,7 @@
 package com.example.ui.auth
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -61,15 +63,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-internal val LoginBrandGreen = Color(0xFF0E6F43)
-internal val LoginMintTop = Color(0xFFE9F6F0)
-internal val LoginPageBg = Color(0xFFF7F8FA)
-internal val LoginNavyText = Color(0xFF0F172A)
-internal val LoginSubtleText = Color(0xFF525866)
-internal val LoginCardBorder = Color(0xFFE2E8F0)
-internal val LoginNavyAvatarBg = Color(0xFF0F294A)
-internal val LoginSoftBadgeBg = Color(0xFFE8ECF4)
-
+internal val LoginBrandGreen: Color get() = kw(0xFF0E6F43)
+internal val LoginMintTop: Color get() = kw(0xFFE9F6F0)
+internal val LoginPageBg: Color get() = kw(0xFFF7F8FA)
+internal val LoginNavyText: Color get() = kw(0xFF0F172A)
+internal val LoginSubtleText: Color get() = kw(0xFF525866)
+internal val LoginCardBorder: Color get() = kw(0xFFE2E8F0)
+internal val LoginNavyAvatarBg: Color get() = kw(0xFF0F294A)
+internal val LoginSoftBadgeBg: Color get() = kw(0xFFE8ECF4)
 @Composable
 internal fun PinUnlockFullScreen(
     repository: CattleFeedRepository,
@@ -239,7 +240,7 @@ internal fun PinUnlockFullScreen(
                         .size(42.dp)
                         .testTag("pin_unlock_back_btn"),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, LoginCardBorder)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -260,7 +261,7 @@ internal fun PinUnlockFullScreen(
                 modifier = Modifier
                     .size(74.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFE1E8F0)),
+                    .background(kw(0xFFE1E8F0)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -338,7 +339,7 @@ internal fun PinUnlockFullScreen(
             Text(
                 text = pinError ?: tr("Enter your 4-digit PIN", "अपना 4-अंकीय पिन दर्ज करें"),
                 fontSize = 13.5.sp,
-                color = if (pinError != null) Color(0xFFDC2626) else LoginSubtleText,
+                color = if (pinError != null) kw(0xFFDC2626) else LoginSubtleText,
                 fontWeight = if (pinError != null) FontWeight.Bold else FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             )
@@ -452,7 +453,7 @@ internal fun PinUnlockFullScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.Backspace,
                             contentDescription = "Backspace",
-                            tint = Color(0xFF475569),
+                            tint = kw(0xFF475569),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -497,8 +498,8 @@ private fun PinKeypadCircleButton(
             .size(76.dp)
             .testTag(testTag),
         shape = CircleShape,
-        color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+        color = KwSurface,
+        border = BorderStroke(1.dp, kw(0xFFE5E7EB)),
         shadowElevation = 1.dp
     ) {
         Box(contentAlignment = Alignment.Center) {

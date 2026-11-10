@@ -1,5 +1,6 @@
 package com.example.ui.purchases
 
+import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -86,16 +87,15 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-internal val SupGreen = Color(0xFF0E6F43)
-internal val SupGreenSoft = Color(0xFFDDF3E8)
-internal val SupRed = Color(0xFFB91C1C)
-internal val SupRedSoft = Color(0xFFFCE4E4)
-internal val SupBlue = Color(0xFF1E40AF)
-internal val SupBlueSoft = Color(0xFFE0EEFF)
-internal val SupAvatarBg = Color(0xFFE8EEF7)
-internal val SupAvatarText = Color(0xFF1E3A8A)
-internal val SupChipIdleBg = Color(0xFFF1F1F7)
-
+internal val SupGreen: Color get() = kw(0xFF0E6F43)
+internal val SupGreenSoft: Color get() = kw(0xFFDDF3E8)
+internal val SupRed: Color get() = kw(0xFFB91C1C)
+internal val SupRedSoft: Color get() = kw(0xFFFCE4E4)
+internal val SupBlue: Color get() = kw(0xFF1E40AF)
+internal val SupBlueSoft: Color get() = kw(0xFFE0EEFF)
+internal val SupAvatarBg: Color get() = kw(0xFFE8EEF7)
+internal val SupAvatarText: Color get() = kw(0xFF1E3A8A)
+internal val SupChipIdleBg: Color get() = kw(0xFFF1F1F7)
 data class SupplierPhoneItem(
     val number: String,
     val tag: String = "Owner" // Owner, Office, WhatsApp, Accounts, Other

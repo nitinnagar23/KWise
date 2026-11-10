@@ -1,5 +1,7 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -122,13 +124,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val LedgerBrandGreen = Color(0xFF0E6F43)
-private val LedgerMintBg = Color(0xFFE1F5EB)
-private val LedgerCrimson = Color(0xFFB91C1C)
-private val LedgerCrimsonSoftBg = Color(0xFFFDE8E8)
-private val LedgerAvatarBg = Color(0xFFE6EEF6)
-private val LedgerAvatarText = Color(0xFF1E3A5F)
-
+private val LedgerBrandGreen: Color get() = kw(0xFF0E6F43)
+private val LedgerMintBg: Color get() = kw(0xFFE1F5EB)
+private val LedgerCrimson: Color get() = kw(0xFFB91C1C)
+private val LedgerCrimsonSoftBg: Color get() = kw(0xFFFDE8E8)
+private val LedgerAvatarBg: Color get() = kw(0xFFE6EEF6)
+private val LedgerAvatarText: Color get() = kw(0xFF1E3A5F)
 private enum class CustomerFilterTab {
     ALL,
     UDHARI_ONLY,
@@ -1671,8 +1672,8 @@ fun RecordPaymentDialog(
                     onPaymentRecorded(selectedCustomer!!.id, amt, noteInput.trim())
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = CGreen,
-                    contentColor = Color(0xFF00220F)
+                    containerColor = CGreenPrimary,
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.testTag("submit_repayment_btn")

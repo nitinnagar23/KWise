@@ -1,5 +1,6 @@
 package com.example.ui.inventory
 
+import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
@@ -887,7 +888,7 @@ internal fun ShareReorderListScreen(
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFF6F7FA)
+                                color = kw(0xFFF6F7FA)
                             ) {
                                 Text(
                                     text = msgText,
@@ -1042,7 +1043,7 @@ internal fun BarcodeScannerScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D171E))
+            .background(kw(0xFF0D171E))
     ) {
         // 1. Dark Scanner Top Header
         Row(
@@ -1059,7 +1060,7 @@ internal fun BarcodeScannerScreen(
                 Surface(
                     onClick = onClose,
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF1F2A33),
+                    color = kw(0xFF1F2A33),
                     modifier = Modifier
                         .size(44.dp)
                         .testTag("barcode_close_btn")
@@ -1085,7 +1086,7 @@ internal fun BarcodeScannerScreen(
             Surface(
                 onClick = { flashOn = !flashOn },
                 shape = RoundedCornerShape(12.dp),
-                color = if (flashOn) Color(0xFF34D399).copy(alpha = 0.25f) else Color(0xFF1F2A33),
+                color = if (flashOn) kw(0xFF34D399).copy(alpha = 0.25f) else kw(0xFF1F2A33),
                 modifier = Modifier
                     .size(44.dp)
                     .testTag("barcode_flash_btn")
@@ -1094,7 +1095,7 @@ internal fun BarcodeScannerScreen(
                     Icon(
                         imageVector = Icons.Default.FlashOn,
                         contentDescription = tr("Flash", "फ़्लैश"),
-                        tint = if (flashOn) Color(0xFF34D399) else Color.White,
+                        tint = if (flashOn) kw(0xFF34D399) else Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -1121,7 +1122,7 @@ internal fun BarcodeScannerScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
-                    val bracketColor = Color(0xFF34D399)
+                    val bracketColor = kw(0xFF34D399)
                     val strokeW = 4.dp.toPx()
                     val cornerLen = 36.dp.toPx()
                     val w = size.width
@@ -1183,7 +1184,7 @@ internal fun BarcodeScannerScreen(
                     tr("Point the camera at the barcode on the bag", "बोरी पर दिए गए बारकोड पर कैमरा दिखाएं")
                 },
                 fontSize = 13.5.sp,
-                color = Color(0xFFCBD5E1),
+                color = kw(0xFFCBD5E1),
                 textAlign = TextAlign.Center
             )
         }
@@ -1220,13 +1221,13 @@ internal fun BarcodeScannerScreen(
                                 modifier = Modifier
                                     .size(46.dp)
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(Color(0xFFFEF3C7)),
+                                    .background(kw(0xFFFEF3C7)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Inventory2,
                                     contentDescription = null,
-                                    tint = Color(0xFF92400E),
+                                    tint = kw(0xFF92400E),
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -1404,7 +1405,7 @@ internal fun BarcodeScannerScreen(
                                 modifier = Modifier
                                     .size(46.dp)
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(Color(0xFFF3F4F6)),
+                                    .background(kw(0xFFF3F4F6)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -1628,7 +1629,7 @@ private fun ScannerMetricBox(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFF4F5F8)
+        color = kw(0xFFF4F5F8)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),

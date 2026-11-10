@@ -1,5 +1,6 @@
 package com.example.ui.settings
 
+import com.example.ui.theme.kw
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -351,21 +352,20 @@ class SettingsExtraPrefsStore(context: Context) {
 }
 
 // Shared design tokens matching the PDF's crisp warm off-white surface & forest green palette
-internal val KwPageBg = Color(0xFFF6F5F0)
-internal val KwCardBg = Color(0xFFFFFFFF)
-internal val KwBorder = Color(0xFFE5E4DC)
-internal val KwTextPrimary = Color(0xFF111827)
-internal val KwTextSecondary = Color(0xFF6B7280)
-internal val KwTextMuted = Color(0xFF9CA3AF)
-internal val KwGreen = Color(0xFF16A34A)
-internal val KwGreenDark = Color(0xFF15803D)
-internal val KwGreenSoft = Color(0xFFDCFCE7)
-internal val KwAmber = Color(0xFFD97706)
-internal val KwAmberSoft = Color(0xFFFEF3C7)
-internal val KwRed = Color(0xFFDC2626)
-internal val KwRedSoft = Color(0xFFFEE2E2)
-internal val KwNavy = Color(0xFF0F172A)
-
+internal val KwPageBg: Color get() = kw(0xFFF6F5F0)
+internal val KwCardBg: Color get() = kw(0xFFFFFFFF)
+internal val KwBorder: Color get() = kw(0xFFE5E4DC)
+internal val KwTextPrimary: Color get() = kw(0xFF111827)
+internal val KwTextSecondary: Color get() = kw(0xFF6B7280)
+internal val KwTextMuted: Color get() = kw(0xFF9CA3AF)
+internal val KwGreen: Color get() = kw(0xFF16A34A)
+internal val KwGreenDark: Color get() = kw(0xFF15803D)
+internal val KwGreenSoft: Color get() = kw(0xFFDCFCE7)
+internal val KwAmber: Color get() = kw(0xFFD97706)
+internal val KwAmberSoft: Color get() = kw(0xFFFEF3C7)
+internal val KwRed: Color get() = kw(0xFFDC2626)
+internal val KwRedSoft: Color get() = kw(0xFFFEE2E2)
+internal val KwNavy: Color get() = kw(0xFF0F172A)
 @Composable
 internal fun SettingsSubScreenHeader(
     title: String,
@@ -996,7 +996,7 @@ private fun DashedGreenActionButton(
             .fillMaxWidth()
             .height(44.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF0FDF4))
+            .background(kw(0xFFF0FDF4))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -1775,8 +1775,8 @@ fun SyncAndBackupSubScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFECFDF5),
-                border = BorderStroke(1.dp, Color(0xFFA7F3D0))
+                color = kw(0xFFECFDF5),
+                border = BorderStroke(1.dp, kw(0xFFA7F3D0))
             ) {
                 Row(
                     modifier = Modifier
@@ -1814,7 +1814,7 @@ fun SyncAndBackupSubScreen(
                                 },
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF065F46)
+                                color = kw(0xFF065F46)
                             )
                             Text(
                                 text = tr(
@@ -1822,7 +1822,7 @@ fun SyncAndBackupSubScreen(
                                     "अंतिम सिंक $lastSyncFormatted · $pendingWaitingCount बाकी"
                                 ),
                                 fontSize = 12.sp,
-                                color = Color(0xFF047857)
+                                color = kw(0xFF047857)
                             )
                         }
                     }
@@ -3414,7 +3414,7 @@ fun SettingsLogoutModalDialog(
                             .width(42.dp)
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(Color(0xFFD1D5DB))
+                            .background(kw(0xFFD1D5DB))
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -3464,7 +3464,7 @@ fun SettingsLogoutModalDialog(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             color = KwAmberSoft,
-                            border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                            border = BorderStroke(1.dp, kw(0xFFFDE68A))
                         ) {
                             Text(
                                 text = tr(
@@ -3473,7 +3473,7 @@ fun SettingsLogoutModalDialog(
                                 ),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF92400E),
+                                color = kw(0xFF92400E),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                             )

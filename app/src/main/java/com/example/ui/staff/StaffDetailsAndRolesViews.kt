@@ -1,5 +1,6 @@
 package com.example.ui.staff
 
+import com.example.ui.theme.kw
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -76,17 +77,16 @@ import com.example.util.tr
 import java.security.SecureRandom
 import java.util.Locale
 
-internal val StaffBrandGreen = Color(0xFF0E6F43)
-internal val StaffMintSoft = Color(0xFFDDF3E8)
-internal val StaffNavyPill = Color(0xFF0F294A)
-internal val StaffBluePillBg = Color(0xFFD6EEFB)
-internal val StaffBluePillText = Color(0xFF0C4A6E)
-internal val StaffCashierPillBg = Color(0xFFEEF0F6)
-internal val StaffCashierPillText = Color(0xFF1E293B)
-internal val StaffAmberPillBg = Color(0xFFFDECCE)
-internal val StaffAmberPillText = Color(0xFFB45309)
-internal val StaffCrimson = Color(0xFFB91C1C)
-
+internal val StaffBrandGreen: Color get() = kw(0xFF0E6F43)
+internal val StaffMintSoft: Color get() = kw(0xFFDDF3E8)
+internal val StaffNavyPill: Color get() = kw(0xFF0F294A)
+internal val StaffBluePillBg: Color get() = kw(0xFFD6EEFB)
+internal val StaffBluePillText: Color get() = kw(0xFF0C4A6E)
+internal val StaffCashierPillBg: Color get() = kw(0xFFEEF0F6)
+internal val StaffCashierPillText: Color get() = kw(0xFF1E293B)
+internal val StaffAmberPillBg: Color get() = kw(0xFFFDECCE)
+internal val StaffAmberPillText: Color get() = kw(0xFFB45309)
+internal val StaffCrimson: Color get() = kw(0xFFB91C1C)
 internal data class StaffProfileItem(
     val id: String,
     val displayName: String,
@@ -211,7 +211,7 @@ internal fun StaffDevicesTabContent(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFFF1F2F6)
+                    color = kw(0xFFF1F2F6)
                 ) {
                     Row(
                         modifier = Modifier
@@ -274,7 +274,7 @@ internal fun StaffDevicesTabContent(
                                 .weight(1f)
                                 .height(58.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFF0FAF5))
+                                .background(kw(0xFFF0FAF5))
                                 .border(1.5.dp, StaffBrandGreen, RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -301,7 +301,7 @@ internal fun StaffDevicesTabContent(
                             .weight(1f)
                             .height(6.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(Color(0xFFE2E8F0))
+                            .background(kw(0xFFE2E8F0))
                     ) {
                         Box(
                             modifier = Modifier
@@ -605,7 +605,7 @@ internal fun StaffRolesTabContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 rows.forEach { row ->
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    HorizontalDivider(color = kw(0xFFF1F5F9))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -639,7 +639,7 @@ internal fun StaffRolesTabContent(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFF1F2F8)
+            color = kw(0xFFF1F2F8)
         ) {
             Text(
                 text = buildAnnotatedString {
@@ -654,7 +654,7 @@ internal fun StaffRolesTabContent(
                     )
                 },
                 fontSize = 13.5.sp,
-                color = Color(0xFF334155),
+                color = kw(0xFF334155),
                 lineHeight = 19.sp,
                 modifier = Modifier.padding(16.dp)
             )
@@ -734,7 +734,7 @@ private fun RoleMatrixCell(status: String) {
                 text = "—",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFCBD5E1)
+                color = kw(0xFFCBD5E1)
             )
         }
     }
@@ -768,7 +768,7 @@ internal fun StaffDetailsApprovalScreen(
         checkedThumbColor = Color.White,
         checkedTrackColor = StaffBrandGreen,
         uncheckedThumbColor = Color.White,
-        uncheckedTrackColor = Color(0xFFD1D5DB),
+        uncheckedTrackColor = kw(0xFFD1D5DB),
         uncheckedBorderColor = Color.Transparent
     )
 
@@ -870,13 +870,13 @@ internal fun StaffDetailsApprovalScreen(
                         label = tr("Registered name", "पंजीकृत नाम"),
                         value = staff.registeredName.ifBlank { staff.displayName }
                     )
-                    HorizontalDivider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(vertical = 10.dp))
+                    HorizontalDivider(color = kw(0xFFF1F5F9), modifier = Modifier.padding(vertical = 10.dp))
 
                     StaffTelemetryRow(
                         label = tr("Gmail", "जीमेल"),
                         value = staff.email.ifBlank { tr("Linked on Google Sign-In", "Google साइन-इन पर लिंक होगा") }
                     )
-                    HorizontalDivider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(vertical = 10.dp))
+                    HorizontalDivider(color = kw(0xFFF1F5F9), modifier = Modifier.padding(vertical = 10.dp))
 
                     val modelWithOs = when {
                         staff.deviceModel.isBlank() -> tr("Detected on device login", "डिवाइस लॉगिन पर पता चलेगा")
@@ -888,7 +888,7 @@ internal fun StaffDetailsApprovalScreen(
                         label = tr("Mobile model", "मोबाइल मॉडल"),
                         value = modelWithOs
                     )
-                    HorizontalDivider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(vertical = 10.dp))
+                    HorizontalDivider(color = kw(0xFFF1F5F9), modifier = Modifier.padding(vertical = 10.dp))
 
                     StaffTelemetryRow(
                         label = tr("Joined", "जुड़े"),
@@ -924,7 +924,7 @@ internal fun StaffDetailsApprovalScreen(
                         focusedContainerColor = FlatDarkCard,
                         unfocusedContainerColor = FlatDarkCard,
                         focusedBorderColor = StaffBrandGreen,
-                        unfocusedBorderColor = Color(0xFFCBD5E1)
+                        unfocusedBorderColor = kw(0xFFCBD5E1)
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1040,7 +1040,7 @@ internal fun StaffDetailsApprovalScreen(
                                             .height(52.dp)
                                             .clip(RoundedCornerShape(12.dp))
                                             .background(FlatDarkCard)
-                                            .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)),
+                                            .border(1.dp, kw(0xFFCBD5E1), RoundedCornerShape(12.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
@@ -1252,7 +1252,7 @@ private fun StaffRoleSelectionCard(
     capabilities: List<String>,
     onClick: () -> Unit
 ) {
-    val cardBg = if (selected) Color(0xFFF2FAF6) else FlatDarkCard
+    val cardBg = if (selected) kw(0xFFF2FAF6) else FlatDarkCard
     val borderColor = if (selected) StaffBrandGreen else FlatDarkBorder
     val borderWidth = if (selected) 2.dp else 1.dp
 
@@ -1276,7 +1276,7 @@ private fun StaffRoleSelectionCard(
                     .clip(CircleShape)
                     .border(
                         width = if (selected) 2.dp else 1.5.dp,
-                        color = if (selected) StaffBrandGreen else Color(0xFFCBD5E1),
+                        color = if (selected) StaffBrandGreen else kw(0xFFCBD5E1),
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -1314,13 +1314,13 @@ private fun StaffRoleSelectionCard(
                     capabilities.forEach { cap ->
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (selected) Color.White else Color(0xFFF1F2F6)
+                            color = if (selected) Color.White else kw(0xFFF1F2F6)
                         ) {
                             Text(
                                 text = cap,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF334155),
+                                color = kw(0xFF334155),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }

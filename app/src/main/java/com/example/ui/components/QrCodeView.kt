@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.ui.theme.kw
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +29,7 @@ fun QrCodeView(
     data: String,
     modifier: Modifier = Modifier,
     size: Dp = 180.dp,
-    qrColor: Color = Color(0xFF0B132B),
+    qrColor: Color = kw(0xFF0B132B),
     backgroundColor: Color = Color.White
 ) {
     val gridSize = 21 // standard Version 1 QR matrix
@@ -42,7 +43,7 @@ fun QrCodeView(
             .size(size)
             .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
-            .border(2.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp)),
+            .border(2.dp, kw(0xFFE2E8F0), RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(size - 24.dp)) {

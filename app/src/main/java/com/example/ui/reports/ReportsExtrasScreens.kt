@@ -1,5 +1,6 @@
 package com.example.ui.reports
 
+import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
@@ -80,15 +81,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val RepExtraGreen = Color(0xFF0E6F43)
-private val RepExtraMintBg = Color(0xFFDDF3E8)
-private val RepExtraMintBorder = Color(0xFFA7DFC2)
-private val RepExtraRed = Color(0xFFB91C1C)
-private val RepExtraAmber = Color(0xFFB45309)
-private val RepExtraBlueInfoBg = Color(0xFFE0F2FE)
-private val RepExtraBlueInfoText = Color(0xFF075985)
-private val RepExtraChipIdle = Color(0xFFF1F1F7)
-
+private val RepExtraGreen: Color get() = kw(0xFF0E6F43)
+private val RepExtraMintBg: Color get() = kw(0xFFDDF3E8)
+private val RepExtraMintBorder: Color get() = kw(0xFFA7DFC2)
+private val RepExtraRed: Color get() = kw(0xFFB91C1C)
+private val RepExtraAmber: Color get() = kw(0xFFB45309)
+private val RepExtraBlueInfoBg: Color get() = kw(0xFFE0F2FE)
+private val RepExtraBlueInfoText: Color get() = kw(0xFF075985)
+private val RepExtraChipIdle: Color get() = kw(0xFFF1F1F7)
 enum class ExtraReportPeriod(val labelEn: String, val labelHi: String) {
     THIS_MONTH("This Month", "इस महीने"),
     LAST_MONTH("Last Month", "पिछले महीने"),

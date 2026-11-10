@@ -1,5 +1,6 @@
 package com.example.ui.inventory
 
+import com.example.ui.theme.kw
 import android.content.Context
 import androidx.compose.ui.graphics.Color
 import com.example.model.Customer
@@ -19,22 +20,21 @@ import java.util.Locale
 import java.util.UUID
 
 // Brand & semantic colors matching the Inventory PDFs
-internal val InvBrandGreen = Color(0xFF0E6F43)
-internal val InvMintBg = Color(0xFFDDF3E8)
-internal val InvAmberText = Color(0xFF8A4B08)
-internal val InvAmberProgress = Color(0xFFD97706)
-internal val InvAmberSoftBg = Color(0xFFFCEBD2)
-internal val InvAmberBannerBg = Color(0xFFFEF6E7)
-internal val InvAmberBannerBorder = Color(0xFFF3D59B)
-internal val InvRustButton = Color(0xFFA84308)
-internal val InvRedText = Color(0xFFB91C1C)
-internal val InvRedSoftBg = Color(0xFFFCE4E4)
-internal val InvBlueSoftBg = Color(0xFFE0F2FE)
-internal val InvBlueText = Color(0xFF0369A1)
-internal val InvTrackGray = Color(0xFFECECF2)
-internal val InvSoftSurface = Color(0xFFF3F3F9)
-internal val InvChipUnselectedBg = Color(0xFFF1F1F7)
-
+internal val InvBrandGreen: Color get() = kw(0xFF0E6F43)
+internal val InvMintBg: Color get() = kw(0xFFDDF3E8)
+internal val InvAmberText: Color get() = kw(0xFF8A4B08)
+internal val InvAmberProgress: Color get() = kw(0xFFD97706)
+internal val InvAmberSoftBg: Color get() = kw(0xFFFCEBD2)
+internal val InvAmberBannerBg: Color get() = kw(0xFFFEF6E7)
+internal val InvAmberBannerBorder: Color get() = kw(0xFFF3D59B)
+internal val InvRustButton: Color get() = kw(0xFFA84308)
+internal val InvRedText: Color get() = kw(0xFFB91C1C)
+internal val InvRedSoftBg: Color get() = kw(0xFFFCE4E4)
+internal val InvBlueSoftBg: Color get() = kw(0xFFE0F2FE)
+internal val InvBlueText: Color get() = kw(0xFF0369A1)
+internal val InvTrackGray: Color get() = kw(0xFFECECF2)
+internal val InvSoftSurface: Color get() = kw(0xFFF3F3F9)
+internal val InvChipUnselectedBg: Color get() = kw(0xFFF1F1F7)
 enum class InventoryFilter(val labelEn: String, val labelHi: String) {
     ALL("All", "सभी"),
     LOW("Low", "कम"),

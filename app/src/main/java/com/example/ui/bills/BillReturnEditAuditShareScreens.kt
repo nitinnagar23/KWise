@@ -1,5 +1,7 @@
 package com.example.ui.bills
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -123,23 +125,22 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 
-private val BPageBg = Color(0xFFF6F7F9)
-private val BCardBorder = Color(0xFFE2E8F0)
-private val BNavyText = Color(0xFF0F172A)
-private val BSubtleText = Color(0xFF64748B)
-private val BBrandGreen = Color(0xFF0E6F43)
-private val BSoftGreen = Color(0xFFDDF5E7)
-private val BCrimsonRed = Color(0xFFB91C1C)
-private val BSoftRed = Color(0xFFFEE2E2)
-private val BAmberText = Color(0xFF92400E)
-private val BSoftAmber = Color(0xFFFEF3C7)
-private val BEditedCardBg = Color(0xFFFFFBEB)
-private val BEditedCardBorder = Color(0xFFF59E0B)
-private val BInfoBlueBg = Color(0xFFE0F2FE)
-private val BInfoBlueBorder = Color(0xFFBAE6FD)
-private val BInfoBlueText = Color(0xFF075985)
-private val BChipIdleBg = Color(0xFFEEF2F6)
-
+private val BPageBg: Color get() = kw(0xFFF6F7F9)
+private val BCardBorder: Color get() = kw(0xFFE2E8F0)
+private val BNavyText: Color get() = kw(0xFF0F172A)
+private val BSubtleText: Color get() = kw(0xFF64748B)
+private val BBrandGreen: Color get() = kw(0xFF0E6F43)
+private val BSoftGreen: Color get() = kw(0xFFDDF5E7)
+private val BCrimsonRed: Color get() = kw(0xFFB91C1C)
+private val BSoftRed: Color get() = kw(0xFFFEE2E2)
+private val BAmberText: Color get() = kw(0xFF92400E)
+private val BSoftAmber: Color get() = kw(0xFFFEF3C7)
+private val BEditedCardBg: Color get() = kw(0xFFFFFBEB)
+private val BEditedCardBorder: Color get() = kw(0xFFF59E0B)
+private val BInfoBlueBg: Color get() = kw(0xFFE0F2FE)
+private val BInfoBlueBorder: Color get() = kw(0xFFBAE6FD)
+private val BInfoBlueText: Color get() = kw(0xFF075985)
+private val BChipIdleBg: Color get() = kw(0xFFEEF2F6)
 // ============================================================================
 // PAGES 1, 2 & 3: MULTI-STEP RETURN FLOW
 // Step 1: Return items -> Step 2: Settle the return -> Step 3: Return recorded
@@ -286,7 +287,7 @@ fun BillReturnFlowScreen(
         checkedThumbColor = Color.White,
         checkedTrackColor = BBrandGreen,
         uncheckedThumbColor = Color.White,
-        uncheckedTrackColor = Color(0xFFD1D5DB),
+        uncheckedTrackColor = kw(0xFFD1D5DB),
         uncheckedBorderColor = Color.Transparent
     )
 
@@ -315,7 +316,7 @@ fun BillReturnFlowScreen(
                             .size(44.dp)
                             .testTag("return_items_back_btn"),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -353,7 +354,7 @@ fun BillReturnFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Row(
@@ -449,7 +450,7 @@ fun BillReturnFlowScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            color = Color.White,
+                            color = KwSurface,
                             border = BorderStroke(
                                 width = if (isChecked) 1.8.dp else 1.dp,
                                 color = if (isChecked) BBrandGreen else BCardBorder
@@ -475,10 +476,10 @@ fun BillReturnFlowScreen(
                                         modifier = Modifier
                                             .size(28.dp)
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(if (isChecked) BBrandGreen else Color.White)
+                                            .background(if (isChecked) BBrandGreen else KwSurface)
                                             .border(
                                                 width = 1.5.dp,
-                                                color = if (isChecked) BBrandGreen else Color(0xFFCBD5E1),
+                                                color = if (isChecked) BBrandGreen else kw(0xFFCBD5E1),
                                                 shape = RoundedCornerShape(8.dp)
                                             ),
                                         contentAlignment = Alignment.Center
@@ -516,7 +517,7 @@ fun BillReturnFlowScreen(
                                 }
 
                                 if (isChecked) {
-                                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                                    HorizontalDivider(color = kw(0xFFF1F5F9))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -594,7 +595,7 @@ fun BillReturnFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Column(
@@ -610,7 +611,7 @@ fun BillReturnFlowScreen(
                                 Text("Labour · Ladaan", fontSize = 13.5.sp, color = BSubtleText)
                                 Text("₹100", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = BNavyText)
                             }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
@@ -618,7 +619,7 @@ fun BillReturnFlowScreen(
                                 Text("Delivery charge", fontSize = 13.5.sp, color = BSubtleText)
                                 Text("₹200", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = BNavyText)
                             }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -689,7 +690,7 @@ fun BillReturnFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         BasicTextField(
@@ -710,7 +711,7 @@ fun BillReturnFlowScreen(
 
                 // Bottom Bar
                 Surface(
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder)
                 ) {
                     Column(
@@ -786,7 +787,7 @@ fun BillReturnFlowScreen(
                         onClick = { currentStep = 1 },
                         modifier = Modifier.size(44.dp),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -852,7 +853,7 @@ fun BillReturnFlowScreen(
                             onClick = { settlementMode = mode },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            color = Color.White,
+                            color = KwSurface,
                             border = BorderStroke(
                                 width = if (selected) 1.8.dp else 1.dp,
                                 color = if (selected) BBrandGreen else BCardBorder
@@ -874,7 +875,7 @@ fun BillReturnFlowScreen(
                                             .clip(CircleShape)
                                             .border(
                                                 width = if (selected) 2.dp else 1.5.dp,
-                                                color = if (selected) BBrandGreen else Color(0xFFCBD5E1),
+                                                color = if (selected) BBrandGreen else kw(0xFFCBD5E1),
                                                 shape = CircleShape
                                             ),
                                         contentAlignment = Alignment.Center
@@ -922,7 +923,7 @@ fun BillReturnFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Column(
@@ -956,7 +957,7 @@ fun BillReturnFlowScreen(
                                 )
                             }
 
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -989,7 +990,7 @@ fun BillReturnFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Column(
@@ -1031,7 +1032,7 @@ fun BillReturnFlowScreen(
                                 }
                             }
 
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1047,7 +1048,7 @@ fun BillReturnFlowScreen(
                                 )
                             }
 
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1098,7 +1099,7 @@ fun BillReturnFlowScreen(
 
                 // Bottom Bar: Back + Confirm return
                 Surface(
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder)
                 ) {
                     Row(
@@ -1237,7 +1238,7 @@ fun BillReturnFlowScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder)
                 ) {
                     Column(
@@ -1306,7 +1307,7 @@ fun BillReturnFlowScreen(
                             }
                         }
 
-                        HorizontalDivider(color = Color(0xFFF1F5F9))
+                        HorizontalDivider(color = kw(0xFFF1F5F9))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -1322,7 +1323,7 @@ fun BillReturnFlowScreen(
                             )
                         }
 
-                        HorizontalDivider(color = Color(0xFFF1F5F9))
+                        HorizontalDivider(color = kw(0xFFF1F5F9))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -1528,7 +1529,7 @@ fun EditBillFlowScreen(
     if (showAddProductDialog) {
         AlertDialog(
             onDismissRequest = { showAddProductDialog = false },
-            containerColor = Color.White,
+            containerColor = KwSurface,
             title = {
                 Text(
                     text = tr("Add item to bill", "बिल में सामान जोड़ें"),
@@ -1617,7 +1618,7 @@ fun EditBillFlowScreen(
                     .size(44.dp)
                     .testTag("edit_bill_back_btn"),
                 shape = RoundedCornerShape(13.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -1695,7 +1696,7 @@ fun EditBillFlowScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
-                    color = if (isModified) BEditedCardBg else Color.White,
+                    color = if (isModified) BEditedCardBg else KwSurface,
                     border = BorderStroke(
                         width = if (isModified) 1.5.dp else 1.dp,
                         color = if (isModified) BEditedCardBorder else BCardBorder
@@ -1816,7 +1817,7 @@ fun EditBillFlowScreen(
                             // Rate box (₹ 1,350)
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = Color.White,
+                                color = KwSurface,
                                 border = BorderStroke(1.dp, BCardBorder),
                                 modifier = Modifier.width(125.dp)
                             ) {
@@ -1908,7 +1909,7 @@ fun EditBillFlowScreen(
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -1934,7 +1935,7 @@ fun EditBillFlowScreen(
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -1969,7 +1970,7 @@ fun EditBillFlowScreen(
             ) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder),
                     modifier = Modifier.weight(1.2f)
                 ) {
@@ -1984,7 +1985,7 @@ fun EditBillFlowScreen(
 
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -2010,7 +2011,7 @@ fun EditBillFlowScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Column(
@@ -2066,7 +2067,7 @@ fun EditBillFlowScreen(
                         }
                     }
 
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    HorizontalDivider(color = kw(0xFFF1F5F9))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -2137,7 +2138,7 @@ fun EditBillFlowScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 BasicTextField(
@@ -2155,7 +2156,7 @@ fun EditBillFlowScreen(
 
         // Bottom Bar: Cancel + Save changes
         Surface(
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, BCardBorder)
         ) {
             Row(
@@ -2335,7 +2336,7 @@ fun AuditLogFullScreen(
                     .size(44.dp)
                     .testTag("audit_log_back_btn"),
                 shape = RoundedCornerShape(13.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -2382,7 +2383,7 @@ fun AuditLogFullScreen(
                     .size(44.dp)
                     .testTag("audit_log_export_btn"),
                 shape = RoundedCornerShape(13.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -2549,15 +2550,15 @@ fun AuditLogFullScreen(
                         "RETURN" -> Quad(BSoftAmber, BAmberText, Icons.AutoMirrored.Filled.Undo, "Return on bill #$billNo")
                         "CANCEL", "DELETE" -> Quad(BSoftRed, BCrimsonRed, Icons.Default.DeleteOutline, "Deleted bill #$billNo")
                         "RATE" -> Quad(BSoftAmber, BAmberText, Icons.Outlined.LocalOffer, "Rate changed")
-                        "CUSTOMER_EDIT" -> Quad(BInfoBlueBg, Color(0xFF0284C7), Icons.Outlined.Edit, "Edited customer")
-                        else -> Quad(BInfoBlueBg, Color(0xFF0284C7), Icons.Outlined.Edit, "Edited bill #$billNo")
+                        "CUSTOMER_EDIT" -> Quad(BInfoBlueBg, kw(0xFF0284C7), Icons.Outlined.Edit, "Edited customer")
+                        else -> Quad(BInfoBlueBg, kw(0xFF0284C7), Icons.Outlined.Edit, "Edited bill #$billNo")
                     }
 
                     val detectedRole = userRoleMap[log.performedByUserName.lowercase(Locale.ROOT)]
                     val (roleLabel, roleBg, roleFg) = when (detectedRole) {
                         Role.ADMINISTRATOR -> Triple("Admin", BNavyText, Color.White)
                         Role.MANAGER -> Triple("Manager", BInfoBlueBg, BInfoBlueText)
-                        Role.STAFF -> Triple("Cashier", Color(0xFFF1F5F9), BSubtleText)
+                        Role.STAFF -> Triple("Cashier", kw(0xFFF1F5F9), BSubtleText)
                         null -> if (log.performedByUserName.contains("manager", ignoreCase = true) || log.performedByUserName.contains("rohit", ignoreCase = true)) {
                             Triple("Manager", BInfoBlueBg, BInfoBlueText)
                         } else {
@@ -2568,7 +2569,7 @@ fun AuditLogFullScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, BCardBorder)
                     ) {
                         Row(
@@ -2743,7 +2744,7 @@ fun BillShareScreen(
         checkedThumbColor = Color.White,
         checkedTrackColor = BBrandGreen,
         uncheckedThumbColor = Color.White,
-        uncheckedTrackColor = Color(0xFFD1D5DB),
+        uncheckedTrackColor = kw(0xFFD1D5DB),
         uncheckedBorderColor = Color.Transparent
     )
 
@@ -2770,7 +2771,7 @@ fun BillShareScreen(
                     .size(44.dp)
                     .testTag("bill_share_back_btn"),
                 shape = RoundedCornerShape(13.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -2848,7 +2849,7 @@ fun BillShareScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder)
                 ) {
                     Column(
@@ -2960,7 +2961,7 @@ fun BillShareScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Column(
@@ -2994,7 +2995,7 @@ fun BillShareScreen(
                         )
                     }
 
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    HorizontalDivider(color = kw(0xFFF1F5F9))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -3021,7 +3022,7 @@ fun BillShareScreen(
                         )
                     }
 
-                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                    HorizontalDivider(color = kw(0xFFF1F5F9))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -3062,7 +3063,7 @@ fun BillShareScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, BCardBorder)
             ) {
                 Column(
@@ -3165,7 +3166,7 @@ fun BillShareScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, BCardBorder)
                 ) {
                     Row(
@@ -3210,7 +3211,7 @@ fun BillShareScreen(
 
         // Sticky Bottom Bar: Send on WhatsApp + Share
         Surface(
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, BCardBorder)
         ) {
             Row(

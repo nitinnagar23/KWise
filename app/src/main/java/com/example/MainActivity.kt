@@ -1,8 +1,10 @@
 package com.example
 
+import com.example.ui.theme.kw
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -25,6 +27,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -90,6 +93,20 @@ class MainActivity : FragmentActivity() {
                 "DARK" -> true
                 "SYSTEM" -> isSystemInDarkTheme()
                 else -> false
+            }
+            // Keep status/navigation bar icons readable for the in-app theme (not just the system theme).
+            DisposableEffect(isDarkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT
+                    ) { isDarkTheme },
+                    navigationBarStyle = SystemBarStyle.auto(
+                        android.graphics.Color.argb(0xE6, 0xFF, 0xFF, 0xFF),
+                        android.graphics.Color.argb(0xE6, 0x0F, 0x17, 0x20)
+                    ) { isDarkTheme }
+                )
+                onDispose { }
             }
             val languageCode = settings?.language ?: "en"
 
@@ -226,9 +243,9 @@ class MainActivity : FragmentActivity() {
                                 if (showBottomBar) {
                                     val navBorderColor = FlatDarkBorder
                                     val navContainerColor = MaterialTheme.colorScheme.surface
-                                    val selectedGreen = if (isDarkTheme) CGreen else androidx.compose.ui.graphics.Color(0xFF0E6F43)
-                                    val selectedPillBg = if (isDarkTheme) CGreenContainer else androidx.compose.ui.graphics.Color(0xFFDDF3E8)
-                                    val unselectedColor = if (isDarkTheme) FlatTextMuted else androidx.compose.ui.graphics.Color(0xFF525866)
+                                    val selectedGreen = if (isDarkTheme) CGreen else com.example.ui.theme.kw(0xFF0E6F43)
+                                    val selectedPillBg = if (isDarkTheme) CGreenContainer else com.example.ui.theme.kw(0xFFDDF3E8)
+                                    val unselectedColor = if (isDarkTheme) FlatTextMuted else com.example.ui.theme.kw(0xFF525866)
                                     NavigationBar(
                                         containerColor = navContainerColor,
                                         tonalElevation = 0.dp,

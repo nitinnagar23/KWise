@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -79,16 +81,15 @@ import kotlinx.coroutines.delay
 import java.math.BigDecimal
 
 // Colors from KhataWise – Onboarding & states.pdf
-private val StateNavyText = Color(0xFF0F1D2E)
-private val StateSubtleText = Color(0xFF5A6578)
-private val StateCardBorder = Color(0xFFE6E8EC)
-private val StateBrandGreen = Color(0xFF0E6F43)
-private val StateSoftGreen = Color(0xFFDDF3E8)
-private val StateCrimsonRed = Color(0xFFB91C1C)
-private val StateSoftRed = Color(0xFFFEE2E2)
-private val StateAmberText = Color(0xFF78350F)
-private val StateSoftAmber = Color(0xFFFEF3C7)
-
+private val StateNavyText: Color get() = kw(0xFF0F1D2E)
+private val StateSubtleText: Color get() = kw(0xFF5A6578)
+private val StateCardBorder: Color get() = kw(0xFFE6E8EC)
+private val StateBrandGreen: Color get() = kw(0xFF0E6F43)
+private val StateSoftGreen: Color get() = kw(0xFFDDF3E8)
+private val StateCrimsonRed: Color get() = kw(0xFFB91C1C)
+private val StateSoftRed: Color get() = kw(0xFFFEE2E2)
+private val StateAmberText: Color get() = kw(0xFF78350F)
+private val StateSoftAmber: Color get() = kw(0xFFFEF3C7)
 // ============================================================================
 // 1. OFFLINE & SYNC BANNERS + HEADER SYNC STATUS DOT (Page 8 of PDF)
 // ============================================================================
@@ -116,7 +117,6 @@ fun OfflineAndSyncBanner(
 
     LaunchedEffect(syncState) {
         when (syncState) {
-            is FirestoreSyncState.Syncing,
             is FirestoreSyncState.Error,
             is FirestoreSyncState.Unauthenticated -> {
                 previousWasOfflineOrSyncing = true
@@ -134,7 +134,7 @@ fun OfflineAndSyncBanner(
     }
 
     val activeBanner = when {
-        syncState is FirestoreSyncState.Syncing -> SyncBannerKind.SYNCING
+        syncState is FirestoreSyncState.Syncing && pendingChangesCount > 0 -> SyncBannerKind.SYNCING
         syncState is FirestoreSyncState.Error -> SyncBannerKind.SYNC_FAILED
         syncState is FirestoreSyncState.Unauthenticated -> SyncBannerKind.OFFLINE
         showBackOnlineTransient -> SyncBannerKind.BACK_ONLINE
@@ -149,8 +149,8 @@ fun OfflineAndSyncBanner(
                     .fillMaxWidth()
                     .testTag("banner_offline"),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFFFBEB),
-                border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                color = kw(0xFFFFFBEB),
+                border = BorderStroke(1.dp, kw(0xFFFDE68A))
             ) {
                 Row(
                     modifier = Modifier
@@ -186,14 +186,14 @@ fun OfflineAndSyncBanner(
         }
 
         SyncBannerKind.SYNCING -> {
-            val countLabel = if (pendingChangesCount > 0) pendingChangesCount else 3
+            val countLabel = pendingChangesCount
             Surface(
                 modifier = modifier
                     .fillMaxWidth()
                     .testTag("banner_syncing"),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFEFF6FF),
-                border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                color = kw(0xFFEFF6FF),
+                border = BorderStroke(1.dp, kw(0xFFBFDBFE))
             ) {
                 Column(
                     modifier = Modifier
@@ -217,7 +217,7 @@ fun OfflineAndSyncBanner(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = null,
-                            tint = Color(0xFF1E40AF),
+                            tint = kw(0xFF1E40AF),
                             modifier = Modifier
                                 .size(20.dp)
                                 .rotate(angle)
@@ -229,7 +229,7 @@ fun OfflineAndSyncBanner(
                             ),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E3A8A)
+                            color = kw(0xFF1E3A8A)
                         )
                     }
 
@@ -239,14 +239,14 @@ fun OfflineAndSyncBanner(
                             .fillMaxWidth()
                             .height(6.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(Color(0xFFDBEAFE))
+                            .background(kw(0xFFDBEAFE))
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(0.58f)
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(50))
-                                .background(Color(0xFF1D4ED8))
+                                .background(kw(0xFF1D4ED8))
                         )
                     }
                 }
@@ -259,8 +259,8 @@ fun OfflineAndSyncBanner(
                     .fillMaxWidth()
                     .testTag("banner_sync_failed"),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFEF2F2),
-                border = BorderStroke(1.dp, Color(0xFFFECACA))
+                color = kw(0xFFFEF2F2),
+                border = BorderStroke(1.dp, kw(0xFFFECACA))
             ) {
                 Row(
                     modifier = Modifier
@@ -277,7 +277,7 @@ fun OfflineAndSyncBanner(
                         Icon(
                             imageVector = Icons.Outlined.WarningAmber,
                             contentDescription = null,
-                            tint = Color(0xFF991B1B),
+                            tint = kw(0xFF991B1B),
                             modifier = Modifier.size(22.dp)
                         )
                         Column(modifier = Modifier.weight(1f)) {
@@ -285,7 +285,7 @@ fun OfflineAndSyncBanner(
                                 text = tr("Couldn't sync", "सिंक नहीं हो सका"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7F1D1D)
+                                color = kw(0xFF7F1D1D)
                             )
                             Text(
                                 text = tr(
@@ -293,7 +293,7 @@ fun OfflineAndSyncBanner(
                                     "अपना इंटरनेट जांचें और पुनः प्रयास करें।"
                                 ),
                                 fontSize = 13.sp,
-                                color = Color(0xFF991B1B)
+                                color = kw(0xFF991B1B)
                             )
                         }
                     }
@@ -324,8 +324,8 @@ fun OfflineAndSyncBanner(
                     .fillMaxWidth()
                     .testTag("banner_back_online"),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFE6F7EE),
-                border = BorderStroke(1.dp, Color(0xFFBBF7D0))
+                color = kw(0xFFE6F7EE),
+                border = BorderStroke(1.dp, kw(0xFFBBF7D0))
             ) {
                 Row(
                     modifier = Modifier
@@ -345,7 +345,7 @@ fun OfflineAndSyncBanner(
                             text = tr("Back online · All synced", "वापस ऑनलाइन · सब सिंक हो गया"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF064E3B)
+                            color = kw(0xFF064E3B)
                         )
                     }
                 }
@@ -358,8 +358,8 @@ fun OfflineAndSyncBanner(
                     .fillMaxWidth()
                     .testTag("banner_backup_reminder"),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFFFBEB),
-                border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                color = kw(0xFFFFFBEB),
+                border = BorderStroke(1.dp, kw(0xFFFDE68A))
             ) {
                 Row(
                     modifier = Modifier
@@ -435,27 +435,27 @@ fun HeaderSyncStatusDotPill(
     val (label, dotColor, bgColor, textColor) = when {
         syncState is FirestoreSyncState.Syncing -> HeaderSyncQuad(
             label = tr("Syncing…", "सिंक हो रहा…"),
-            dotColor = Color(0xFF2563EB),
-            bgColor = if (isLightTheme) Color(0xFFEFF6FF) else Color(0xFF1E3A8A),
-            textColor = if (isLightTheme) Color(0xFF1E40AF) else Color(0xFF93C5FD)
+            dotColor = kw(0xFF2563EB),
+            bgColor = if (isLightTheme) kw(0xFFEFF6FF) else Color(0xFF1E3A8A),
+            textColor = if (isLightTheme) kw(0xFF1E40AF) else Color(0xFF93C5FD)
         )
         syncState is FirestoreSyncState.Error -> HeaderSyncQuad(
             label = tr("Sync failed · tap to retry", "सिंक विफल · टैप करें"),
-            dotColor = Color(0xFFDC2626),
-            bgColor = if (isLightTheme) Color(0xFFFEF2F2) else Color(0xFF3B1219),
-            textColor = if (isLightTheme) Color(0xFF991B1B) else Color(0xFFFCA5A5)
+            dotColor = kw(0xFFDC2626),
+            bgColor = if (isLightTheme) kw(0xFFFEF2F2) else Color(0xFF3B1219),
+            textColor = if (isLightTheme) kw(0xFF991B1B) else Color(0xFFFCA5A5)
         )
         pendingSyncCount > 0 -> HeaderSyncQuad(
             label = tr("$pendingSyncCount waiting to sync", "$pendingSyncCount सिंक बाकी"),
-            dotColor = Color(0xFFD97706),
-            bgColor = if (isLightTheme) Color(0xFFFFFBEB) else Color(0xFF2E1C05),
-            textColor = if (isLightTheme) Color(0xFF92400E) else Color(0xFFFBBF24)
+            dotColor = kw(0xFFD97706),
+            bgColor = if (isLightTheme) kw(0xFFFFFBEB) else Color(0xFF2E1C05),
+            textColor = if (isLightTheme) kw(0xFF92400E) else Color(0xFFFBBF24)
         )
         syncState is FirestoreSyncState.Unauthenticated -> HeaderSyncQuad(
             label = tr("Offline", "ऑफ़लाइन"),
-            dotColor = Color(0xFF64748B),
-            bgColor = if (isLightTheme) Color(0xFFF1F5F9) else Color(0xFF1E293B),
-            textColor = if (isLightTheme) Color(0xFF334155) else Color(0xFF94A3B8)
+            dotColor = kw(0xFF64748B),
+            bgColor = if (isLightTheme) kw(0xFFF1F5F9) else Color(0xFF1E293B),
+            textColor = if (isLightTheme) kw(0xFF334155) else Color(0xFF94A3B8)
         )
         else -> HeaderSyncQuad(
             label = tr("Synced", "सिंक है"),
@@ -519,9 +519,9 @@ private fun rememberShimmerBrush(): Brush {
     )
     return Brush.linearGradient(
         colors = listOf(
-            Color(0xFFE2E8F0),
-            Color(0xFFF1F5F9),
-            Color(0xFFE2E8F0)
+            kw(0xFFE2E8F0),
+            kw(0xFFF1F5F9),
+            kw(0xFFE2E8F0)
         ),
         start = Offset(translateAnim - 300f, 0f),
         end = Offset(translateAnim, 0f)
@@ -539,7 +539,7 @@ fun ListSkeletonView(
             .fillMaxWidth()
             .testTag("list_skeleton_view"),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -600,7 +600,7 @@ fun DashboardSkeletonView(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .testTag("dashboard_skeleton_view"),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -616,7 +616,7 @@ fun DashboardSkeletonView(modifier: Modifier = Modifier) {
                         Surface(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(14.dp),
-                            color = Color.White,
+                            color = KwSurface,
                             border = BorderStroke(1.dp, StateCardBorder)
                         ) {
                             Column(
@@ -665,7 +665,7 @@ fun OpeningOrRestoringShopCard(
             .fillMaxWidth()
             .testTag("restoring_shop_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -708,7 +708,7 @@ fun OpeningOrRestoringShopCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(Color(0xFFE2E8F0))
+                    .background(kw(0xFFE2E8F0))
             ) {
                 Box(
                     modifier = Modifier
@@ -747,9 +747,9 @@ fun KhataWiseActionStateButton(
     val containerColor = when {
         isLoading -> StateBrandGreen.copy(alpha = 0.85f)
         active -> StateBrandGreen
-        else -> Color(0xFFE2E8F0)
+        else -> kw(0xFFE2E8F0)
     }
-    val contentColor = if (active || isLoading) Color.White else Color(0xFF64748B)
+    val contentColor = if (active || isLoading) Color.White else kw(0xFF64748B)
 
     Surface(
         onClick = { if (active) onClick() },
@@ -818,7 +818,7 @@ fun EmptyCustomersStateCard(
             .fillMaxWidth()
             .testTag("empty_customers_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -893,7 +893,7 @@ fun EmptyCustomersStateCard(
                     Surface(
                         onClick = onImportContacts,
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, StateBrandGreen),
                         modifier = Modifier
                             .height(46.dp)
@@ -927,7 +927,7 @@ fun EmptyBillsTodayStateCard(
             .fillMaxWidth()
             .testTag("empty_bills_today_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -939,7 +939,7 @@ fun EmptyBillsTodayStateCard(
             Surface(
                 modifier = Modifier.size(64.dp),
                 shape = CircleShape,
-                color = Color(0xFFF1F5F9)
+                color = kw(0xFFF1F5F9)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -1008,7 +1008,7 @@ fun EmptyStockListStateCard(
             .fillMaxWidth()
             .testTag("empty_stock_list_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1083,7 +1083,7 @@ fun EmptyStockListStateCard(
                     Surface(
                         onClick = onImportExcel,
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, StateBrandGreen),
                         modifier = Modifier
                             .height(46.dp)
@@ -1118,7 +1118,7 @@ fun AllCaughtUpStateCard(
             .fillMaxWidth()
             .testTag("all_caught_up_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1175,7 +1175,7 @@ fun NoSearchResultsStateCard(
             .fillMaxWidth()
             .testTag("no_search_results_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1187,7 +1187,7 @@ fun NoSearchResultsStateCard(
             Surface(
                 modifier = Modifier.size(64.dp),
                 shape = CircleShape,
-                color = Color(0xFFF1F5F9)
+                color = kw(0xFFF1F5F9)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -1227,7 +1227,7 @@ fun NoSearchResultsStateCard(
             Surface(
                 onClick = onClearSearch,
                 shape = RoundedCornerShape(14.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, StateBrandGreen),
                 modifier = Modifier
                     .height(46.dp)
@@ -1264,7 +1264,7 @@ fun NoInternetErrorCard(
             .fillMaxWidth()
             .testTag("error_no_internet_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1336,7 +1336,7 @@ fun NoInternetErrorCard(
                 Surface(
                     onClick = onContinueOffline,
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, StateBrandGreen),
                     modifier = Modifier
                         .weight(1f)
@@ -1368,7 +1368,7 @@ fun CouldNotLoadErrorCard(
             .fillMaxWidth()
             .testTag("error_could_not_load_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1440,7 +1440,7 @@ fun CouldNotLoadErrorCard(
                 Surface(
                     onClick = onReportProblem,
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, StateBrandGreen),
                     modifier = Modifier
                         .weight(1f)
@@ -1477,7 +1477,7 @@ fun BillSyncConflictCard(
             .fillMaxWidth()
             .testTag("error_bill_sync_conflict_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1493,13 +1493,13 @@ fun BillSyncConflictCard(
                 Surface(
                     modifier = Modifier.size(44.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFE0ECF8)
+                    color = kw(0xFFE0ECF8)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.Devices,
                             contentDescription = null,
-                            tint = Color(0xFF1E4D8C),
+                            tint = kw(0xFF1E4D8C),
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -1530,7 +1530,7 @@ fun BillSyncConflictCard(
                 Surface(
                     onClick = { keepThisPhone = true },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (keepThisPhone) Color(0xFFF0FDF4) else Color.White,
+                    color = if (keepThisPhone) kw(0xFFF0FDF4) else KwSurface,
                     border = BorderStroke(
                         if (keepThisPhone) 1.5.dp else 1.dp,
                         if (keepThisPhone) StateBrandGreen else StateCardBorder
@@ -1556,7 +1556,7 @@ fun BillSyncConflictCard(
                 Surface(
                     onClick = { keepThisPhone = false },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (!keepThisPhone) Color(0xFFF0FDF4) else Color.White,
+                    color = if (!keepThisPhone) kw(0xFFF0FDF4) else KwSurface,
                     border = BorderStroke(
                         if (!keepThisPhone) 1.5.dp else 1.dp,
                         if (!keepThisPhone) StateBrandGreen else StateCardBorder
@@ -1613,7 +1613,7 @@ fun ReportsAdminOnlyErrorCard(
             .fillMaxWidth()
             .testTag("error_reports_admin_only_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1629,7 +1629,7 @@ fun ReportsAdminOnlyErrorCard(
                 Surface(
                     modifier = Modifier.size(44.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFF1F5F9)
+                    color = kw(0xFFF1F5F9)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -1662,7 +1662,7 @@ fun ReportsAdminOnlyErrorCard(
             Surface(
                 onClick = onRequestAccess,
                 shape = RoundedCornerShape(14.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, StateBrandGreen),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1692,7 +1692,7 @@ fun BackupCouldNotFinishCard(
             .fillMaxWidth()
             .testTag("error_backup_failed_card"),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, StateCardBorder)
     ) {
         Column(
@@ -1789,7 +1789,7 @@ fun DeleteCustomerConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("delete_customer_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -1921,8 +1921,8 @@ fun DeleteCustomerConfirmationDialog(
                         Surface(
                             onClick = onDismiss,
                             shape = RoundedCornerShape(14.dp),
-                            color = Color.White,
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                            color = KwSurface,
+                            border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp)
@@ -1989,7 +1989,7 @@ fun DeleteBillConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("delete_bill_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -2052,7 +2052,7 @@ fun DeleteBillConfirmationDialog(
                         Surface(
                             onClick = { selectedReason = key },
                             shape = RoundedCornerShape(50),
-                            color = if (isSelected) StateBrandGreen else Color(0xFFF1F2F6),
+                            color = if (isSelected) StateBrandGreen else kw(0xFFF1F2F6),
                             modifier = Modifier.testTag("delete_bill_reason_${key.lowercase().replace(" ", "_")}")
                         ) {
                             Text(
@@ -2106,10 +2106,10 @@ fun DeleteBillConfirmationDialog(
                                 Surface(
                                     modifier = Modifier.size(48.dp),
                                     shape = RoundedCornerShape(12.dp),
-                                    color = Color.White,
+                                    color = KwSurface,
                                     border = BorderStroke(
                                         if (focused) 1.5.dp else 1.dp,
-                                        if (focused) StateBrandGreen else Color(0xFFCBD5E1)
+                                        if (focused) StateBrandGreen else kw(0xFFCBD5E1)
                                     )
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -2134,7 +2134,7 @@ fun DeleteBillConfirmationDialog(
                 Surface(
                     onClick = onReturnItemsInstead,
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, StateBrandGreen),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -2213,7 +2213,7 @@ fun DeleteInventoryItemConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("delete_inventory_item_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -2282,8 +2282,8 @@ fun DeleteInventoryItemConfirmationDialog(
                     Surface(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        color = KwSurface,
+                        border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
@@ -2344,7 +2344,7 @@ fun RemoveStaffConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("remove_staff_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -2399,8 +2399,8 @@ fun RemoveStaffConfirmationDialog(
                     Surface(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        color = KwSurface,
+                        border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
@@ -2461,7 +2461,7 @@ fun UnpairDeviceConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("unpair_device_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -2516,8 +2516,8 @@ fun UnpairDeviceConfirmationDialog(
                     Surface(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        color = KwSurface,
+                        border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
@@ -2563,7 +2563,7 @@ fun UnpairDeviceConfirmationDialog(
  */
 @Composable
 fun LogoutKhataWiseConfirmationDialog(
-    pendingSyncChanges: Int = 3,
+    pendingSyncChanges: Int = 0,
     onSyncAndLogout: () -> Unit,
     onLogoutAnyway: () -> Unit,
     onDismiss: () -> Unit
@@ -2578,7 +2578,7 @@ fun LogoutKhataWiseConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("logout_khatawise_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -2629,7 +2629,7 @@ fun LogoutKhataWiseConfirmationDialog(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFFFF7ED)
+                        color = kw(0xFFFFF7ED)
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
@@ -2722,7 +2722,7 @@ fun ResetAllShopDataConfirmationDialog(
                 .padding(horizontal = 20.dp)
                 .testTag("reset_shop_data_confirm_dialog"),
             shape = RoundedCornerShape(24.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -2786,8 +2786,8 @@ fun ResetAllShopDataConfirmationDialog(
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                    color = KwSurface,
+                    border = BorderStroke(1.dp, kw(0xFFCBD5E1))
                 ) {
                     Box(
                         contentAlignment = Alignment.CenterStart,
@@ -2799,7 +2799,7 @@ fun ResetAllShopDataConfirmationDialog(
                             Text(
                                 text = "DELETE",
                                 fontSize = 15.sp,
-                                color = Color(0xFF94A3B8)
+                                color = kw(0xFF94A3B8)
                             )
                         }
                         BasicTextField(
@@ -2827,8 +2827,8 @@ fun ResetAllShopDataConfirmationDialog(
                     Surface(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                        color = KwSurface,
+                        border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
@@ -2847,7 +2847,7 @@ fun ResetAllShopDataConfirmationDialog(
                     Surface(
                         onClick = { if (isConfirmed) onConfirmReset() },
                         shape = RoundedCornerShape(14.dp),
-                        color = if (isConfirmed) StateCrimsonRed else Color(0xFFE5A3A3),
+                        color = if (isConfirmed) StateCrimsonRed else kw(0xFFE5A3A3),
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)

@@ -1,5 +1,6 @@
 package com.example.ui.collections
 
+import com.example.ui.theme.kw
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -1163,7 +1164,7 @@ private fun CollectedTodayBannerCard(
                 Text(
                     text = paidStatusLabel,
                     fontSize = 13.sp,
-                    color = Color(0xFF166534)
+                    color = kw(0xFF166534)
                 )
             }
 

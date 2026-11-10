@@ -1,5 +1,8 @@
 package com.example.ui.auth
 
+import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -426,7 +429,7 @@ fun LoginScreen(
                             .size(42.dp)
                             .testTag("login_back_button"),
                         shape = RoundedCornerShape(12.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, LoginCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -451,7 +454,7 @@ fun LoginScreen(
                         }
                     },
                     shape = RoundedCornerShape(50),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, LoginCardBorder),
                     shadowElevation = 1.dp,
                     modifier = Modifier.testTag("login_language_toggle_btn")
@@ -513,7 +516,7 @@ fun LoginScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, LoginCardBorder),
                 shadowElevation = 3.dp
             ) {
@@ -526,7 +529,7 @@ fun LoginScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
-                        color = Color(0xFFF1F2F6)
+                        color = kw(0xFFF1F2F6)
                     ) {
                         Row(
                             modifier = Modifier
@@ -542,7 +545,7 @@ fun LoginScreen(
                                     pairingErrorMessage = null
                                 },
                                 shape = RoundedCornerShape(11.dp),
-                                color = if (!isPairingMode) Color.White else Color.Transparent,
+                                color = if (!isPairingMode) KwSurface else Color.Transparent,
                                 shadowElevation = if (!isPairingMode) 1.5.dp else 0.dp,
                                 modifier = Modifier
                                     .weight(1f)
@@ -567,7 +570,7 @@ fun LoginScreen(
                                     pairingErrorMessage = null
                                 },
                                 shape = RoundedCornerShape(11.dp),
-                                color = if (isPairingMode) Color.White else Color.Transparent,
+                                color = if (isPairingMode) KwSurface else Color.Transparent,
                                 shadowElevation = if (isPairingMode) 1.5.dp else 0.dp,
                                 modifier = Modifier
                                     .weight(1f)
@@ -591,9 +594,9 @@ fun LoginScreen(
                     if (authError != null) {
                         Card(
                             colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFFEE2E2)
+                                containerColor = kw(0xFFFEE2E2)
                             ),
-                            border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                            border = BorderStroke(1.dp, kw(0xFFFCA5A5)),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -612,20 +615,20 @@ fun LoginScreen(
                                     Icon(
                                         imageVector = Icons.Default.Security,
                                         contentDescription = null,
-                                        tint = Color(0xFFDC2626),
+                                        tint = kw(0xFFDC2626),
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
                                         text = tr("Authentication notice", "प्रमाणीकरण सूचना"),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp,
-                                        color = Color(0xFF991B1B)
+                                        color = kw(0xFF991B1B)
                                     )
                                 }
                                 Text(
                                     text = authError!!,
                                     fontSize = 12.5.sp,
-                                    color = Color(0xFF991B1B),
+                                    color = kw(0xFF991B1B),
                                     lineHeight = 17.sp
                                 )
                             }
@@ -698,8 +701,8 @@ fun LoginScreen(
                             },
                             enabled = !isAuthenticating && activity != null,
                             shape = RoundedCornerShape(14.dp),
-                            color = Color.White,
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                            color = KwSurface,
+                            border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(54.dp)
@@ -730,8 +733,8 @@ fun LoginScreen(
                                     Surface(
                                         modifier = Modifier.size(26.dp),
                                         shape = CircleShape,
-                                        color = Color.White,
-                                        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                                        color = KwSurface,
+                                        border = BorderStroke(1.dp, kw(0xFFE2E8F0))
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Text(
@@ -810,7 +813,7 @@ fun LoginScreen(
                             Text(
                                 text = pairingErrorMessage!!,
                                 fontSize = 12.5.sp,
-                                color = Color(0xFFDC2626),
+                                color = kw(0xFFDC2626),
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(bottom = 10.dp)
                             )
@@ -881,8 +884,8 @@ fun LoginScreen(
                         Surface(
                             onClick = { showQrScanDialog = true },
                             shape = RoundedCornerShape(14.dp),
-                            color = Color.White,
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                            color = KwSurface,
+                            border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp)
@@ -949,7 +952,7 @@ fun LoginScreen(
     if (showQrScanDialog) {
         AlertDialog(
             onDismissRequest = { showQrScanDialog = false },
-            containerColor = Color.White,
+            containerColor = KwSurface,
             title = {
                 Text(
                     text = tr("Scan or enter QR code", "QR कोड स्कैन या दर्ज करें"),
@@ -1108,7 +1111,7 @@ fun LoginScreen(
                             onLoginSuccess()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = CGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = CGreenPrimary),
                     modifier = Modifier.testTag("confirm_store_setup_btn")
                 ) {
                     Text("Launch Register", fontWeight = FontWeight.Bold)
@@ -1147,7 +1150,7 @@ private fun StoreOwnerFeatureRow(
             modifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE6F5EE)),
+                .background(kw(0xFFE6F5EE)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -1161,7 +1164,7 @@ private fun StoreOwnerFeatureRow(
         Text(
             text = text,
             fontSize = 14.sp,
-            color = Color(0xFF334155),
+            color = kw(0xFF334155),
             fontWeight = FontWeight.SemiBold
         )
     }

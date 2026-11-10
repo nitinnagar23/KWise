@@ -1,5 +1,6 @@
 package com.example.ui.home
 
+import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -259,10 +260,10 @@ fun HomeScreen(
         return
     }
 
-    val primaryForestGreen = if (isLightTheme) Color(0xFF0E6F43) else CGreen
+    val primaryForestGreen = if (isLightTheme) kw(0xFF0E6F43) else CGreen
     val primaryForestGreenTextOn = if (isLightTheme) Color.White else Color(0xFF061A0E)
-    val udhariCrimsonRed = if (isLightTheme) Color(0xFFB91C1C) else CRedUdhari
-    val lowStockAmber = if (isLightTheme) Color(0xFFB45309) else CAmber
+    val udhariCrimsonRed = if (isLightTheme) kw(0xFFB91C1C) else CRedUdhari
+    val lowStockAmber = if (isLightTheme) kw(0xFFB45309) else CAmber
 
     LazyColumn(
         modifier = Modifier
@@ -310,8 +311,8 @@ fun HomeScreen(
                             Role.MANAGER -> tr("Manager", "मैनेजर")
                             else -> tr("Staff", "स्टाफ")
                         }
-                        val rolePillBg = if (isLightTheme) Color(0xFFE0ECF8) else Color(0xFF1E3A5F)
-                        val rolePillFg = if (isLightTheme) Color(0xFF1E4D8C) else Color(0xFF93C5FD)
+                        val rolePillBg = if (isLightTheme) kw(0xFFE0ECF8) else Color(0xFF1E3A5F)
+                        val rolePillFg = if (isLightTheme) kw(0xFF1E4D8C) else Color(0xFF93C5FD)
 
                         Surface(
                             shape = RoundedCornerShape(6.dp),
@@ -403,10 +404,10 @@ fun HomeScreen(
         // 2. QUICK ACTION PILLS: Today's Rates & Customers
         // -------------------------------------------------------------
         item {
-            val ratesBg = if (isLightTheme) Color(0xFFFCEBD2) else Color(0xFF362308)
-            val ratesFg = if (isLightTheme) Color(0xFF6B3E08) else CAmber
-            val customersBg = if (isLightTheme) Color(0xFFE1F5EB) else Color(0xFF133826)
-            val customersFg = if (isLightTheme) Color(0xFF0E623D) else CGreen
+            val ratesBg = if (isLightTheme) kw(0xFFFCEBD2) else Color(0xFF362308)
+            val ratesFg = if (isLightTheme) kw(0xFF6B3E08) else CAmber
+            val customersBg = if (isLightTheme) kw(0xFFE1F5EB) else Color(0xFF133826)
+            val customersFg = if (isLightTheme) kw(0xFF0E623D) else CGreen
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -619,14 +620,14 @@ fun HomeScreen(
                     }
                 }
 
-                val avatarBg = if (isLightTheme) Color(0xFFE6EEF6) else Color(0xFF1E293B)
-                val avatarFg = if (isLightTheme) Color(0xFF1E3A5F) else Color(0xFF93C5FD)
+                val avatarBg = if (isLightTheme) kw(0xFFE6EEF6) else Color(0xFF1E293B)
+                val avatarFg = if (isLightTheme) kw(0xFF1E3A5F) else Color(0xFF93C5FD)
 
                 val isUdhariSale = bill.udhariAmount > BigDecimal.ZERO
                 val statusPillBg = if (isUdhariSale) {
-                    if (isLightTheme) Color(0xFFFDE8E8) else Color(0xFF331416)
+                    if (isLightTheme) kw(0xFFFDE8E8) else Color(0xFF331416)
                 } else {
-                    if (isLightTheme) Color(0xFFE1F5EB) else CGreenContainer
+                    if (isLightTheme) kw(0xFFE1F5EB) else CGreenContainer
                 }
                 val statusPillFg = if (isUdhariSale) {
                     udhariCrimsonRed
@@ -989,21 +990,21 @@ private fun SyncStatusPill(
     val (label, dotColor, textColor, bgColor) = when (syncState) {
         is FirestoreSyncState.Syncing -> Quadruple(
             tr("Syncing…", "सिंक…"),
-            if (isLightTheme) Color(0xFFD97706) else CAmber,
-            if (isLightTheme) Color(0xFF92400E) else CAmber,
-            if (isLightTheme) Color(0xFFFEF3C7) else Color(0xFF2E1C05)
+            if (isLightTheme) kw(0xFFD97706) else CAmber,
+            if (isLightTheme) kw(0xFF92400E) else CAmber,
+            if (isLightTheme) kw(0xFFFEF3C7) else Color(0xFF2E1C05)
         )
         is FirestoreSyncState.Success, is FirestoreSyncState.Idle -> Quadruple(
             tr("Synced", "सिंक है"),
-            if (isLightTheme) Color(0xFF0E6F43) else CGreen,
-            if (isLightTheme) Color(0xFF0E6F43) else CGreen,
-            if (isLightTheme) Color(0xFFE1F5EB) else CGreenContainer
+            if (isLightTheme) kw(0xFF0E6F43) else CGreen,
+            if (isLightTheme) kw(0xFF0E6F43) else CGreen,
+            if (isLightTheme) kw(0xFFE1F5EB) else CGreenContainer
         )
         is FirestoreSyncState.Error, is FirestoreSyncState.Unauthenticated -> Quadruple(
             tr("Offline", "ऑफ़लाइन"),
             FlatTextSecondary,
             FlatTextSecondary,
-            if (isLightTheme) Color(0xFFEAE8E1) else FlatDarkCard
+            if (isLightTheme) kw(0xFFEAE8E1) else FlatDarkCard
         )
     }
 
@@ -1120,13 +1121,13 @@ private fun FriendlyEmptyRegisterIllustration(
             Canvas(modifier = Modifier.size(72.dp)) {
                 val stroke = Stroke(width = 3.dp.toPx())
                 drawRoundRect(
-                    color = Color(0xFFE1F5EB),
+                    color = kw(0xFFE1F5EB),
                     topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
                     size = Size(size.width * 0.7f, size.height * 0.8f),
                     cornerRadius = CornerRadius(12.dp.toPx())
                 )
                 drawRoundRect(
-                    color = Color(0xFF0E6F43),
+                    color = kw(0xFF0E6F43),
                     topLeft = Offset(size.width * 0.15f, size.height * 0.1f),
                     size = Size(size.width * 0.7f, size.height * 0.8f),
                     cornerRadius = CornerRadius(12.dp.toPx()),
@@ -1135,7 +1136,7 @@ private fun FriendlyEmptyRegisterIllustration(
                 for (i in 1..3) {
                     val y = size.height * (0.25f + i * 0.15f)
                     drawLine(
-                        color = Color(0xFFD97706),
+                        color = kw(0xFFD97706),
                         start = Offset(size.width * 0.28f, y),
                         end = Offset(size.width * 0.72f, y),
                         strokeWidth = 3.dp.toPx()

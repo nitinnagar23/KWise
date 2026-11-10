@@ -1,5 +1,6 @@
 package com.example.ui.search
 
+import com.example.ui.theme.kw
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -158,23 +159,22 @@ private data class SearchSupplierSummary(
 )
 
 // Palette matching the Search PDF design
-private val SearchPageBg = Color(0xFFF6F5F0)
-private val SearchCardBg = Color(0xFFFFFFFF)
-private val SearchBorder = Color(0xFFE5E4DC)
-private val SearchGreen = Color(0xFF15803D)
-private val SearchGreenSoft = Color(0xFFDCFCE7)
-private val SearchRedText = Color(0xFF991B1B)
-private val SearchRedSoft = Color(0xFFFEE2E2)
-private val SearchBlueText = Color(0xFF1E40AF)
-private val SearchBlueSoft = Color(0xFFDBEAFE)
-private val SearchAmberText = Color(0xFFB45309)
-private val SearchAmberSoft = Color(0xFFFEF3C7)
-private val SearchNavyText = Color(0xFF111827)
-private val SearchSubtleText = Color(0xFF6B7280)
-private val SearchChipUnselectedBg = Color(0xFFEFECE6)
-private val SearchAvatarBg = Color(0xFFE2E8F0)
-private val SearchAvatarText = Color(0xFF1E293B)
-
+private val SearchPageBg: Color get() = kw(0xFFF6F5F0)
+private val SearchCardBg: Color get() = kw(0xFFFFFFFF)
+private val SearchBorder: Color get() = kw(0xFFE5E4DC)
+private val SearchGreen: Color get() = kw(0xFF15803D)
+private val SearchGreenSoft: Color get() = kw(0xFFDCFCE7)
+private val SearchRedText: Color get() = kw(0xFF991B1B)
+private val SearchRedSoft: Color get() = kw(0xFFFEE2E2)
+private val SearchBlueText: Color get() = kw(0xFF1E40AF)
+private val SearchBlueSoft: Color get() = kw(0xFFDBEAFE)
+private val SearchAmberText: Color get() = kw(0xFFB45309)
+private val SearchAmberSoft: Color get() = kw(0xFFFEF3C7)
+private val SearchNavyText: Color get() = kw(0xFF111827)
+private val SearchSubtleText: Color get() = kw(0xFF6B7280)
+private val SearchChipUnselectedBg: Color get() = kw(0xFFEFECE6)
+private val SearchAvatarBg: Color get() = kw(0xFFE2E8F0)
+private val SearchAvatarText: Color get() = kw(0xFF1E293B)
 @Composable
 fun GlobalSearchScreen(
     repository: CattleFeedRepository,
@@ -415,7 +415,7 @@ fun GlobalSearchScreen(
                                         "ग्राहक, बिल, आइटम खोजें…"
                                     ),
                                     fontSize = 15.5.sp,
-                                    color = Color(0xFF9CA3AF),
+                                    color = kw(0xFF9CA3AF),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -597,7 +597,7 @@ fun GlobalSearchScreen(
                                             Surface(
                                                 modifier = Modifier.size(36.dp),
                                                 shape = CircleShape,
-                                                color = Color(0xFFF3F4F6)
+                                                color = kw(0xFFF3F4F6)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(
@@ -653,7 +653,7 @@ fun GlobalSearchScreen(
                             title = tr("Overdue customers", "ओवरड्यू ग्राहक"),
                             subtitle = tr("Promise date passed", "वादे की तारीख बीत गई"),
                             icon = Icons.Outlined.CreditCard,
-                            iconTint = Color(0xFFB91C1C),
+                            iconTint = kw(0xFFB91C1C),
                             iconBg = SearchRedSoft,
                             testTag = "quick_find_overdue_customers",
                             onClick = {
@@ -698,7 +698,7 @@ fun GlobalSearchScreen(
                             title = tr("Unpaid supplier bills", "बकाया सप्लायर बिल"),
                             subtitle = tr("Part paid or unpaid", "आंशिक या बकाया"),
                             icon = Icons.Default.LocalShipping,
-                            iconTint = Color(0xFF1D4ED8),
+                            iconTint = kw(0xFF1D4ED8),
                             iconBg = SearchBlueSoft,
                             testTag = "quick_find_unpaid_suppliers",
                             onClick = {
@@ -714,7 +714,7 @@ fun GlobalSearchScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFFEEF0F8)
+                    color = kw(0xFFEEF0F8)
                 ) {
                     Column(
                         modifier = Modifier
@@ -734,7 +734,7 @@ fun GlobalSearchScreen(
                                 "नाम, गाँव या फ़ोन · बिल नंबर · आइटम का नाम · सप्लायर · स्टाफ का नाम"
                             ),
                             fontSize = 13.sp,
-                            color = Color(0xFF4B5563),
+                            color = kw(0xFF4B5563),
                             lineHeight = 19.sp
                         )
                     }

@@ -1,5 +1,7 @@
 package com.example.ui.estimate
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -114,20 +116,19 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val VoiceGreen = Color(0xFF0E6F43)
-private val VoiceGreenSoft = Color(0xFFDDF3E8)
-private val VoiceGreenRingMid = Color(0xFFC5EBD8)
-private val VoiceGreenRingOuter = Color(0xFFEAF7F0)
-private val VoiceRed = Color(0xFFB91C1C)
-private val VoiceRedSoft = Color(0xFFFCE4E4)
-private val VoiceAmber = Color(0xFF8A4B08)
-private val VoiceAmberBorder = Color(0xFFF59E0B)
-private val VoiceAmberSoft = Color(0xFFFCEBD2)
-private val VoiceAmberCardBg = Color(0xFFFFFBF2)
-private val VoiceBlueSoft = Color(0xFFE8EEF7)
-private val VoiceBlueText = Color(0xFF1E3A8A)
-private val VoiceChipIdleBg = Color(0xFFF1F1F7)
-
+private val VoiceGreen: Color get() = kw(0xFF0E6F43)
+private val VoiceGreenSoft: Color get() = kw(0xFFDDF3E8)
+private val VoiceGreenRingMid: Color get() = kw(0xFFC5EBD8)
+private val VoiceGreenRingOuter: Color get() = kw(0xFFEAF7F0)
+private val VoiceRed: Color get() = kw(0xFFB91C1C)
+private val VoiceRedSoft: Color get() = kw(0xFFFCE4E4)
+private val VoiceAmber: Color get() = kw(0xFF8A4B08)
+private val VoiceAmberBorder: Color get() = kw(0xFFF59E0B)
+private val VoiceAmberSoft: Color get() = kw(0xFFFCEBD2)
+private val VoiceAmberCardBg: Color get() = kw(0xFFFFFBF2)
+private val VoiceBlueSoft: Color get() = kw(0xFFE8EEF7)
+private val VoiceBlueText: Color get() = kw(0xFF1E3A8A)
+private val VoiceChipIdleBg: Color get() = kw(0xFFF1F1F7)
 data class VoiceParsedItemCandidate(
     val id: String,
     val rawPhrase: String,
@@ -969,7 +970,7 @@ fun VoiceBillFlowScreen(
                                                 }
                                             },
                                             shape = RoundedCornerShape(50),
-                                            color = Color.White,
+                                            color = KwSurface,
                                             border = BorderStroke(1.dp, FlatDarkBorder)
                                         ) {
                                             Text(
@@ -989,7 +990,7 @@ fun VoiceBillFlowScreen(
                                             }
                                         },
                                         shape = RoundedCornerShape(50),
-                                        color = Color.White,
+                                        color = KwSurface,
                                         border = BorderStroke(1.dp, FlatDarkBorder)
                                     ) {
                                         Text(

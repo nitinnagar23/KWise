@@ -1,5 +1,7 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.kw
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -236,8 +238,8 @@ fun CustomersScreen(
             if (canAddCustomer) {
                 FloatingActionButton(
                     onClick = { showAddCustomerDialog = true },
-                    containerColor = CGreen,
-                    contentColor = Color(0xFF00220F),
+                    containerColor = CGreenPrimary,
+                    contentColor = Color.White,
                     elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp),
                     modifier = Modifier.testTag("customers_add_fab")
                 ) {
@@ -414,7 +416,7 @@ private fun DirectoryCustomerRow(
     val (chipColor, chipBg) = when (statusChip) {
         CustomerStatusChip.OVER_LIMIT -> Pair(CRedUdhari, CRedUdhariBg)
         CustomerStatusChip.HAS_UDHARI -> Pair(CAmber, CAmberBg)
-        CustomerStatusChip.CLEAR -> Pair(CGreen, Color(0xFF133826))
+        CustomerStatusChip.CLEAR -> Pair(CGreen, kw(0xFF133826))
     }
 
     Surface(

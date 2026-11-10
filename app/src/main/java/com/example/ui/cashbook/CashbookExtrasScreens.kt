@@ -1,5 +1,6 @@
 package com.example.ui.cashbook
 
+import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
@@ -78,17 +79,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val CbBrandGreen = Color(0xFF0E6F43)
-private val CbMintBg = Color(0xFFDDF3E8)
-private val CbMintBorder = Color(0xFFA7DFC2)
-private val CbCrimsonRed = Color(0xFFB91C1C)
-private val CbCrimsonSoftBg = Color(0xFFFCE4E4)
-private val CbAmberText = Color(0xFFB45309)
-private val CbAmberSoftBg = Color(0xFFFEF3C7)
-private val CbAmberBorder = Color(0xFFF59E0B)
-private val CbNeutralPillBg = Color(0xFFF3F3F8)
-private val CbChipUnselectedBg = Color(0xFFF1F1F7)
-
+private val CbBrandGreen: Color get() = kw(0xFF0E6F43)
+private val CbMintBg: Color get() = kw(0xFFDDF3E8)
+private val CbMintBorder: Color get() = kw(0xFFA7DFC2)
+private val CbCrimsonRed: Color get() = kw(0xFFB91C1C)
+private val CbCrimsonSoftBg: Color get() = kw(0xFFFCE4E4)
+private val CbAmberText: Color get() = kw(0xFFB45309)
+private val CbAmberSoftBg: Color get() = kw(0xFFFEF3C7)
+private val CbAmberBorder: Color get() = kw(0xFFF59E0B)
+private val CbNeutralPillBg: Color get() = kw(0xFFF3F3F8)
+private val CbChipUnselectedBg: Color get() = kw(0xFFF1F1F7)
 data class ExpenseCategoryConfig(
     val name: String,
     val colorHex: Long,

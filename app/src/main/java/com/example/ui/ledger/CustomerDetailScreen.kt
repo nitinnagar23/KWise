@@ -1,5 +1,7 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
@@ -84,18 +86,17 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-private val DetailPageBg = Color(0xFFF6F7F9)
-private val DetailCardBorder = Color(0xFFE2E8F0)
-private val DetailNavyText = Color(0xFF0F172A)
-private val DetailSubtleText = Color(0xFF64748B)
-private val DetailBrandGreen = Color(0xFF0E6F43)
-private val DetailSoftGreen = Color(0xFFDDF5E7)
-private val DetailCrimsonRed = Color(0xFFB91C1C)
-private val DetailSoftRed = Color(0xFFFEE2E2)
-private val DetailSoftAmber = Color(0xFFFEF3C7)
-private val DetailAmberText = Color(0xFFB45309)
-private val DetailAvatarBg = Color(0xFFE2E8F0)
-
+private val DetailPageBg: Color get() = kw(0xFFF6F7F9)
+private val DetailCardBorder: Color get() = kw(0xFFE2E8F0)
+private val DetailNavyText: Color get() = kw(0xFF0F172A)
+private val DetailSubtleText: Color get() = kw(0xFF64748B)
+private val DetailBrandGreen: Color get() = kw(0xFF0E6F43)
+private val DetailSoftGreen: Color get() = kw(0xFFDDF5E7)
+private val DetailCrimsonRed: Color get() = kw(0xFFB91C1C)
+private val DetailSoftRed: Color get() = kw(0xFFFEE2E2)
+private val DetailSoftAmber: Color get() = kw(0xFFFEF3C7)
+private val DetailAmberText: Color get() = kw(0xFFB45309)
+private val DetailAvatarBg: Color get() = kw(0xFFE2E8F0)
 private enum class CustomerDetailOverlay {
     NONE,
     STATEMENT,
@@ -345,7 +346,7 @@ fun CustomerDetailScreen(
                         .size(44.dp)
                         .testTag("customer_khata_back_btn"),
                     shape = RoundedCornerShape(13.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, DetailCardBorder)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -386,7 +387,7 @@ fun CustomerDetailScreen(
                             .size(44.dp)
                             .testTag("customer_call_header_btn"),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, DetailCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -407,7 +408,7 @@ fun CustomerDetailScreen(
                             .size(44.dp)
                             .testTag("edit_customer_btn"),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, DetailCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -440,7 +441,7 @@ fun CustomerDetailScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
                         shape = RoundedCornerShape(20.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, DetailCardBorder)
                     ) {
                         Column(
@@ -541,7 +542,7 @@ fun CustomerDetailScreen(
                                                 context.startActivity(intent)
                                             },
                                             shape = RoundedCornerShape(50),
-                                            color = Color(0xFFF1F5F9)
+                                            color = kw(0xFFF1F5F9)
                                         ) {
                                             Text(
                                                 text = "${tp.number} · ${tp.tag}",
@@ -556,7 +557,7 @@ fun CustomerDetailScreen(
                             }
 
                             Spacer(modifier = Modifier.height(14.dp))
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             Spacer(modifier = Modifier.height(14.dp))
 
                             if (canViewFull) {
@@ -585,7 +586,7 @@ fun CustomerDetailScreen(
                                         .height(6.dp)
                                         .clip(RoundedCornerShape(50)),
                                     color = if (progressRatio >= 1f) DetailCrimsonRed else DetailBrandGreen,
-                                    trackColor = Color(0xFFE2E8F0),
+                                    trackColor = kw(0xFFE2E8F0),
                                     strokeCap = StrokeCap.Round
                                 )
 
@@ -648,7 +649,7 @@ fun CustomerDetailScreen(
                                     Surface(
                                         onClick = onNavigateToNewBill,
                                         shape = RoundedCornerShape(14.dp),
-                                        color = Color.White,
+                                        color = KwSurface,
                                         border = BorderStroke(1.5.dp, DetailBrandGreen),
                                         modifier = Modifier
                                             .weight(1f)
@@ -675,7 +676,7 @@ fun CustomerDetailScreen(
                                             sendWhatsAppToCustomer(context, customer.phone, msg)
                                         },
                                         shape = RoundedCornerShape(14.dp),
-                                        color = Color.White,
+                                        color = KwSurface,
                                         border = BorderStroke(1.dp, DetailCardBorder),
                                         modifier = Modifier
                                             .size(48.dp)
@@ -703,7 +704,7 @@ fun CustomerDetailScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, DetailCardBorder)
                     ) {
                         Row(
@@ -851,7 +852,7 @@ fun CustomerDetailScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             shape = RoundedCornerShape(18.dp),
-                            color = Color.White,
+                            color = KwSurface,
                             border = BorderStroke(1.dp, DetailCardBorder)
                         ) {
                             if (ledgerRowsDesc.isEmpty()) {
@@ -915,7 +916,7 @@ fun CustomerDetailScreen(
                                         }
                                         if (idx < ledgerRowsDesc.lastIndex) {
                                             HorizontalDivider(
-                                                color = Color(0xFFF1F5F9),
+                                                color = kw(0xFFF1F5F9),
                                                 modifier = Modifier.padding(horizontal = 16.dp)
                                             )
                                         }
@@ -946,7 +947,7 @@ fun CustomerDetailScreen(
                                 Surface(
                                     onClick = { selectedBillFilter = filter },
                                     shape = RoundedCornerShape(50),
-                                    color = if (selected) DetailBrandGreen else Color(0xFFEEF2F6)
+                                    color = if (selected) DetailBrandGreen else kw(0xFFEEF2F6)
                                 ) {
                                     Text(
                                         text = label,
@@ -1024,7 +1025,7 @@ fun CustomerDetailScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 5.dp),
                                 shape = RoundedCornerShape(18.dp),
-                                color = Color.White,
+                                color = KwSurface,
                                 border = BorderStroke(1.dp, DetailCardBorder)
                             ) {
                                 Row(
@@ -1107,7 +1108,7 @@ fun CustomerDetailScreen(
                                     .padding(horizontal = 16.dp, vertical = 14.dp),
                                 shape = RoundedCornerShape(18.dp),
                                 color = DetailSoftRed,
-                                border = BorderStroke(1.dp, Color(0xFFFECACA))
+                                border = BorderStroke(1.dp, kw(0xFFFECACA))
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -1156,7 +1157,7 @@ fun CustomerDetailScreen(
                                                 ).show()
                                             },
                                             shape = RoundedCornerShape(14.dp),
-                                            color = Color.White,
+                                            color = KwSurface,
                                             border = BorderStroke(1.5.dp, DetailBrandGreen),
                                             modifier = Modifier
                                                 .weight(1f)
@@ -1247,7 +1248,7 @@ fun CustomerDetailScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 5.dp),
                                 shape = RoundedCornerShape(18.dp),
-                                color = Color.White,
+                                color = KwSurface,
                                 border = BorderStroke(1.dp, DetailCardBorder)
                             ) {
                                 Row(
@@ -1309,7 +1310,7 @@ fun CustomerDetailScreen(
                                         },
                                         modifier = Modifier.size(40.dp),
                                         shape = RoundedCornerShape(11.dp),
-                                        color = Color(0xFFF1F5F9)
+                                        color = kw(0xFFF1F5F9)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(

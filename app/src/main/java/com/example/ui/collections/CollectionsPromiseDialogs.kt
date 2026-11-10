@@ -1,5 +1,6 @@
 package com.example.ui.collections
 
+import com.example.ui.theme.kw
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -72,24 +73,23 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-internal val ColBrandGreen = Color(0xFF0E6F43)
-internal val ColMintBg = Color(0xFFDDF3E8)
-internal val ColMintBorder = Color(0xFFB7E4CE)
-internal val ColCrimson = Color(0xFFB91C1C)
-internal val ColCrimsonSoftBg = Color(0xFFFCE4E4)
-internal val ColAmber = Color(0xFFB45309)
-internal val ColAmberText = Color(0xFF8A4B08)
-internal val ColAmberSoftBg = Color(0xFFFCEBD2)
-internal val ColBlue = Color(0xFF1E3A8A)
-internal val ColBlueBadgeText = Color(0xFF1E40AF)
-internal val ColBlueSoftBg = Color(0xFFDCEBFA)
-internal val ColBlueBannerBorder = Color(0xFFB9D7F7)
-internal val ColAvatarBg = Color(0xFFE8EEF7)
-internal val ColSoftGrayBtn = Color(0xFFF3F3F8)
-internal val ColNoDateBannerBg = Color(0xFFF1F1F8)
-internal val ColNoDatePillBg = Color(0xFFECECF2)
-internal val ColNoDatePillText = Color(0xFF374151)
-
+internal val ColBrandGreen: Color get() = kw(0xFF0E6F43)
+internal val ColMintBg: Color get() = kw(0xFFDDF3E8)
+internal val ColMintBorder: Color get() = kw(0xFFB7E4CE)
+internal val ColCrimson: Color get() = kw(0xFFB91C1C)
+internal val ColCrimsonSoftBg: Color get() = kw(0xFFFCE4E4)
+internal val ColAmber: Color get() = kw(0xFFB45309)
+internal val ColAmberText: Color get() = kw(0xFF8A4B08)
+internal val ColAmberSoftBg: Color get() = kw(0xFFFCEBD2)
+internal val ColBlue: Color get() = kw(0xFF1E3A8A)
+internal val ColBlueBadgeText: Color get() = kw(0xFF1E40AF)
+internal val ColBlueSoftBg: Color get() = kw(0xFFDCEBFA)
+internal val ColBlueBannerBorder: Color get() = kw(0xFFB9D7F7)
+internal val ColAvatarBg: Color get() = kw(0xFFE8EEF7)
+internal val ColSoftGrayBtn: Color get() = kw(0xFFF3F3F8)
+internal val ColNoDateBannerBg: Color get() = kw(0xFFF1F1F8)
+internal val ColNoDatePillBg: Color get() = kw(0xFFECECF2)
+internal val ColNoDatePillText: Color get() = kw(0xFF374151)
 data class CustomerPromiseMeta(
     val promisedAmount: BigDecimal? = null,
     val note: String = "",
@@ -250,7 +250,7 @@ internal fun SetPromiseDateDialog(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color(0xFFF8F8FC),
+                        color = kw(0xFFF8F8FC),
                         border = BorderStroke(1.dp, FlatDarkBorder)
                     ) {
                         Row(
@@ -386,14 +386,14 @@ internal fun SetPromiseDateDialog(
                                 Icon(
                                     imageVector = Icons.Outlined.CalendarToday,
                                     contentDescription = null,
-                                    tint = Color(0xFF0F4C81),
+                                    tint = kw(0xFF0F4C81),
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
                                     text = fullDateFormatter.format(Date(selectedDateMillis)),
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF0F4C81)
+                                    color = kw(0xFF0F4C81)
                                 )
                             }
                         }
@@ -505,7 +505,7 @@ internal fun SetPromiseDateDialog(
                                     checkedThumbColor = Color.White,
                                     checkedTrackColor = ColBrandGreen,
                                     uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = Color(0xFFD1D5DB)
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
                                 ),
                                 modifier = Modifier.testTag("promise_whatsapp_switch")
                             )

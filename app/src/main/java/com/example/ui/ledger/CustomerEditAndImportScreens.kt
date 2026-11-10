@@ -1,5 +1,7 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -97,15 +99,14 @@ import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.util.UUID
 
-private val EditPageBg = Color(0xFFF6F7F9)
-private val EditCardBorder = Color(0xFFE2E8F0)
-private val EditNavyText = Color(0xFF0F172A)
-private val EditSubtleText = Color(0xFF64748B)
-private val EditBrandGreen = Color(0xFF0E6F43)
-private val EditSoftGreen = Color(0xFFDDF5E7)
-private val EditCrimsonRed = Color(0xFFB91C1C)
-private val EditSoftRed = Color(0xFFFFF1F2)
-
+private val EditPageBg: Color get() = kw(0xFFF6F7F9)
+private val EditCardBorder: Color get() = kw(0xFFE2E8F0)
+private val EditNavyText: Color get() = kw(0xFF0F172A)
+private val EditSubtleText: Color get() = kw(0xFF64748B)
+private val EditBrandGreen: Color get() = kw(0xFF0E6F43)
+private val EditSoftGreen: Color get() = kw(0xFFDDF5E7)
+private val EditCrimsonRed: Color get() = kw(0xFFB91C1C)
+private val EditSoftRed: Color get() = kw(0xFFFFF1F2)
 // ============================================================================
 // PAGE 8: ADD OR EDIT CUSTOMER SCREEN
 // ============================================================================
@@ -194,7 +195,7 @@ fun AddOrEditCustomerScreen(
                     .size(44.dp)
                     .testTag("edit_customer_back_btn"),
                 shape = RoundedCornerShape(13.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, EditCardBorder)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -273,7 +274,7 @@ fun AddOrEditCustomerScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(
@@ -292,8 +293,8 @@ fun AddOrEditCustomerScreen(
                                         .weight(1f)
                                         .height(48.dp),
                                     shape = RoundedCornerShape(12.dp),
-                                    color = Color.White,
-                                    border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                    color = KwSurface,
+                                    border = BorderStroke(1.dp, kw(0xFFCBD5E1))
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -332,7 +333,7 @@ fun AddOrEditCustomerScreen(
                                         onClick = { mobileEntries.removeAt(idx) },
                                         modifier = Modifier.size(48.dp),
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color(0xFFF8FAFC),
+                                        color = kw(0xFFF8FAFC),
                                         border = BorderStroke(1.dp, EditCardBorder)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
@@ -381,7 +382,7 @@ fun AddOrEditCustomerScreen(
                                     Surface(
                                         onClick = { mobileEntries[idx] = entry.copy(tag = tag) },
                                         shape = RoundedCornerShape(50),
-                                        color = if (selected) EditBrandGreen else Color(0xFFEEF2F6)
+                                        color = if (selected) EditBrandGreen else kw(0xFFEEF2F6)
                                     ) {
                                         Text(
                                             text = tag,
@@ -403,7 +404,7 @@ fun AddOrEditCustomerScreen(
                         .fillMaxWidth()
                         .height(48.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
+                        .background(KwSurface)
                         .clickable {
                             mobileEntries.add(TaggedMobileNumber("", "Father"))
                         }
@@ -442,7 +443,7 @@ fun AddOrEditCustomerScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, EditCardBorder)
             ) {
                 Column(
@@ -480,7 +481,7 @@ fun AddOrEditCustomerScreen(
                             Surface(
                                 onClick = { selectedLimitPreset = key },
                                 shape = RoundedCornerShape(50),
-                                color = if (selected) EditBrandGreen else Color(0xFFEEF2F6)
+                                color = if (selected) EditBrandGreen else kw(0xFFEEF2F6)
                             ) {
                                 Text(
                                     text = label,
@@ -499,8 +500,8 @@ fun AddOrEditCustomerScreen(
                                 .fillMaxWidth()
                                 .height(46.dp),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color(0xFFF8FAFC),
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                            color = kw(0xFFF8FAFC),
+                            border = BorderStroke(1.dp, kw(0xFFCBD5E1))
                         ) {
                             Row(
                                 modifier = Modifier
@@ -537,7 +538,7 @@ fun AddOrEditCustomerScreen(
                                 .height(7.dp)
                                 .clip(RoundedCornerShape(50)),
                             color = if (ratio >= 1f) EditCrimsonRed else EditBrandGreen,
-                            trackColor = Color(0xFFE2E8F0),
+                            trackColor = kw(0xFFE2E8F0),
                             strokeCap = StrokeCap.Round
                         )
                         Text(
@@ -553,7 +554,7 @@ fun AddOrEditCustomerScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, EditCardBorder)
             ) {
                 Row(
@@ -597,7 +598,7 @@ fun AddOrEditCustomerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
                 color = EditSoftRed,
-                border = BorderStroke(1.dp, Color(0xFFFECDD3))
+                border = BorderStroke(1.dp, kw(0xFFFECDD3))
             ) {
                 Row(
                     modifier = Modifier
@@ -646,7 +647,7 @@ fun AddOrEditCustomerScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFFEEF2F6),
+                    color = kw(0xFFEEF2F6),
                     border = BorderStroke(1.dp, EditCardBorder)
                 ) {
                     Row(
@@ -726,7 +727,7 @@ fun AddOrEditCustomerScreen(
         // Bottom Sticky Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, EditCardBorder)
         ) {
             Row(
@@ -739,8 +740,8 @@ fun AddOrEditCustomerScreen(
                 Surface(
                     onClick = onCancel,
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                    color = KwSurface,
+                    border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp)
@@ -831,7 +832,7 @@ private fun CustomerFormInputSection(
                 .fillMaxWidth()
                 .height(52.dp),
             shape = RoundedCornerShape(14.dp),
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, EditCardBorder)
         ) {
             Box(
@@ -842,7 +843,7 @@ private fun CustomerFormInputSection(
                     Text(
                         text = placeholder,
                         fontSize = 15.sp,
-                        color = Color(0xFF94A3B8)
+                        color = kw(0xFF94A3B8)
                     )
                 }
                 BasicTextField(
@@ -1017,7 +1018,7 @@ fun ImportCustomersFlowScreen(
                             .size(44.dp)
                             .testTag("import_customers_back_btn"),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -1068,7 +1069,7 @@ fun ImportCustomersFlowScreen(
                             .fillMaxWidth()
                             .testTag("import_from_contacts_card"),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Row(
@@ -1126,7 +1127,7 @@ fun ImportCustomersFlowScreen(
                             .fillMaxWidth()
                             .testTag("import_from_excel_card"),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Row(
@@ -1144,13 +1145,13 @@ fun ImportCustomersFlowScreen(
                                 Surface(
                                     modifier = Modifier.size(48.dp),
                                     shape = RoundedCornerShape(14.dp),
-                                    color = Color(0xFFDBEAFE)
+                                    color = kw(0xFFDBEAFE)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
                                             imageVector = Icons.Outlined.Description,
                                             contentDescription = null,
-                                            tint = Color(0xFF1D4ED8),
+                                            tint = kw(0xFF1D4ED8),
                                             modifier = Modifier.size(24.dp)
                                         )
                                     }
@@ -1181,7 +1182,7 @@ fun ImportCustomersFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color(0xFFF1F5F9),
+                        color = kw(0xFFF1F5F9),
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(
@@ -1212,7 +1213,7 @@ fun ImportCustomersFlowScreen(
                                     .height(48.dp)
                                     .testTag("download_sample_template_btn"),
                                 shape = RoundedCornerShape(14.dp),
-                                color = Color.White,
+                                color = KwSurface,
                                 border = BorderStroke(1.5.dp, EditBrandGreen)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
@@ -1275,7 +1276,7 @@ fun ImportCustomersFlowScreen(
                         onClick = { currentStep = ImportSubStep.HUB },
                         modifier = Modifier.size(44.dp),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -1309,7 +1310,7 @@ fun ImportCustomersFlowScreen(
                         .padding(horizontal = 16.dp)
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, EditCardBorder)
                 ) {
                     Row(
@@ -1330,7 +1331,7 @@ fun ImportCustomersFlowScreen(
                                 Text(
                                     text = tr("Search contacts...", "कॉन्टैक्ट्स खोजें..."),
                                     fontSize = 14.5.sp,
-                                    color = Color(0xFF94A3B8)
+                                    color = kw(0xFF94A3B8)
                                 )
                             }
                             BasicTextField(
@@ -1379,7 +1380,7 @@ fun ImportCustomersFlowScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, EditCardBorder)
                 ) {
                     if (filteredContacts.isEmpty()) {
@@ -1419,7 +1420,7 @@ fun ImportCustomersFlowScreen(
                                             modifier = Modifier.size(26.dp),
                                             shape = RoundedCornerShape(7.dp),
                                             color = if (isChecked) EditBrandGreen else Color.White,
-                                            border = if (isChecked) null else BorderStroke(1.5.dp, Color(0xFFCBD5E1))
+                                            border = if (isChecked) null else BorderStroke(1.5.dp, kw(0xFFCBD5E1))
                                         ) {
                                             if (isChecked) {
                                                 Box(contentAlignment = Alignment.Center) {
@@ -1439,7 +1440,7 @@ fun ImportCustomersFlowScreen(
                                     Surface(
                                         modifier = Modifier.size(40.dp),
                                         shape = CircleShape,
-                                        color = Color(0xFFE2E8F0)
+                                        color = kw(0xFFE2E8F0)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Text(
@@ -1468,7 +1469,7 @@ fun ImportCustomersFlowScreen(
                                     if (item.alreadyAdded) {
                                         Surface(
                                             shape = RoundedCornerShape(50),
-                                            color = Color(0xFFF1F5F9)
+                                            color = kw(0xFFF1F5F9)
                                         ) {
                                             Text(
                                                 text = tr("Already added", "पहले से जुड़ा है"),
@@ -1480,7 +1481,7 @@ fun ImportCustomersFlowScreen(
                                         }
                                     }
                                 }
-                                HorizontalDivider(color = Color(0xFFF1F5F9))
+                                HorizontalDivider(color = kw(0xFFF1F5F9))
                             }
                         }
                     }
@@ -1490,7 +1491,7 @@ fun ImportCustomersFlowScreen(
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, EditCardBorder)
                 ) {
                     Button(
@@ -1587,7 +1588,7 @@ fun ImportCustomersFlowScreen(
                         onClick = { currentStep = ImportSubStep.HUB },
                         modifier = Modifier.size(44.dp),
                         shape = RoundedCornerShape(13.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -1625,7 +1626,7 @@ fun ImportCustomersFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(
@@ -1649,13 +1650,13 @@ fun ImportCustomersFlowScreen(
                             }
 
                             ColumnMapperRow("Name *", fileHeaders, nameColIndex, allowNotUsed = false) { nameColIndex = it }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             ColumnMapperRow("Mobile", fileHeaders, mobileColIndex, allowNotUsed = true) { mobileColIndex = it }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             ColumnMapperRow("Village", fileHeaders, villageColIndex, allowNotUsed = true) { villageColIndex = it }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             ColumnMapperRow("Opening udhari", fileHeaders, udhariColIndex, allowNotUsed = true) { udhariColIndex = it }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
                             ColumnMapperRow("Credit limit", fileHeaders, limitColIndex, allowNotUsed = true) { limitColIndex = it }
                         }
                     }
@@ -1664,7 +1665,7 @@ fun ImportCustomersFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(
@@ -1695,18 +1696,18 @@ fun ImportCustomersFlowScreen(
                                         )
                                     }
                                     if (duplicateCount > 0) {
-                                        Surface(shape = RoundedCornerShape(50), color = Color(0xFFFEF3C7)) {
+                                        Surface(shape = RoundedCornerShape(50), color = kw(0xFFFEF3C7)) {
                                             Text(
                                                 text = "$duplicateCount",
                                                 fontSize = 11.5.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color(0xFFB45309),
+                                                color = kw(0xFFB45309),
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                             )
                                         }
                                     }
                                     if (noNameCount > 0) {
-                                        Surface(shape = RoundedCornerShape(50), color = Color(0xFFFEE2E2)) {
+                                        Surface(shape = RoundedCornerShape(50), color = kw(0xFFFEE2E2)) {
                                             Text(
                                                 text = "$noNameCount",
                                                 fontSize = 11.5.sp,
@@ -1730,7 +1731,7 @@ fun ImportCustomersFlowScreen(
                                 Text("UDHARI", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, textAlign = TextAlign.End, modifier = Modifier.weight(0.8f))
                                 Text("STATUS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = EditSubtleText, textAlign = TextAlign.End, modifier = Modifier.weight(0.9f))
                             }
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                            HorizontalDivider(color = kw(0xFFF1F5F9))
 
                             parsedRows.take(15).forEach { r ->
                                 Row(
@@ -1771,8 +1772,8 @@ fun ImportCustomersFlowScreen(
                                     ) {
                                         val (bg, fg) = when (r.status) {
                                             "Ready" -> EditSoftGreen to EditBrandGreen
-                                            "Duplicate" -> Color(0xFFFEF3C7) to Color(0xFFB45309)
-                                            else -> Color(0xFFFEE2E2) to EditCrimsonRed
+                                            "Duplicate" -> kw(0xFFFEF3C7) to kw(0xFFB45309)
+                                            else -> kw(0xFFFEE2E2) to EditCrimsonRed
                                         }
                                         Surface(shape = RoundedCornerShape(50), color = bg) {
                                             Text(
@@ -1785,7 +1786,7 @@ fun ImportCustomersFlowScreen(
                                         }
                                     }
                                 }
-                                HorizontalDivider(color = Color(0xFFF1F5F9))
+                                HorizontalDivider(color = kw(0xFFF1F5F9))
                             }
                         }
                     }
@@ -1803,7 +1804,7 @@ fun ImportCustomersFlowScreen(
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, EditCardBorder)
                 ) {
                     Button(
@@ -1911,7 +1912,7 @@ fun ImportCustomersFlowScreen(
                     Surface(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
@@ -1924,20 +1925,20 @@ fun ImportCustomersFlowScreen(
                     Surface(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text("SKIPPED", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = EditSubtleText)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("${lastSkippedRows.size}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                            Text("${lastSkippedRows.size}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = kw(0xFFB45309))
                         }
                     }
 
                     Surface(
                         modifier = Modifier.weight(1.25f),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
@@ -1959,7 +1960,7 @@ fun ImportCustomersFlowScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, EditCardBorder)
                     ) {
                         Column(
@@ -1975,7 +1976,7 @@ fun ImportCustomersFlowScreen(
                                 color = EditNavyText
                             )
                             lastSkippedRows.take(5).forEach { skip ->
-                                HorizontalDivider(color = Color(0xFFF1F5F9))
+                                HorizontalDivider(color = kw(0xFFF1F5F9))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1998,13 +1999,13 @@ fun ImportCustomersFlowScreen(
                                     val isDup = skip.status == "Duplicate"
                                     Surface(
                                         shape = RoundedCornerShape(50),
-                                        color = if (isDup) Color(0xFFFEF3C7) else Color(0xFFFEE2E2)
+                                        color = if (isDup) kw(0xFFFEF3C7) else kw(0xFFFEE2E2)
                                     ) {
                                         Text(
                                             text = skip.status,
                                             fontSize = 11.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (isDup) Color(0xFFB45309) else EditCrimsonRed,
+                                            color = if (isDup) kw(0xFFB45309) else EditCrimsonRed,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                         )
                                     }
@@ -2093,7 +2094,7 @@ private fun ColumnMapperRow(
             Surface(
                 onClick = { expanded = true },
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFF8FAFC),
+                color = kw(0xFFF8FAFC),
                 border = BorderStroke(1.dp, EditCardBorder)
             ) {
                 Row(

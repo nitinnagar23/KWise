@@ -1,5 +1,6 @@
 package com.example.ui.settings
 
+import com.example.ui.theme.kw
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -815,8 +816,8 @@ fun RemindersSubScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFECFDF5),
-                border = BorderStroke(1.dp, Color(0xFFA7F3D0))
+                color = kw(0xFFECFDF5),
+                border = BorderStroke(1.dp, kw(0xFFA7F3D0))
             ) {
                 Text(
                     text = if (channel == "WhatsApp") {
@@ -832,7 +833,7 @@ fun RemindersSubScreen(
                     },
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF065F46),
+                    color = kw(0xFF065F46),
                     lineHeight = 18.sp,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                 )
@@ -1247,7 +1248,7 @@ fun EditMessageTemplateSubScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFFE7F8E9)
+                    color = kw(0xFFE7F8E9)
                 ) {
                     Box(modifier = Modifier.padding(14.dp)) {
                         Surface(

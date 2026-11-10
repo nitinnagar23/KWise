@@ -1,5 +1,7 @@
 package com.example.ui.auth
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -80,10 +82,10 @@ internal fun StaffSixDigitCodeInput(
                     val charStr = code.getOrNull(index)?.toString() ?: ""
                     val isFilled = charStr.isNotEmpty()
                     val isCurrentSlot = index == code.length
-                    val boxBg = if (isFilled) Color(0xFFF0FAF5) else Color(0xFFF8FAFC)
+                    val boxBg = if (isFilled) kw(0xFFF0FAF5) else kw(0xFFF8FAFC)
                     val boxBorder = when {
                         isFilled || isCurrentSlot -> LoginBrandGreen
-                        else -> Color(0xFFCBD5E1)
+                        else -> kw(0xFFCBD5E1)
                     }
                     val borderWidth = if (isFilled || isCurrentSlot) 1.5.dp else 1.dp
 
@@ -164,7 +166,7 @@ internal fun StaffConfirmAndJoinScreen(
                         .size(44.dp)
                         .testTag("join_shop_back_btn"),
                     shape = RoundedCornerShape(13.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, LoginCardBorder)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -199,7 +201,7 @@ internal fun StaffConfirmAndJoinScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, LoginCardBorder)
                 ) {
                     Row(
@@ -242,7 +244,7 @@ internal fun StaffConfirmAndJoinScreen(
 
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = Color(0xFFEEF0F6)
+                            color = kw(0xFFEEF0F6)
                         ) {
                             Text(
                                 text = roleLabel,
@@ -259,7 +261,7 @@ internal fun StaffConfirmAndJoinScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, LoginCardBorder)
                 ) {
                     Column(
@@ -291,7 +293,7 @@ internal fun StaffConfirmAndJoinScreen(
                         )
 
                         HorizontalDivider(
-                            color = Color(0xFFF1F5F9),
+                            color = kw(0xFFF1F5F9),
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
 
@@ -301,7 +303,7 @@ internal fun StaffConfirmAndJoinScreen(
                         )
 
                         HorizontalDivider(
-                            color = Color(0xFFF1F5F9),
+                            color = kw(0xFFF1F5F9),
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
 
@@ -330,7 +332,7 @@ internal fun StaffConfirmAndJoinScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFFF1F2F8)
+                    color = kw(0xFFF1F2F8)
                 ) {
                     Text(
                         text = tr(
@@ -338,7 +340,7 @@ internal fun StaffConfirmAndJoinScreen(
                             "आपका एडमिन आपको मंज़ूरी देगा और बिलों के लिए आपको एक डिस्प्ले नाम दे सकता है।"
                         ),
                         fontSize = 13.5.sp,
-                        color = Color(0xFF334155),
+                        color = kw(0xFF334155),
                         lineHeight = 19.sp,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -423,7 +425,7 @@ private fun StaffAutoDetailRow(
         )
         Surface(
             shape = RoundedCornerShape(50),
-            color = Color(0xFFEEF0F6)
+            color = kw(0xFFEEF0F6)
         ) {
             Text(
                 text = tr("Auto", "ऑटो"),
@@ -491,12 +493,12 @@ internal fun StaffWaitingForApprovalScreen(
                 modifier = Modifier
                     .size(96.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFDECCE)),
+                    .background(kw(0xFFFDECCE)),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.size(44.dp)) {
                     val strokePx = 3.6.dp.toPx()
-                    val amberColor = Color(0xFFB45309)
+                    val amberColor = kw(0xFFB45309)
                     drawCircle(
                         color = amberColor,
                         radius = size.minDimension / 2f - strokePx / 2f,
@@ -555,7 +557,7 @@ internal fun StaffWaitingForApprovalScreen(
                     .fillMaxWidth()
                     .testTag("waiting_approval_staff_card"),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, LoginCardBorder)
             ) {
                 Row(
@@ -602,13 +604,13 @@ internal fun StaffWaitingForApprovalScreen(
 
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color(0xFFFDECCE)
+                        color = kw(0xFFFDECCE)
                     ) {
                         Text(
                             text = tr("Pending", "लंबित"),
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFB45309),
+                            color = kw(0xFFB45309),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                     }
@@ -633,7 +635,7 @@ internal fun StaffWaitingForApprovalScreen(
                     .height(52.dp)
                     .testTag("remind_admin_whatsapp_btn"),
                 shape = RoundedCornerShape(14.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.5.dp, LoginBrandGreen)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -662,7 +664,7 @@ internal fun StaffWaitingForApprovalScreen(
                     text = tr("Cancel request", "अनुरोध रद्द करें"),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFB91C1C)
+                    color = kw(0xFFB91C1C)
                 )
             }
         }

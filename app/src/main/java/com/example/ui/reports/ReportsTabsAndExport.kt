@@ -1,5 +1,6 @@
 package com.example.ui.reports
 
+import com.example.ui.theme.kw
 import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -80,24 +81,23 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-internal val RepGreen = Color(0xFF0E6F43)
-internal val RepGreenSoft = Color(0xFFDDF3E8)
-internal val RepMintBg = Color(0xFFF0FAF5)
-internal val RepMintBorder = Color(0xFFC6E9D6)
-internal val RepRed = Color(0xFFB91C1C)
-internal val RepRedSoft = Color(0xFFFCE4E4)
-internal val RepAmber = Color(0xFFB45309)
-internal val RepAmberBar = Color(0xFFD97706)
-internal val RepAmberSoft = Color(0xFFFCEBD2)
-internal val RepAmberCalloutBg = Color(0xFFFEF6E7)
-internal val RepAmberCalloutBorder = Color(0xFFF5D598)
-internal val RepBlue = Color(0xFF2563EB)
-internal val RepBarBlue = Color(0xFFBFDBFE)
-internal val RepAvatarBg = Color(0xFFE8EEF7)
-internal val RepAvatarText = Color(0xFF1E3A8A)
-internal val RepChipIdleBg = Color(0xFFF1F1F7)
-internal val RepTrackBg = Color(0xFFEAECEF)
-
+internal val RepGreen: Color get() = kw(0xFF0E6F43)
+internal val RepGreenSoft: Color get() = kw(0xFFDDF3E8)
+internal val RepMintBg: Color get() = kw(0xFFF0FAF5)
+internal val RepMintBorder: Color get() = kw(0xFFC6E9D6)
+internal val RepRed: Color get() = kw(0xFFB91C1C)
+internal val RepRedSoft: Color get() = kw(0xFFFCE4E4)
+internal val RepAmber: Color get() = kw(0xFFB45309)
+internal val RepAmberBar: Color get() = kw(0xFFD97706)
+internal val RepAmberSoft: Color get() = kw(0xFFFCEBD2)
+internal val RepAmberCalloutBg: Color get() = kw(0xFFFEF6E7)
+internal val RepAmberCalloutBorder: Color get() = kw(0xFFF5D598)
+internal val RepBlue: Color get() = kw(0xFF2563EB)
+internal val RepBarBlue: Color get() = kw(0xFFBFDBFE)
+internal val RepAvatarBg: Color get() = kw(0xFFE8EEF7)
+internal val RepAvatarText: Color get() = kw(0xFF1E3A8A)
+internal val RepChipIdleBg: Color get() = kw(0xFFF1F1F7)
+internal val RepTrackBg: Color get() = kw(0xFFEAECEF)
 @Composable
 internal fun ReportsProfitViewTab(
     totalGrossProfit: BigDecimal,
@@ -367,10 +367,10 @@ internal fun ReportsProfitViewTab(
                     )
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF78350F))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = kw(0xFF78350F))) {
                                 append("${candidate.feedName} margin is ${candidate.marginPercent}%. ")
                             }
-                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = Color(0xFF78350F))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = kw(0xFF78350F))) {
                                 append("Raising the 1 kg rate by ₹1 would add about ${CurrencyUtils.formatInr(extraGain)} this month.")
                             }
                         },
@@ -731,7 +731,7 @@ internal fun ReportsCustomerInsightsTab(
                     topBuyers.forEachIndexed { idx, ci ->
                         val (scoreBg, scoreColor, labelText) = when {
                             ci.trustScore >= 85 -> Triple(RepGreenSoft, RepGreen, "Excellent")
-                            ci.trustScore >= 60 -> Triple(RepAmberSoft, Color(0xFF8A4B08), "Good")
+                            ci.trustScore >= 60 -> Triple(RepAmberSoft, kw(0xFF8A4B08), "Good")
                             else -> Triple(RepRedSoft, RepRed, "Risky")
                         }
                         val village = ci.customer.village
@@ -828,8 +828,8 @@ internal fun ReportsCustomerInsightsTab(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFCE8E8),
-                border = BorderStroke(1.dp, Color(0xFFF5BABA))
+                color = kw(0xFFFCE8E8),
+                border = BorderStroke(1.dp, kw(0xFFF5BABA))
             ) {
                 Row(
                     modifier = Modifier
@@ -840,10 +840,10 @@ internal fun ReportsCustomerInsightsTab(
                 ) {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF7F1D1D))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = kw(0xFF7F1D1D))) {
                                 append(overdueCust.customer.name)
                             }
-                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = Color(0xFF7F1D1D))) {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = kw(0xFF7F1D1D))) {
                                 append(" has ${CurrencyUtils.formatInr(overdueCust.currentUdhari)} overdue for $days days. Consider pausing new udhari.")
                             }
                         },
@@ -924,7 +924,7 @@ internal fun ReportsExportAndBackupScreen(
         checkedThumbColor = Color.White,
         checkedTrackColor = RepGreen,
         uncheckedThumbColor = Color.White,
-        uncheckedTrackColor = Color(0xFFD1D5DB),
+        uncheckedTrackColor = kw(0xFFD1D5DB),
         uncheckedBorderColor = Color.Transparent
     )
 
@@ -1287,7 +1287,7 @@ internal fun ReportsExportAndBackupScreen(
                                 text = daysSinceBackup,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF8A4B08),
+                                color = kw(0xFF8A4B08),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                             )
                         }

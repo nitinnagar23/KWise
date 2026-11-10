@@ -1,5 +1,6 @@
 package com.example.ui.billing
 
+import com.example.ui.theme.kw
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -132,13 +133,12 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private val BillBrandGreen = Color(0xFF0E6F43)
-private val BillMintPillBg = Color(0xFFE1F5EB)
-private val BillCrimson = Color(0xFFB91C1C)
-private val BillCrimsonSoftBg = Color(0xFFFDE8E8)
-private val BillAvatarBg = Color(0xFFE6EEF6)
-private val BillAvatarText = Color(0xFF1E3A5F)
-
+private val BillBrandGreen: Color get() = kw(0xFF0E6F43)
+private val BillMintPillBg: Color get() = kw(0xFFE1F5EB)
+private val BillCrimson: Color get() = kw(0xFFB91C1C)
+private val BillCrimsonSoftBg: Color get() = kw(0xFFFDE8E8)
+private val BillAvatarBg: Color get() = kw(0xFFE6EEF6)
+private val BillAvatarText: Color get() = kw(0xFF1E3A5F)
 private fun billCustomerInitials(name: String): String {
     val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
     return when {
@@ -1513,7 +1513,7 @@ fun BillingScreen(
                             executeSaveBill()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = CRedUdhari, contentColor = Color.White)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB91C1C), contentColor = Color.White)
                 ) {
                     Text(
                         text = if (isManager) tr("Verify Admin & Approve", "एडमिन पिन सत्यापित करें") else tr("Approve Over-Limit Sale", "उधारी बिल मंजूर करें"),

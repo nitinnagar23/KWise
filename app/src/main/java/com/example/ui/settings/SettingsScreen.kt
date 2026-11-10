@@ -1,5 +1,7 @@
 package com.example.ui.settings
 
+import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -505,16 +507,16 @@ fun SettingsScreen(
     val role = currentUser?.role
     val canManageShopProfile = can(role, Permission.MANAGE_SHOP_PROFILE)
 
-    val greenIconTint = if (isLightTheme) Color(0xFF15803D) else CGreen
-    val greenIconBg = if (isLightTheme) Color(0xFFDCFCE7) else Color(0xFF133826)
-    val redIconTint = if (isLightTheme) Color(0xFFB91C1C) else CRedUdhari
-    val redIconBg = if (isLightTheme) Color(0xFFFEE2E2) else Color(0xFF331416)
-    val amberIconTint = if (isLightTheme) Color(0xFFB45309) else CAmber
-    val amberIconBg = if (isLightTheme) Color(0xFFFEF3C7) else Color(0xFF362308)
-    val blueIconTint = if (isLightTheme) Color(0xFF1D4ED8) else Color(0xFF38BDF8)
-    val blueIconBg = if (isLightTheme) Color(0xFFDBEAFE) else Color(0xFF0C2B4E)
-    val purpleIconTint = if (isLightTheme) Color(0xFF6D28D9) else Color(0xFFA78BFA)
-    val purpleIconBg = if (isLightTheme) Color(0xFFEDE9FE) else Color(0xFF281B46)
+    val greenIconTint = if (isLightTheme) kw(0xFF15803D) else CGreen
+    val greenIconBg = if (isLightTheme) kw(0xFFDCFCE7) else Color(0xFF133826)
+    val redIconTint = if (isLightTheme) kw(0xFFB91C1C) else CRedUdhari
+    val redIconBg = if (isLightTheme) kw(0xFFFEE2E2) else Color(0xFF331416)
+    val amberIconTint = if (isLightTheme) kw(0xFFB45309) else CAmber
+    val amberIconBg = if (isLightTheme) kw(0xFFFEF3C7) else Color(0xFF362308)
+    val blueIconTint = if (isLightTheme) kw(0xFF1D4ED8) else Color(0xFF38BDF8)
+    val blueIconBg = if (isLightTheme) kw(0xFFDBEAFE) else Color(0xFF0C2B4E)
+    val purpleIconTint = if (isLightTheme) kw(0xFF6D28D9) else Color(0xFFA78BFA)
+    val purpleIconBg = if (isLightTheme) kw(0xFFEDE9FE) else Color(0xFF281B46)
 
     // 8-Tile SHOP HUB Grid matching Page 1 of the PDF
     val hubTiles = buildList {
@@ -669,7 +671,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .size(34.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF16A34A)),
+                        .background(kw(0xFF16A34A)),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -745,7 +747,7 @@ fun SettingsScreen(
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp),
                             shape = CircleShape,
-                            color = Color(0xFFDC2626)
+                            color = kw(0xFFDC2626)
                         ) {
                             Text(
                                 text = unreadNotificationsCount.toString(),
@@ -804,9 +806,9 @@ fun SettingsScreen(
                             .clip(CircleShape)
                             .background(
                                 when (currentUser?.role) {
-                                    Role.ADMINISTRATOR -> Color(0xFF9A3412)
-                                    Role.MANAGER -> Color(0xFF1D4ED8)
-                                    else -> Color(0xFF047857)
+                                    Role.ADMINISTRATOR -> kw(0xFF9A3412)
+                                    Role.MANAGER -> kw(0xFF1D4ED8)
+                                    else -> kw(0xFF047857)
                                 }
                             )
                             .clickable(enabled = canManageShopProfile) {
@@ -860,7 +862,7 @@ fun SettingsScreen(
                             }
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFF0F172A)
+                                color = kw(0xFF0F172A)
                             ) {
                                 Text(
                                     text = roleBadgeText,
@@ -881,7 +883,7 @@ fun SettingsScreen(
                                 .clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
                                 .testTag("btn_edit_shop_profile"),
                             shape = RoundedCornerShape(12.dp),
-                            color = if (isLightTheme) Color(0xFFF5F4EE) else FlatDarkInput,
+                            color = if (isLightTheme) kw(0xFFF5F4EE) else FlatDarkInput,
                             border = BorderStroke(1.dp, FlatDarkBorder)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -917,7 +919,7 @@ fun SettingsScreen(
                             metadataPills.forEach { chipText ->
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput
+                                    color = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput
                                 ) {
                                     Text(
                                         text = chipText,
@@ -930,7 +932,7 @@ fun SettingsScreen(
                         } else if (canManageShopProfile) {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                                color = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                                 modifier = Modifier.clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
                             ) {
                                 Text(
@@ -1016,12 +1018,12 @@ fun SettingsScreen(
 
                                 if (tile.badge != null) {
                                     val badgeBg = when (tile.badgeStyle) {
-                                        HubBadgeStyle.URGENT_RED -> Color(0xFF881313)
-                                        HubBadgeStyle.WARNING_AMBER -> if (isLightTheme) Color(0xFFFEF3C7) else Color(0xFF3B2506)
+                                        HubBadgeStyle.URGENT_RED -> kw(0xFF881313)
+                                        HubBadgeStyle.WARNING_AMBER -> if (isLightTheme) kw(0xFFFEF3C7) else Color(0xFF3B2506)
                                     }
                                     val badgeFg = when (tile.badgeStyle) {
                                         HubBadgeStyle.URGENT_RED -> Color.White
-                                        HubBadgeStyle.WARNING_AMBER -> if (isLightTheme) Color(0xFF92400E) else CAmber
+                                        HubBadgeStyle.WARNING_AMBER -> if (isLightTheme) kw(0xFF92400E) else CAmber
                                     }
                                     Surface(
                                         modifier = Modifier
@@ -1075,7 +1077,7 @@ fun SettingsScreen(
                     SettingsMenuRow(
                         icon = Icons.Default.Store,
                         iconTint = FlatTextPrimary,
-                        iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                        iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                         title = tr("Store profile", "दुकान प्रोफ़ाइल"),
                         subtitle = tr("Name, address, logo", "नाम, पता, लोगो"),
                         testTag = "row_store_profile",
@@ -1088,7 +1090,7 @@ fun SettingsScreen(
                     SettingsMenuRow(
                         icon = Icons.Default.QrCode2,
                         iconTint = FlatTextPrimary,
-                        iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                        iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                         title = tr("UPI & GST", "UPI और GST"),
                         subtitle = upiGstSubtitle,
                         testTag = "row_upi_gst_details",
@@ -1101,7 +1103,7 @@ fun SettingsScreen(
                     SettingsMenuRow(
                         icon = Icons.Default.Description,
                         iconTint = FlatTextPrimary,
-                        iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                        iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                         title = tr("Bill & PDF", "बिल और PDF"),
                         subtitle = "${extraPrefs.billPaperSize} · ${extraPrefs.billLanguage}",
                         testTag = "row_bill_pdf",
@@ -1243,7 +1245,7 @@ fun SettingsScreen(
                 SettingsMenuRow(
                     icon = Icons.Default.Palette,
                     iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                     title = tr("Theme & Language", "थीम और भाषा"),
                     subtitle = "$currentThemeLabel · $currentLanguageLabel",
                     testTag = "row_theme_preference",
@@ -1272,7 +1274,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput),
+                                .background(if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -1335,7 +1337,7 @@ fun SettingsScreen(
                 SettingsMenuRow(
                     icon = Icons.Default.Lock,
                     iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                     title = tr("App lock & security", "ऐप लॉक और सुरक्षा"),
                     subtitle = securitySubtitle,
                     testTag = "row_app_lock_security",
@@ -1360,7 +1362,7 @@ fun SettingsScreen(
                 SettingsMenuRow(
                     icon = Icons.AutoMirrored.Filled.HelpOutline,
                     iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                     title = tr("Help & support", "सहायता और सपोर्ट"),
                     subtitle = null,
                     testTag = "row_help_support",
@@ -1372,7 +1374,7 @@ fun SettingsScreen(
                 SettingsMenuRow(
                     icon = Icons.Default.Info,
                     iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) Color(0xFFF3F1EC) else FlatDarkInput,
+                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
                     title = tr("About KhataWise", "KhataWise के बारे में"),
                     subtitle = tr("Version 1.0", "वर्ज़न 1.0"),
                     testTag = "row_about_khatawise",
@@ -1386,9 +1388,9 @@ fun SettingsScreen(
         // -------------------------------------------------------------
         // 7. BOTTOM LOG OUT CARD BUTTON (Opens Page 7 Logout Modal)
         // -------------------------------------------------------------
-        val logoutBorder = if (isLightTheme) Color(0xFFFECACA) else Color(0xFFEF4444).copy(alpha = 0.45f)
-        val logoutBg = if (isLightTheme) Color(0xFFFFFFFF) else Color(0xFF2A1214)
-        val logoutTextColor = if (isLightTheme) Color(0xFFDC2626) else Color(0xFFEF4444)
+        val logoutBorder = if (isLightTheme) kw(0xFFFECACA) else Color(0xFFEF4444).copy(alpha = 0.45f)
+        val logoutBg = if (isLightTheme) kw(0xFFFFFFFF) else Color(0xFF2A1214)
+        val logoutTextColor = if (isLightTheme) kw(0xFFDC2626) else Color(0xFFEF4444)
 
         Surface(
             modifier = Modifier
@@ -1499,9 +1501,9 @@ fun SettingsScreen(
                             }
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = CGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = CGreenPrimary)
                 ) {
-                    Text(tr("Save", "सेव करें"), color = Color(0xFF061A0E), fontWeight = FontWeight.Bold)
+                    Text(tr("Save", "सेव करें"), color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {

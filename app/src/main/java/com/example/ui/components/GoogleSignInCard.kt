@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.kw
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -176,7 +178,7 @@ fun GoogleSignInCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF0F172A))
+                        .background(kw(0xFF0F172A))
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -211,7 +213,7 @@ fun GoogleSignInCard(
                                     }
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = CGreen),
+                            colors = ButtonDefaults.buttonColors(containerColor = CGreenPrimary),
                             modifier = Modifier.testTag("sync_now_btn")
                         ) {
                             Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))

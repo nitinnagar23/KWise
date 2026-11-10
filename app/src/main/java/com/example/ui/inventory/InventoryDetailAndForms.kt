@@ -1,5 +1,6 @@
 package com.example.ui.inventory
 
+import com.example.ui.theme.kw
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -249,8 +250,8 @@ internal fun InventoryItemDetailView(
                     Surface(
                         onClick = onDeleteItem,
                         shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFFEE2E2),
-                        border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                        color = kw(0xFFFEE2E2),
+                        border = BorderStroke(1.dp, kw(0xFFFECACA)),
                         modifier = Modifier
                             .size(42.dp)
                             .testTag("inventory_detail_delete_btn")
@@ -259,7 +260,7 @@ internal fun InventoryItemDetailView(
                             Icon(
                                 imageVector = androidx.compose.material.icons.Icons.Outlined.Delete,
                                 contentDescription = tr("Delete item", "आइटम हटाएं"),
-                                tint = Color(0xFFB91C1C),
+                                tint = kw(0xFFB91C1C),
                                 modifier = Modifier.size(19.dp)
                             )
                         }
@@ -343,7 +344,7 @@ internal fun InventoryItemDetailView(
                     }
                     val tickX = size.width * tickFraction
                     drawLine(
-                        color = Color(0xFF1F2937),
+                        color = kw(0xFF1F2937),
                         start = Offset(tickX, 0f),
                         end = Offset(tickX, size.height),
                         strokeWidth = 2.dp.toPx()
@@ -1455,7 +1456,7 @@ internal fun InventoryAddOrEditItemView(
                                 text = tr("Set selling rates", "बिक्री भाव सेट करें"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6B3E08)
+                                color = kw(0xFF6B3E08)
                             )
                             Text(
                                 text = tr(
@@ -1701,7 +1702,7 @@ internal fun InventoryUpdateStockView(
         checkedThumbColor = Color.White,
         checkedTrackColor = InvBrandGreen,
         uncheckedThumbColor = Color.White,
-        uncheckedTrackColor = Color(0xFFD1D5DB),
+        uncheckedTrackColor = kw(0xFFD1D5DB),
         uncheckedBorderColor = Color.Transparent
     )
 
@@ -2651,8 +2652,8 @@ internal fun InventoryUpdateStockView(
 
                 // 6. Difference Card
                 val isShort = countDiffKg < BigDecimal.ZERO
-                val diffBg = if (isShort) Color(0xFFFCE8E8) else InvMintBg
-                val diffBorder = if (isShort) Color(0xFFF5BABA) else Color(0xFFB8E6CE)
+                val diffBg = if (isShort) kw(0xFFFCE8E8) else InvMintBg
+                val diffBorder = if (isShort) kw(0xFFF5BABA) else kw(0xFFB8E6CE)
                 val diffColor = if (isShort) InvRedText else InvBrandGreen
                 val diffSign = if (countDiffKg < BigDecimal.ZERO) "−" else if (countDiffKg > BigDecimal.ZERO) "+" else ""
 
@@ -2691,13 +2692,13 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = "Counted ${CurrencyUtils.formatWeight(countedTotalKg)} kg",
                                 fontSize = 13.sp,
-                                color = Color(0xFF4B1D1D),
+                                color = kw(0xFF4B1D1D),
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "System ${CurrencyUtils.formatWeight(systemStockKg)} kg",
                                 fontSize = 13.sp,
-                                color = Color(0xFF4B1D1D),
+                                color = kw(0xFF4B1D1D),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -2834,7 +2835,7 @@ private fun QuantityStepperBox(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFF6F6FA)
+        color = kw(0xFFF6F6FA)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
@@ -2856,7 +2857,7 @@ private fun QuantityStepperBox(
                 Surface(
                     onClick = { onValueChange((value - 1).coerceAtLeast(0)) },
                     shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFFE7E7F0),
+                    color = kw(0xFFE7E7F0),
                     modifier = Modifier
                         .size(38.dp)
                         .testTag("${tagPrefix}_minus")

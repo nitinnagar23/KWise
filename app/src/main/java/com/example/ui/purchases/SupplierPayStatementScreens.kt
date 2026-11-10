@@ -1,5 +1,7 @@
 package com.example.ui.purchases
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
@@ -109,13 +111,12 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private val CashbookBannerBg = Color(0xFFE0F2FE)
-private val CashbookBannerBorder = Color(0xFFBAE6FD)
-private val CashbookBannerText = Color(0xFF0369A1)
-private val CashbookAddedCardBg = Color(0xFFEEF2F8)
-private val StatementTableHeaderBg = Color(0xFFF3F5F9)
-private val AmberCoinColor = Color(0xFFF59E0B)
-
+private val CashbookBannerBg: Color get() = kw(0xFFE0F2FE)
+private val CashbookBannerBorder: Color get() = kw(0xFFBAE6FD)
+private val CashbookBannerText: Color get() = kw(0xFF0369A1)
+private val CashbookAddedCardBg: Color get() = kw(0xFFEEF2F8)
+private val StatementTableHeaderBg: Color get() = kw(0xFFF3F5F9)
+private val AmberCoinColor: Color get() = kw(0xFFF59E0B)
 // ============================================================================
 // PAGES 1 & 2: PAY SUPPLIER FULL-SCREEN FLOW + VOUCHER CONFIRMATION
 // ============================================================================
@@ -1706,19 +1707,19 @@ fun SupplierStatementScreen(
                                             modifier = Modifier
                                                 .width(14.dp)
                                                 .height(2.5.dp)
-                                                .background(Color.White, RoundedCornerShape(2.dp))
+                                                .background(KwSurface, RoundedCornerShape(2.dp))
                                         )
                                         Box(
                                             modifier = Modifier
                                                 .width(11.dp)
                                                 .height(2.5.dp)
-                                                .background(Color.White, RoundedCornerShape(2.dp))
+                                                .background(KwSurface, RoundedCornerShape(2.dp))
                                         )
                                         Box(
                                             modifier = Modifier
                                                 .width(8.dp)
                                                 .height(2.5.dp)
-                                                .background(Color.White, RoundedCornerShape(2.dp))
+                                                .background(KwSurface, RoundedCornerShape(2.dp))
                                         )
                                     }
                                     Box(

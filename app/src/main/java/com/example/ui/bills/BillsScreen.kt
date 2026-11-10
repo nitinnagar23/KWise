@@ -1,5 +1,6 @@
 package com.example.ui.bills
 
+import com.example.ui.theme.kw
 import android.app.DatePickerDialog
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -108,18 +109,17 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 
-private val BillsGreen = Color(0xFF0E6F43)
-private val BillsGreenSoft = Color(0xFFDDF3E8)
-private val BillsRed = Color(0xFFB91C1C)
-private val BillsRedSoft = Color(0xFFFCE4E4)
-private val BillsAmber = Color(0xFF8A4B08)
-private val BillsAmberSoft = Color(0xFFFCEBD2)
-private val BillsEditedBg = Color(0xFFE8EEF7)
-private val BillsEditedText = Color(0xFF374151)
-private val BillsAvatarBg = Color(0xFFE8EEF7)
-private val BillsAvatarText = Color(0xFF1E3A8A)
-private val BillsChipIdleBg = Color(0xFFF1F1F7)
-
+private val BillsGreen: Color get() = kw(0xFF0E6F43)
+private val BillsGreenSoft: Color get() = kw(0xFFDDF3E8)
+private val BillsRed: Color get() = kw(0xFFB91C1C)
+private val BillsRedSoft: Color get() = kw(0xFFFCE4E4)
+private val BillsAmber: Color get() = kw(0xFF8A4B08)
+private val BillsAmberSoft: Color get() = kw(0xFFFCEBD2)
+private val BillsEditedBg: Color get() = kw(0xFFE8EEF7)
+private val BillsEditedText: Color get() = kw(0xFF374151)
+private val BillsAvatarBg: Color get() = kw(0xFFE8EEF7)
+private val BillsAvatarText: Color get() = kw(0xFF1E3A8A)
+private val BillsChipIdleBg: Color get() = kw(0xFFF1F1F7)
 @Composable
 fun BillsScreen(
     repository: CattleFeedRepository,
@@ -929,7 +929,7 @@ private fun BillDetailAndAuditScreen(
                 Triple(
                     title,
                     "$logTimeStr · ${log.performedByUserName}",
-                    Color(0xFF6B7280)
+                    kw(0xFF6B7280)
                 )
             )
         }
@@ -1001,8 +1001,8 @@ private fun BillDetailAndAuditScreen(
                         .size(44.dp)
                         .testTag("bill_detail_delete_btn"),
                     shape = RoundedCornerShape(13.dp),
-                    color = Color(0xFFFEE2E2),
-                    border = BorderStroke(1.dp, Color(0xFFFECACA))
+                    color = kw(0xFFFEE2E2),
+                    border = BorderStroke(1.dp, kw(0xFFFECACA))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(

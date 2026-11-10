@@ -1,5 +1,7 @@
 package com.example.ui.staff
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -602,8 +604,8 @@ fun StaffManagementScreen(
                                     .fillMaxWidth()
                                     .testTag("pending_approval_banner"),
                                 shape = RoundedCornerShape(18.dp),
-                                color = Color(0xFFFEF9EC),
-                                border = BorderStroke(1.dp, Color(0xFFF3E2B3))
+                                color = kw(0xFFFEF9EC),
+                                border = BorderStroke(1.dp, kw(0xFFF3E2B3))
                             ) {
                                 Column(
                                     modifier = Modifier
@@ -615,7 +617,7 @@ fun StaffManagementScreen(
                                             modifier = Modifier
                                                 .size(9.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFFD97706))
+                                                .background(kw(0xFFD97706))
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
@@ -625,7 +627,7 @@ fun StaffManagementScreen(
                                             ),
                                             fontSize = 14.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF78350F)
+                                            color = kw(0xFF78350F)
                                         )
                                     }
 
@@ -639,7 +641,7 @@ fun StaffManagementScreen(
                                             modifier = Modifier
                                                 .size(44.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFFE2E8F0)),
+                                                .background(kw(0xFFE2E8F0)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
@@ -692,8 +694,8 @@ fun StaffManagementScreen(
                                                 .height(46.dp)
                                                 .testTag("pending_reject_btn"),
                                             shape = RoundedCornerShape(12.dp),
-                                            color = Color.White,
-                                            border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+                                            color = KwSurface,
+                                            border = BorderStroke(1.dp, kw(0xFFCBD5E1))
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 Text(
@@ -738,21 +740,21 @@ fun StaffManagementScreen(
                                 RoleCountSummaryCard(
                                     count = adminCount,
                                     label = tr("Admin", "एडमिन"),
-                                    bgColor = Color(0xFFE8ECF4),
+                                    bgColor = kw(0xFFE8ECF4),
                                     textColor = StaffNavyPill,
                                     modifier = Modifier.weight(1f)
                                 )
                                 RoleCountSummaryCard(
                                     count = managerCount,
                                     label = tr("Manager", "मैनेजर"),
-                                    bgColor = Color(0xFFDCF0FA),
+                                    bgColor = kw(0xFFDCF0FA),
                                     textColor = StaffBluePillText,
                                     modifier = Modifier.weight(1f)
                                 )
                                 RoleCountSummaryCard(
                                     count = cashierCount,
                                     label = tr("Cashier", "कैशियर"),
-                                    bgColor = Color(0xFFF1F2F6),
+                                    bgColor = kw(0xFFF1F2F6),
                                     textColor = StaffCashierPillText,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -917,7 +919,7 @@ fun StaffManagementScreen(
 
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF1F2F8),
+                        color = kw(0xFFF1F2F8),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
@@ -1035,7 +1037,7 @@ private fun TeamMemberCard(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFE2E8F0)),
+                    .background(kw(0xFFE2E8F0)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -1107,7 +1109,7 @@ private fun TeamMemberCard(
                                 text = tr("No PIN · Set now", "कोई पिन नहीं · अभी सेट करें"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF92400E),
+                                color = kw(0xFF92400E),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }

@@ -1,5 +1,7 @@
 package com.example.ui.ledger
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.ClipData
@@ -91,15 +93,14 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private val KhataPageBg = Color(0xFFF6F7F9)
-private val KhataCardBorder = Color(0xFFE2E8F0)
-private val KhataNavyText = Color(0xFF0F172A)
-private val KhataSubtleText = Color(0xFF64748B)
-private val KhataBrandGreen = Color(0xFF0E6F43)
-private val KhataSoftGreen = Color(0xFFDDF5E7)
-private val KhataCrimsonRed = Color(0xFFB91C1C)
-private val KhataAvatarBg = Color(0xFFE2E8F0)
-
+private val KhataPageBg: Color get() = kw(0xFFF6F7F9)
+private val KhataCardBorder: Color get() = kw(0xFFE2E8F0)
+private val KhataNavyText: Color get() = kw(0xFF0F172A)
+private val KhataSubtleText: Color get() = kw(0xFF64748B)
+private val KhataBrandGreen: Color get() = kw(0xFF0E6F43)
+private val KhataSoftGreen: Color get() = kw(0xFFDDF5E7)
+private val KhataCrimsonRed: Color get() = kw(0xFFB91C1C)
+private val KhataAvatarBg: Color get() = kw(0xFFE2E8F0)
 data class CustomerLedgerRow(
     val id: String,
     val dateMillis: Long,
@@ -333,7 +334,7 @@ fun CustomerStatementScreen(
                         .size(44.dp)
                         .testTag("statement_back_btn"),
                     shape = RoundedCornerShape(13.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, KhataCardBorder)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -362,7 +363,7 @@ fun CustomerStatementScreen(
 
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = Color(0xFFEFF3F8)
+                color = kw(0xFFEFF3F8)
             ) {
                 Text(
                     text = "A4",
@@ -385,7 +386,7 @@ fun CustomerStatementScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFEEF2F6),
+                color = kw(0xFFEEF2F6),
                 border = BorderStroke(1.dp, KhataCardBorder)
             ) {
                 Row(
@@ -475,7 +476,7 @@ fun CustomerStatementScreen(
                         .fillMaxWidth()
                         .testTag("statement_pdf_preview_card"),
                     shape = RoundedCornerShape(18.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, KhataCardBorder),
                     shadowElevation = 2.dp
                 ) {
@@ -568,7 +569,7 @@ fun CustomerStatementScreen(
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(10.dp),
-                                color = Color(0xFFF8FAFC)
+                                color = kw(0xFFF8FAFC)
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -626,7 +627,7 @@ fun CustomerStatementScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Color(0xFFF1F5F9), RoundedCornerShape(6.dp))
+                                    .background(kw(0xFFF1F5F9), RoundedCornerShape(6.dp))
                                     .padding(horizontal = 8.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -697,7 +698,7 @@ fun CustomerStatementScreen(
                                             modifier = Modifier.width(58.dp)
                                         )
                                     }
-                                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                                    HorizontalDivider(color = kw(0xFFF1F5F9))
                                 }
                             }
 
@@ -789,7 +790,7 @@ fun CustomerStatementScreen(
                             Text(
                                 text = "Made with KhataWise · Smart Shop Register",
                                 fontSize = 10.5.sp,
-                                color = Color(0xFF94A3B8),
+                                color = kw(0xFF94A3B8),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -810,7 +811,7 @@ fun CustomerStatementScreen(
                         .padding(horizontal = 8.dp)
                         .testTag("statement_image_preview_card"),
                     shape = RoundedCornerShape(22.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, KhataCardBorder),
                     shadowElevation = 3.dp
                 ) {
@@ -829,7 +830,7 @@ fun CustomerStatementScreen(
                                 Surface(
                                     modifier = Modifier.size(32.dp),
                                     shape = RoundedCornerShape(8.dp),
-                                    color = Color.White.copy(alpha = 0.2f)
+                                    color = KwSurface.copy(alpha = 0.2f)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
@@ -922,7 +923,7 @@ fun CustomerStatementScreen(
                                             color = if (isDebit) KhataCrimsonRed else KhataBrandGreen
                                         )
                                     }
-                                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                                    HorizontalDivider(color = kw(0xFFF1F5F9))
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
@@ -956,7 +957,7 @@ fun CustomerStatementScreen(
                             Text(
                                 text = "Made with KhataWise",
                                 fontSize = 11.sp,
-                                color = Color(0xFF94A3B8),
+                                color = kw(0xFF94A3B8),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -968,7 +969,7 @@ fun CustomerStatementScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, KhataCardBorder)
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
@@ -1002,7 +1003,7 @@ fun CustomerStatementScreen(
                             )
                         }
 
-                        HorizontalDivider(color = Color(0xFFF1F5F9))
+                        HorizontalDivider(color = kw(0xFFF1F5F9))
 
                         Row(
                             modifier = Modifier
@@ -1043,7 +1044,7 @@ fun CustomerStatementScreen(
         // Bottom Sticky Action Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, KhataCardBorder)
         ) {
             Row(
@@ -1127,7 +1128,7 @@ fun CustomerStatementScreen(
                         }
                     },
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.5.dp, KhataBrandGreen),
                     modifier = Modifier
                         .weight(1f)
@@ -1165,7 +1166,7 @@ fun CustomerStatementScreen(
                         }
                     },
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, KhataCardBorder),
                     modifier = Modifier.size(50.dp)
                 ) {
@@ -1425,7 +1426,7 @@ fun CollectUdhariScreen(
                     .size(44.dp)
                     .testTag("collect_udhari_back_btn"),
                 shape = RoundedCornerShape(13.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, KhataCardBorder)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -1463,7 +1464,7 @@ fun CollectUdhariScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, KhataCardBorder)
             ) {
                 Row(
@@ -1547,7 +1548,7 @@ fun CollectUdhariScreen(
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(16.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(2.dp, KhataBrandGreen)
                 ) {
                     Row(
@@ -1606,7 +1607,7 @@ fun CollectUdhariScreen(
                     Surface(
                         onClick = { amountInput = chipVal.stripTrailingZeros().toPlainString() },
                         shape = RoundedCornerShape(50),
-                        color = if (isSelected) KhataBrandGreen else Color(0xFFEEF2F6)
+                        color = if (isSelected) KhataBrandGreen else kw(0xFFEEF2F6)
                     ) {
                         Text(
                             text = chipLabel,
@@ -1631,7 +1632,7 @@ fun CollectUdhariScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFFEEF2F6),
+                    color = kw(0xFFEEF2F6),
                     border = BorderStroke(1.dp, KhataCardBorder)
                 ) {
                     Row(
@@ -1699,7 +1700,7 @@ fun CollectUdhariScreen(
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, KhataCardBorder)
                     ) {
                         Box(
@@ -1746,7 +1747,7 @@ fun CollectUdhariScreen(
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, KhataCardBorder)
                     ) {
                         Box(
@@ -1778,7 +1779,7 @@ fun CollectUdhariScreen(
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
+                    color = KwSurface,
                     border = BorderStroke(1.dp, KhataCardBorder)
                 ) {
                     Box(
@@ -1789,7 +1790,7 @@ fun CollectUdhariScreen(
                             Text(
                                 text = tr("Paid at shop", "दुकान पर भुगतान किया"),
                                 fontSize = 14.5.sp,
-                                color = Color(0xFF94A3B8)
+                                color = kw(0xFF94A3B8)
                             )
                         }
                         BasicTextField(
@@ -1811,7 +1812,7 @@ fun CollectUdhariScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 color = KhataSoftGreen,
-                border = BorderStroke(1.dp, Color(0xFF86EFAC))
+                border = BorderStroke(1.dp, kw(0xFF86EFAC))
             ) {
                 Row(
                     modifier = Modifier
@@ -1846,7 +1847,7 @@ fun CollectUdhariScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                color = Color.White,
+                color = KwSurface,
                 border = BorderStroke(1.dp, KhataCardBorder)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -1921,7 +1922,7 @@ fun CollectUdhariScreen(
                                                 }
                                             },
                                             shape = RoundedCornerShape(50),
-                                            color = if (selected) KhataBrandGreen else Color(0xFFEEF2F6)
+                                            color = if (selected) KhataBrandGreen else kw(0xFFEEF2F6)
                                         ) {
                                             Text(
                                                 text = label,
@@ -1936,7 +1937,7 @@ fun CollectUdhariScreen(
                             }
                         }
 
-                        HorizontalDivider(color = Color(0xFFF1F5F9))
+                        HorizontalDivider(color = kw(0xFFF1F5F9))
                     }
 
                     Row(
@@ -1977,7 +1978,7 @@ fun CollectUdhariScreen(
         // Bottom Sticky Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, KhataCardBorder)
         ) {
             Row(
@@ -1990,8 +1991,8 @@ fun CollectUdhariScreen(
                 Surface(
                     onClick = onCancel,
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                    color = KwSurface,
+                    border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp)
@@ -2110,7 +2111,7 @@ fun RepaymentReceivedSuccessScreen(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            color = Color.White,
+            color = KwSurface,
             border = BorderStroke(1.dp, KhataCardBorder)
         ) {
             Column(
@@ -2183,8 +2184,8 @@ fun RepaymentReceivedSuccessScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFDBEAFE),
-                border = BorderStroke(1.dp, Color(0xFF93C5FD))
+                color = kw(0xFFDBEAFE),
+                border = BorderStroke(1.dp, kw(0xFF93C5FD))
             ) {
                 Column(
                     modifier = Modifier
@@ -2195,12 +2196,12 @@ fun RepaymentReceivedSuccessScreen(
                         text = tr("Promise date set", "वायदा तारीख तय की गई"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E3A8A)
+                        color = kw(0xFF1E3A8A)
                     )
                     Text(
                         text = "${tr("Next payment due", "अगला भुगतान देय")} ${promiseDateFmt.format(Date(receipt.newPromiseDateMillis))}",
                         fontSize = 13.5.sp,
-                        color = Color(0xFF1E40AF)
+                        color = kw(0xFF1E40AF)
                     )
                 }
             }

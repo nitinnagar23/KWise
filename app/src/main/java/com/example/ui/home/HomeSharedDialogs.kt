@@ -1,5 +1,6 @@
 package com.example.ui.home
 
+import com.example.ui.theme.kw
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -80,9 +81,8 @@ import com.example.util.CurrencyUtils
 import com.example.util.tr
 import java.math.BigDecimal
 
-private val DialogBrandGreen = Color(0xFF0E6F43)
-private val DialogMintBadgeBg = Color(0xFFE1F5EB)
-
+private val DialogBrandGreen: Color get() = kw(0xFF0E6F43)
+private val DialogMintBadgeBg: Color get() = kw(0xFFE1F5EB)
 @Composable
 fun CustomerDropdownSelector(
     customers: List<Customer>,

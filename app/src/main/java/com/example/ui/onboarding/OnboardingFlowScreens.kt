@@ -1,5 +1,7 @@
 package com.example.ui.onboarding
 
+import com.example.ui.theme.KwSurface
+import com.example.ui.theme.kw
 import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -86,16 +88,15 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 // Colors matching KhataWise – Onboarding & states.pdf
-private val OnbPageBg = Color(0xFFFBFBF9)
-private val OnbCardBorder = Color(0xFFE6E8EC)
-private val OnbNavyText = Color(0xFF0F1D2E)
-private val OnbSubtleText = Color(0xFF5A6578)
-private val OnbBrandGreen = Color(0xFF0E6F43)
-private val OnbSoftGreenBg = Color(0xFFDDF3E8)
-private val OnbFieldBg = Color(0xFFFFFFFF)
-private val OnbFieldBorder = Color(0xFFCBD5E1)
-private val OnbErrorRed = Color(0xFFB91C1C)
-
+private val OnbPageBg: Color get() = kw(0xFFFBFBF9)
+private val OnbCardBorder: Color get() = kw(0xFFE6E8EC)
+private val OnbNavyText: Color get() = kw(0xFF0F1D2E)
+private val OnbSubtleText: Color get() = kw(0xFF5A6578)
+private val OnbBrandGreen: Color get() = kw(0xFF0E6F43)
+private val OnbSoftGreenBg: Color get() = kw(0xFFDDF3E8)
+private val OnbFieldBg: Color get() = kw(0xFFFFFFFF)
+private val OnbFieldBorder: Color get() = kw(0xFFCBD5E1)
+private val OnbErrorRed: Color get() = kw(0xFFB91C1C)
 enum class QuickStartDestination {
     HOME,
     ADD_FIRST_ITEM,
@@ -356,7 +357,7 @@ fun FirstTimeSetupWizardScreen(
                                 .size(40.dp)
                                 .testTag("setup_step1_back_btn"),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color.White,
+                            color = KwSurface,
                             border = BorderStroke(1.dp, OnbCardBorder)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -410,7 +411,7 @@ fun FirstTimeSetupWizardScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, OnbCardBorder)
                     ) {
                         Row(
@@ -429,7 +430,7 @@ fun FirstTimeSetupWizardScreen(
                                 Surface(
                                     modifier = Modifier.size(44.dp),
                                     shape = CircleShape,
-                                    color = Color(0xFFE6EEF6)
+                                    color = kw(0xFFE6EEF6)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(
@@ -510,7 +511,7 @@ fun FirstTimeSetupWizardScreen(
                             Surface(
                                 onClick = { selectedShopType = key },
                                 shape = RoundedCornerShape(50),
-                                color = if (isSelected) OnbBrandGreen else Color(0xFFF1F2F6),
+                                color = if (isSelected) OnbBrandGreen else kw(0xFFF1F2F6),
                                 modifier = Modifier.testTag("shop_type_chip_${key.lowercase().replace(" ", "_")}")
                             ) {
                                 Text(
@@ -535,7 +536,7 @@ fun FirstTimeSetupWizardScreen(
                         trailingContent = {
                             Surface(
                                 shape = RoundedCornerShape(50),
-                                color = Color(0xFFF1F2F6)
+                                color = kw(0xFFF1F2F6)
                             ) {
                                 Text(
                                     text = tr("Auto", "ऑटो"),
@@ -655,7 +656,7 @@ fun FirstTimeSetupWizardScreen(
                                 .size(42.dp)
                                 .testTag("onboarding_step2_back_btn"),
                             shape = RoundedCornerShape(12.dp),
-                            color = Color.White,
+                            color = KwSurface,
                             border = BorderStroke(1.dp, OnbCardBorder)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -792,7 +793,7 @@ fun FirstTimeSetupWizardScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, OnbCardBorder)
                     ) {
                         Row(
@@ -825,7 +826,7 @@ fun FirstTimeSetupWizardScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
+                        color = KwSurface,
                         border = BorderStroke(1.dp, OnbCardBorder)
                     ) {
                         Column(
@@ -858,7 +859,7 @@ fun FirstTimeSetupWizardScreen(
                                         checkedThumbColor = Color.White,
                                         checkedTrackColor = OnbBrandGreen,
                                         uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color(0xFFCBD5E1)
+                                        uncheckedTrackColor = kw(0xFFCBD5E1)
                                     ),
                                     modifier = Modifier.testTag("onboarding_has_gstin_switch")
                                 )
@@ -895,7 +896,7 @@ fun FirstTimeSetupWizardScreen(
                                         checkedThumbColor = Color.White,
                                         checkedTrackColor = OnbBrandGreen,
                                         uncheckedThumbColor = Color.White,
-                                        uncheckedTrackColor = Color(0xFFCBD5E1)
+                                        uncheckedTrackColor = kw(0xFFCBD5E1)
                                     ),
                                     modifier = Modifier.testTag("onboarding_prices_include_gst_switch")
                                 )
@@ -910,7 +911,7 @@ fun FirstTimeSetupWizardScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
-                        color = Color(0xFFF1F2F6)
+                        color = kw(0xFFF1F2F6)
                     ) {
                         Row(
                             modifier = Modifier
@@ -1052,8 +1053,8 @@ fun FirstTimeSetupWizardScreen(
                             title = tr("Add your first item", "अपना पहला आइटम जोड़ें"),
                             subtitle = tr("Stock and rates for billing", "बिलिंग के लिए स्टॉक और रेट"),
                             icon = Icons.Outlined.Inventory2,
-                            iconBg = Color(0xFFFEF3C7),
-                            iconTint = Color(0xFF92400E),
+                            iconBg = kw(0xFFFEF3C7),
+                            iconTint = kw(0xFF92400E),
                             onClick = { onFinishSetup(QuickStartDestination.ADD_FIRST_ITEM) },
                             testTag = "ready_action_add_item"
                         )
@@ -1070,8 +1071,8 @@ fun FirstTimeSetupWizardScreen(
                             title = tr("Set today's rates", "आज का भाव सेट करें"),
                             subtitle = tr("1 kg, 5 kg and per bag", "1 किग्रा, 5 किग्रा और प्रति बोरी"),
                             icon = Icons.Outlined.LocalOffer,
-                            iconBg = Color(0xFFFEF3C7),
-                            iconTint = Color(0xFF92400E),
+                            iconBg = kw(0xFFFEF3C7),
+                            iconTint = kw(0xFF92400E),
                             onClick = { onFinishSetup(QuickStartDestination.SET_TODAY_RATES) },
                             testTag = "ready_action_set_rates"
                         )
@@ -1079,8 +1080,8 @@ fun FirstTimeSetupWizardScreen(
                             title = tr("Invite staff", "स्टाफ जोड़ें"),
                             subtitle = tr("Cashiers and managers", "कैशियर और मैनेजर"),
                             icon = Icons.Outlined.Shield,
-                            iconBg = Color(0xFFE0ECF8),
-                            iconTint = Color(0xFF1E4D8C),
+                            iconBg = kw(0xFFE0ECF8),
+                            iconTint = kw(0xFF1E4D8C),
                             onClick = { onFinishSetup(QuickStartDestination.INVITE_STAFF) },
                             testTag = "ready_action_invite_staff"
                         )
@@ -1189,8 +1190,8 @@ fun WelcomeTourScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFE3F4EC),
-                            Color(0xFFF6F8FB)
+                            kw(0xFFE3F4EC),
+                            kw(0xFFF6F8FB)
                         )
                     )
                 )
@@ -1266,7 +1267,7 @@ fun WelcomeTourScreen(
                         .height(8.dp)
                         .width(if (isCurrent) 26.dp else 8.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(if (isCurrent) OnbBrandGreen else Color(0xFFCBD5E1))
+                        .background(if (isCurrent) OnbBrandGreen else kw(0xFFCBD5E1))
                         .clickable { slideIndex = i }
                 )
             }
@@ -1310,7 +1311,7 @@ private fun TourSlide1Illustration() {
             .fillMaxWidth()
             .shadow(8.dp, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White
+        color = KwSurface
     ) {
         Column(
             modifier = Modifier
@@ -1324,14 +1325,14 @@ private fun TourSlide1Illustration() {
                 Surface(
                     modifier = Modifier.size(36.dp),
                     shape = CircleShape,
-                    color = Color(0xFFE6EEF6)
+                    color = kw(0xFFE6EEF6)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = "RY",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E4D8C)
+                            color = kw(0xFF1E4D8C)
                         )
                     }
                 }
@@ -1353,7 +1354,7 @@ private fun TourSlide1Illustration() {
                 Text("₹2,700", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = OnbNavyText)
             }
             HorizontalDivider(
-                color = Color(0xFFF1F5F9),
+                color = kw(0xFFF1F5F9),
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             Row(
@@ -1364,7 +1365,7 @@ private fun TourSlide1Illustration() {
                 Text("₹230", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = OnbNavyText)
             }
             HorizontalDivider(
-                color = Color(0xFFF1F5F9),
+                color = kw(0xFFF1F5F9),
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             Row(
@@ -1410,7 +1411,7 @@ private fun TourSlide2Illustration(upiId: String) {
                 .fillMaxWidth()
                 .shadow(8.dp, RoundedCornerShape(20.dp)),
             shape = RoundedCornerShape(20.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -1430,14 +1431,14 @@ private fun TourSlide2Illustration(upiId: String) {
                         Surface(
                             modifier = Modifier.size(36.dp),
                             shape = CircleShape,
-                            color = Color(0xFFE6EEF6)
+                            color = kw(0xFFE6EEF6)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = "KM",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E4D8C)
+                                    color = kw(0xFF1E4D8C)
                                 )
                             }
                         }
@@ -1450,13 +1451,13 @@ private fun TourSlide2Illustration(upiId: String) {
                     }
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color(0xFFFEE2E2)
+                        color = kw(0xFFFEE2E2)
                     ) {
                         Text(
                             text = "Overdue 8 days",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF991B1B),
+                            color = kw(0xFF991B1B),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
@@ -1474,14 +1475,14 @@ private fun TourSlide2Illustration(upiId: String) {
                         Surface(
                             modifier = Modifier.size(36.dp),
                             shape = CircleShape,
-                            color = Color(0xFFE6EEF6)
+                            color = kw(0xFFE6EEF6)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = "RY",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1E4D8C)
+                                    color = kw(0xFF1E4D8C)
                                 )
                             }
                         }
@@ -1494,13 +1495,13 @@ private fun TourSlide2Illustration(upiId: String) {
                     }
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color(0xFFFEE2E2)
+                        color = kw(0xFFFEE2E2)
                     ) {
                         Text(
                             text = "Due today",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF991B1B),
+                            color = kw(0xFF991B1B),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
@@ -1533,7 +1534,7 @@ private fun TourSlide3Illustration() {
             .fillMaxWidth()
             .shadow(8.dp, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White
+        color = KwSurface
     ) {
         Column(
             modifier = Modifier
@@ -1573,7 +1574,7 @@ private fun TourSlide3Illustration() {
                     val h = size.height * ratio
                     val y = size.height - h
                     drawRoundRect(
-                        color = Color(0xFFBFDBFE),
+                        color = kw(0xFFBFDBFE),
                         topLeft = Offset(x, y),
                         size = Size(barWidth, h),
                         cornerRadius = CornerRadius(8.dp.toPx())
@@ -1602,13 +1603,13 @@ private fun TourSlide3Illustration() {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Surface(
                     shape = RoundedCornerShape(50),
-                    color = Color(0xFFFEF3C7)
+                    color = kw(0xFFFEF3C7)
                 ) {
                     Text(
                         text = "3 items low",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF92400E),
+                        color = kw(0xFF92400E),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                     )
                 }
@@ -1640,7 +1641,7 @@ private fun TourSlide4Illustration() {
                 .fillMaxWidth()
                 .shadow(8.dp, RoundedCornerShape(20.dp)),
             shape = RoundedCornerShape(20.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Column(
                 modifier = Modifier
@@ -1655,7 +1656,7 @@ private fun TourSlide4Illustration() {
                     Surface(
                         modifier = Modifier.size(40.dp),
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF1F5F9)
+                        color = kw(0xFFF1F5F9)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -1690,19 +1691,19 @@ private fun TourSlide4Illustration() {
                     }
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color(0xFFE0ECF8)
+                        color = kw(0xFFE0ECF8)
                     ) {
                         Text(
                             text = "Manager",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E4D8C),
+                            color = kw(0xFF1E4D8C),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                         )
                     }
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color(0xFFF1F2F6)
+                        color = kw(0xFFF1F2F6)
                     ) {
                         Text(
                             text = "Cashier",
@@ -1721,7 +1722,7 @@ private fun TourSlide4Illustration() {
                 .fillMaxWidth()
                 .shadow(4.dp, RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
-            color = Color.White
+            color = KwSurface
         ) {
             Row(
                 modifier = Modifier
@@ -1760,7 +1761,7 @@ private fun ThreeSegmentProgressBar(completedSegments: Int) {
                     .weight(1f)
                     .height(5.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(if (active) OnbBrandGreen else Color(0xFFE2E8F0))
+                    .background(if (active) OnbBrandGreen else kw(0xFFE2E8F0))
             )
         }
     }
@@ -1834,7 +1835,7 @@ private fun SetupInputBox(
                     Text(
                         text = placeholder,
                         fontSize = 15.5.sp,
-                        color = Color(0xFF94A3B8)
+                        color = kw(0xFF94A3B8)
                     )
                 }
                 BasicTextField(
@@ -1877,7 +1878,7 @@ private fun ReadyActionCard(
             .fillMaxWidth()
             .testTag(testTag),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
+        color = KwSurface,
         border = BorderStroke(1.dp, OnbCardBorder)
     ) {
         Row(

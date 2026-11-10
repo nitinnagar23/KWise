@@ -1,5 +1,7 @@
 package com.example.ui.estimate
 
+import com.example.ui.theme.CGreenPrimary
+import com.example.ui.theme.kw
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -93,10 +95,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val EstimateBrandGreen = Color(0xFF0E6F43)
-private val EstimateMintSurface = Color(0xFFE1F5EB)
-private val EstimateStepperMinusBg = Color(0xFFE5E7EB)
-
+private val EstimateBrandGreen: Color get() = kw(0xFF0E6F43)
+private val EstimateMintSurface: Color get() = kw(0xFFE1F5EB)
+private val EstimateStepperMinusBg: Color get() = kw(0xFFE5E7EB)
 private enum class CalculatorTabMode {
     ITEMS,
     BUDGET
@@ -1761,7 +1762,7 @@ fun EstimateCalculatorScreen(
                             }
                         },
                         enabled = (useWalkInCustomer || selectedCustomer != null) && activeTotalPrice > BigDecimal.ZERO,
-                        colors = ButtonDefaults.buttonColors(containerColor = CGreen, contentColor = Color.Black)
+                        colors = ButtonDefaults.buttonColors(containerColor = CGreenPrimary, contentColor = Color.White)
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
@@ -1830,7 +1831,7 @@ fun EstimateCalculatorScreen(
                                     adminPinError = true
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = CGreen, contentColor = Color.Black)
+                            colors = ButtonDefaults.buttonColors(containerColor = CGreenPrimary, contentColor = Color.White)
                         ) {
                             Text(tr("Authorize", "अनुमति दें"), fontWeight = FontWeight.Bold)
                         }

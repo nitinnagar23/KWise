@@ -1,5 +1,6 @@
 package com.example.ui.inventory
 
+import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -879,7 +880,7 @@ private fun InventoryListView(
                                     text = "$needReorderCount ${tr("items need reorder", "आइटम री-ऑर्डर करें")}",
                                     fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF6B3E08)
+                                    color = kw(0xFF6B3E08)
                                 )
                             }
 
