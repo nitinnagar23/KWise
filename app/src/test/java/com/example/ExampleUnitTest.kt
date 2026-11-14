@@ -153,7 +153,70 @@ class ExampleUnitTest {
         assertEquals(1, grouped.size)
         assertEquals("1005", grouped.first().billNumber)
     }
+
+    @Test
+    fun verifyPinRejectsEmptyHashAndUses120kIterations() {
+        assertFalse(com.example.util.SecurityUtils.verifyPin("1234", ""))
+        assertFalse(com.example.util.SecurityUtils.verifyPin("1234", "   "))
+        val hash = com.example.util.SecurityUtils.hashPin("4321")
+        assertTrue(hash.startsWith("PBKDF2$120000$"))
+        assertTrue(com.example.util.SecurityUtils.verifyPin("4321", hash))
+        assertFalse(com.example.util.SecurityUtils.verifyPin("0000", hash))
+    }
+
+    @Test
+    fun pinLockoutTracksAttemptsPerUserIndependently() {
+        val hash = com.example.util.SecurityUtils.hashPin("1234")
+        com.example.util.SecurityUtils.resetLockout("user_a")
+        com.example.util.SecurityUtils.resetLockout("user_b")
+
+        repeat(5) {
+            com.example.util.SecurityUtils.verifyPinWithLockout(
+                pin = "0000",
+                storedHash = hash,
+                userId = "user_a"
+            )
+        }
+        assertTrue(com.example.util.SecurityUtils.isPinLockedOut("user_a"))
+        assertFalse(com.example.util.SecurityUtils.isPinLockedOut("user_b"))
+        assertTrue(
+            com.example.util.SecurityUtils.verifyPinWithLockout(
+                pin = "1234",
+                storedHash = hash,
+                userId = "user_b"
+            ).isSuccess
+        )
+        com.example.util.SecurityUtils.resetLockout("user_a")
+        com.example.util.SecurityUtils.resetLockout("user_b")
+    }
+
+    @Test
+    fun budgetSplitAmountModeAutoFillsSingleUnlockedRow() {
+        val res = com.example.util.splitBudget(
+            budget = java.math.BigDecimal("500"),
+            items = listOf(
+                com.example.util.BudgetSplitItemInput(
+                    productId = "p1",
+                    productName = "Locked Item",
+                    ratePerKg = java.math.BigDecimal("50"),
+                    requestedAmount = java.math.BigDecimal("200"),
+                    isLocked = true
+                ),
+                com.example.util.BudgetSplitItemInput(
+                    productId = "p2",
+                    productName = "Single Unlocked Item",
+                    ratePerKg = java.math.BigDecimal("30"),
+                    requestedAmount = java.math.BigDecimal.ZERO,
+                    isLocked = false
+                )
+            ),
+            mode = com.example.util.BudgetSplitMode.AMOUNT
+        )
+        assertEquals(0, res.rows[1].targetAmount.compareTo(java.math.BigDecimal("300.00")))
+        assertEquals(0, res.rows[1].allocatedKg.compareTo(java.math.BigDecimal("10.000")))
+    }
 }
+
 
 
 

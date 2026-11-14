@@ -237,7 +237,7 @@ fun splitBudget(
             BudgetSplitMode.AMOUNT -> {
                 var typedUnlockedSum = BigDecimal.ZERO
                 unlockedIndices.forEachIndexed { pos, itemIdx ->
-                    if (pos == unlockedIndices.lastIndex && unlockedIndices.size > 1) {
+                    if (pos == unlockedIndices.lastIndex) {
                         val autoFill = remainingBudget.subtract(typedUnlockedSum).max(BigDecimal.ZERO)
                             .setScale(2, RoundingMode.HALF_UP)
                         targetAmounts[itemIdx] = autoFill
@@ -313,12 +313,10 @@ fun applyLeftoverToRow(
         if (row.productId == targetProductId && row.ratePerKg > BigDecimal.ZERO) {
             val maxTargetAmount = row.actualAmount.add(result.leftoverRupees).setScale(2, RoundingMode.HALF_UP)
             val newKg = maxTargetAmount.divide(row.ratePerKg, 3, RoundingMode.DOWN)
-            val newActualAmount = newKg.multiply(row.ratePerKg).setScale(2, RoundingMode.HALF_UP)
-                .min(maxTargetAmount)
             row.copy(
                 targetAmount = maxTargetAmount,
                 allocatedKg = newKg,
-                actualAmount = newActualAmount,
+                actualAmount = maxTargetAmount,
                 exceedsStock = newKg > row.availableStockKg
             )
         } else {

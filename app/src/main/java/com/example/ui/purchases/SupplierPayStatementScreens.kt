@@ -160,7 +160,7 @@ fun PaySupplierFlowScreen(
     var amountInput by remember(selectedSummary.wholesalerName, owedBefore) {
         mutableStateOf(
             if (defaultPayAmount > BigDecimal.ZERO) {
-                NumberFormat.getNumberInstance(Locale("en", "IN")).format(defaultPayAmount.toLong())
+                formatStatementNumber(defaultPayAmount, NumberFormat.getNumberInstance(Locale("en", "IN")))
             } else ""
         )
     }
@@ -522,7 +522,7 @@ fun PaySupplierFlowScreen(
                     }
 
                     // Quick Amount Chips: Full ₹..., Half ₹..., ₹5,000, ₹2,000
-                    val halfAmt = owedBefore.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP)
+                    val halfAmt = owedBefore.divide(BigDecimal("2"), 2, RoundingMode.HALF_UP)
                     val quickOptions = remember(owedBefore, halfAmt) {
                         buildList {
                             if (owedBefore > BigDecimal.ZERO) {
@@ -544,7 +544,7 @@ fun PaySupplierFlowScreen(
                             val isSelected = enteredAmount.compareTo(valAmt) == 0 && valAmt > BigDecimal.ZERO
                             Surface(
                                 onClick = {
-                                    amountInput = NumberFormat.getNumberInstance(Locale("en", "IN")).format(valAmt.toLong())
+                                    amountInput = formatStatementNumber(valAmt, NumberFormat.getNumberInstance(Locale("en", "IN")))
                                 },
                                 shape = RoundedCornerShape(50),
                                 color = if (isSelected) SupGreen else SupChipIdleBg

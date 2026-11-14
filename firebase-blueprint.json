@@ -109,6 +109,23 @@
         "claimedAt": { "type": "number" }
       },
       "required": ["code", "adminUid", "storeName", "assignedRole", "status", "expiresAt"]
+    },
+    "StaffMember": {
+      "title": "StaffMember",
+      "description": "Paired staff member record under a store owner",
+      "type": "object",
+      "properties": {
+        "staffUid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "deviceInfo": { "type": "string" },
+        "role": { "type": "string", "enum": ["CASHIER", "MANAGER", "STAFF", "ADMINISTRATOR"] },
+        "isActive": { "type": "boolean" },
+        "pairedAt": { "type": "number" },
+        "lastActiveAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["staffUid", "name", "role"]
     }
   },
   "firestore": {
@@ -136,9 +153,14 @@
       "schema": "Supplier",
       "description": "Supplier accounts and purchase ledger"
     },
+    "/users/{userId}/staff/{staffId}": {
+      "schema": "StaffMember",
+      "description": "Paired staff devices and RBAC roles"
+    },
     "/pairings/{code}": {
       "schema": "DevicePairingToken",
-      "description": "15-minute expiring device pairing tokens"
+      "description": "10-minute expiring device pairing tokens"
     }
   }
 }
+

@@ -166,4 +166,24 @@ test("Bob can claim active pairing code and then access Alice's store as staff",
       amount: 100,
     })
   );
+
+  // Staff member Bob can update his own lastActiveAt / deviceInfo, but CANNOT escalate role to ADMINISTRATOR
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      lastActiveAt: Date.now(),
+      deviceInfo: "Redmi Note 12",
+    })
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      role: "ADMINISTRATOR",
+    })
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      isActive: true,
+      role: "ADMINISTRATOR",
+    })
+  );
 });
+

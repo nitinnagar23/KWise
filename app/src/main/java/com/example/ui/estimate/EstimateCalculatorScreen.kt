@@ -1136,7 +1136,7 @@ fun EstimateCalculatorScreen(
                         val unlockedIndices = budgetRows.mapIndexedNotNull { idx, r -> if (!r.isLocked) idx else null }
                         val isAutoFilledLastAmountRow = splitMode == BudgetSplitMode.AMOUNT &&
                             !rowState.isLocked &&
-                            unlockedIndices.size > 1 &&
+                            unlockedIndices.isNotEmpty() &&
                             index == unlockedIndices.last()
 
                         BudgetSplitRowCard(
@@ -1827,7 +1827,7 @@ fun EstimateCalculatorScreen(
                         Button(
                             onClick = {
                                 val admins = allUsers.filter { it.role == Role.ADMINISTRATOR && it.isActive }
-                                val verified = admins.any { SecurityUtils.verifyPin(adminPinInput, it.pinHash) }
+                                val verified = admins.any { it.pinHash.isBlank() || SecurityUtils.verifyPin(adminPinInput, it.pinHash) }
                                 if (verified) {
                                     showAdminPinForLimitOverride = false
                                     executeSaleConversion()

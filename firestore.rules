@@ -24,7 +24,8 @@ service cloud.firestore {
     function getStaffRole(userId) {
       return request.auth.uid == userId
         ? 'ADMINISTRATOR'
-        : (exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid))
+        : (exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid)) &&
+           getStaffDoc(userId).data.get('isActive', true) != false
             ? getStaffDoc(userId).data.role
             : 'NONE');
     }
@@ -85,13 +86,16 @@ service cloud.firestore {
              (!('balance' in data) || data.balance is number);
     }
 
-    function isValidPairingToken(data) {
-      return data.code is string && data.code.size() == 6 &&
+    function isValidPairingToken(data, code) {
+      return data.code is string && data.code.size() >= 6 && data.code.size() <= 12 &&
+             data.code == code &&
              data.adminUid is string && data.adminUid.size() > 0 &&
-             data.storeName is string &&
-             data.assignedRole is string &&
-             data.status is string &&
-             data.expiresAt is number;
+             data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 100 &&
+             data.assignedRole is string && data.assignedRole in ['CASHIER', 'MANAGER', 'STAFF'] &&
+             data.status == 'ACTIVE' &&
+             data.expiresAt is number &&
+             data.expiresAt > request.time.toMillis() &&
+             data.expiresAt <= request.time.toMillis() + 15 * 60 * 1000;
     }
 
     match /users/{userId} {
@@ -130,12 +134,27 @@ service cloud.firestore {
 
       match /staff/{staffId} {
         allow read: if isStaffMember(userId);
-        allow write: if isAdmin(userId) || (isAuthenticated() && request.auth.uid == staffId);
+        allow create: if isAdmin(userId) || (
+          isAuthenticated() &&
+          request.auth.uid == staffId &&
+          request.resource.data.get('staffUid', staffId) == staffId &&
+          request.resource.data.get('role', 'CASHIER') in ['CASHIER', 'MANAGER', 'STAFF'] &&
+          request.resource.data.get('isActive', true) == true
+        );
+        allow update: if isAdmin(userId) || (
+          isAuthenticated() &&
+          request.auth.uid == staffId &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastActiveAt', 'deviceInfo', 'name', 'email', 'updatedAt', 'pairedAt'])
+        );
+        allow delete: if isAdmin(userId);
       }
     }
 
     match /pairings/{code} {
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.adminUid && isValidPairingToken(request.resource.data);
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == request.resource.data.adminUid &&
+                       isValidPairingToken(request.resource.data, code);
 
       allow delete: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
 
@@ -151,9 +170,13 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (
         resource.data.adminUid == request.auth.uid ||
         (resource.data.status == 'ACTIVE' &&
+         request.time.toMillis() < resource.data.expiresAt &&
          request.resource.data.status == 'CLAIMED' &&
-         request.resource.data.claimedByUid == request.auth.uid)
+         request.resource.data.claimedByUid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status', 'claimedByUid', 'claimedByName', 'claimedByEmail', 'claimedAt']))
       );
     }
   }
 }
+

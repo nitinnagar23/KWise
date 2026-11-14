@@ -32,6 +32,40 @@ class PairingRepository(private val context: Context) {
     companion object {
         private const val TAG = "KhataWisePairing"
         const val PAIRING_EXPIRY_MS = 10 * 60 * 1000L // 10 minutes
+        private const val MAX_PAIRING_ATTEMPTS = 5
+        private const val PAIRING_LOCKOUT_MS = 5 * 60 * 1000L
+
+        @Volatile
+        private var failedLookupAttempts = 0
+
+        @Volatile
+        private var lookupLockoutUntilMs = 0L
+
+        @Synchronized
+        private fun checkLookupRateLimit() {
+            val now = System.currentTimeMillis()
+            if (lookupLockoutUntilMs > now) {
+                val remSec = ((lookupLockoutUntilMs - now + 999L) / 1000L).coerceAtLeast(1L)
+                throw IllegalStateException("Too many invalid pairing attempts. Please wait ${remSec}s before trying again.")
+            }
+            if (lookupLockoutUntilMs != 0L && now >= lookupLockoutUntilMs) {
+                lookupLockoutUntilMs = 0L
+                failedLookupAttempts = 0
+            }
+        }
+
+        @Synchronized
+        private fun recordLookupOutcome(success: Boolean) {
+            if (success) {
+                failedLookupAttempts = 0
+                lookupLockoutUntilMs = 0L
+            } else {
+                failedLookupAttempts++
+                if (failedLookupAttempts >= MAX_PAIRING_ATTEMPTS) {
+                    lookupLockoutUntilMs = System.currentTimeMillis() + PAIRING_LOCKOUT_MS
+                }
+            }
+        }
     }
 
     /**
@@ -47,6 +81,7 @@ class PairingRepository(private val context: Context) {
         val db = firestore ?: throw IllegalStateException("Cloud Firestore is not available")
         val random = SecureRandom()
         val numericCode = String.format("%06d", random.nextInt(1000000))
+        val safeRole = assignedRole.uppercase().takeIf { it in setOf("CASHIER", "MANAGER", "STAFF") } ?: "CASHIER"
 
         val now = System.currentTimeMillis()
         val token = DevicePairingToken(
@@ -55,7 +90,7 @@ class PairingRepository(private val context: Context) {
             storeName = storeName.ifBlank { "KhataWise Store" },
             storeAddress = storeAddress,
             storePhone = storePhone,
-            assignedRole = assignedRole,
+            assignedRole = safeRole,
             status = "ACTIVE",
             createdAt = now,
             expiresAt = now + PAIRING_EXPIRY_MS
@@ -82,20 +117,29 @@ class PairingRepository(private val context: Context) {
      * Inspect pairing token to display shop confirmation before claiming.
      */
     suspend fun getPairingToken(code: String): Result<DevicePairingToken> = runCatching {
+        checkLookupRateLimit()
         val db = firestore ?: throw IllegalStateException("Cloud Firestore is not available")
         val cleanCode = code.trim().replace(" ", "").replace("-", "")
+        if (cleanCode.length !in 6..12) {
+            recordLookupOutcome(false)
+            throw IllegalArgumentException("Invalid pairing code format.")
+        }
         val snapshot = db.collection("pairings").document(cleanCode).get().await()
         if (!snapshot.exists()) {
+            recordLookupOutcome(false)
             throw IllegalArgumentException("Invalid pairing code. Please verify the 6-digit code on the Admin device.")
         }
         val status = snapshot.safeString("status")
         val expiresAt = snapshot.safeLong("expiresAt", 0L) ?: 0L
         if (status != "ACTIVE") {
+            recordLookupOutcome(false)
             throw IllegalStateException("This pairing code has already been claimed or expired.")
         }
         if (System.currentTimeMillis() >= expiresAt) {
+            recordLookupOutcome(false)
             throw IllegalStateException("This pairing code expired after 10 minutes. Please request a new code.")
         }
+        recordLookupOutcome(true)
         DevicePairingToken(
             code = cleanCode,
             adminUid = snapshot.safeString("adminUid"),

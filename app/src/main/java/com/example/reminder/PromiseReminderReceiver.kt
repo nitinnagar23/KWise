@@ -14,6 +14,7 @@ import com.example.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 class PromiseReminderReceiver : BroadcastReceiver() {
     companion object {
@@ -27,46 +28,69 @@ class PromiseReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val customerId = intent.getStringExtra(EXTRA_CUSTOMER_ID) ?: return
-        val customerName = intent.getStringExtra(EXTRA_CUSTOMER_NAME) ?: "Customer"
-        val customerPhone = intent.getStringExtra(EXTRA_CUSTOMER_PHONE) ?: ""
-        val udhariAmount = intent.getStringExtra(EXTRA_UDHARI_AMOUNT) ?: ""
+        val initialName = intent.getStringExtra(EXTRA_CUSTOMER_NAME) ?: "Customer"
+        val initialPhone = intent.getStringExtra(EXTRA_CUSTOMER_PHONE) ?: ""
+        val initialAmount = intent.getStringExtra(EXTRA_UDHARI_AMOUNT)?.replace("₹", "")?.trim() ?: ""
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        createChannel(notificationManager)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val liveCustomer = runCatching {
+                    AppDatabase.getInstance(context).customerDao().getCustomerById(customerId)
+                }.getOrNull()
 
-        // Main Tap Intent opens app
-        val openAppIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                // Skip notification if customer already settled their udhari
+                if (liveCustomer != null && liveCustomer.totalUdhari <= BigDecimal.ZERO) {
+                    return@launch
+                }
+
+                val customerName = liveCustomer?.name?.takeIf { it.isNotBlank() } ?: initialName
+                val customerPhone = liveCustomer?.phone?.takeIf { it.isNotBlank() } ?: initialPhone
+                val udhariAmount = when {
+                    liveCustomer != null && liveCustomer.totalUdhari > BigDecimal.ZERO ->
+                        liveCustomer.totalUdhari.stripTrailingZeros().toPlainString()
+                    initialAmount.isNotBlank() && initialAmount != "0" && initialAmount != "0.00" ->
+                        initialAmount
+                    else -> "0"
+                }
+
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                createChannel(notificationManager)
+
+                val openAppIntent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                val openPendingIntent = PendingIntent.getActivity(
+                    context,
+                    customerId.hashCode(),
+                    openAppIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+
+                val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle("Payment Due Today: $customerName")
+                    .setContentText("Promised payment for cattle feed. Outstanding: ₹$udhariAmount")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true)
+                    .setContentIntent(openPendingIntent)
+
+                if (customerPhone.isNotBlank()) {
+                    val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$customerPhone"))
+                    val callPendingIntent = PendingIntent.getActivity(
+                        context,
+                        customerId.hashCode() + 1,
+                        callIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    builder.addAction(android.R.drawable.ic_menu_call, "Call Customer", callPendingIntent)
+                }
+
+                notificationManager.notify(customerId.hashCode(), builder.build())
+            } finally {
+                pendingResult?.finish()
+            }
         }
-        val openPendingIntent = PendingIntent.getActivity(
-            context,
-            customerId.hashCode(),
-            openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Notification builder
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Payment Due Today: $customerName")
-            .setContentText("Promised payment for cattle feed. Outstanding: ₹$udhariAmount")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .setContentIntent(openPendingIntent)
-
-        // 1-Click Call Action button if phone number is present
-        if (customerPhone.isNotBlank()) {
-            val callIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$customerPhone"))
-            val callPendingIntent = PendingIntent.getActivity(
-                context,
-                customerId.hashCode() + 1,
-                callIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            builder.addAction(android.R.drawable.ic_menu_call, "Call Customer", callPendingIntent)
-        }
-
-        notificationManager.notify(customerId.hashCode(), builder.build())
     }
 
     private fun createChannel(manager: NotificationManager) {

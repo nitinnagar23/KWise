@@ -6,20 +6,39 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.example.model.Customer
+import java.math.BigDecimal
 import java.util.Calendar
 
 object ReminderScheduler {
-    fun scheduleCustomerReminder(context: Context, customer: Customer) {
+    fun scheduleCustomerReminder(
+        context: Context,
+        customer: Customer,
+        udhariAmountOverride: String? = null
+    ) {
         val promiseDate = customer.promiseDate ?: return
-        if (promiseDate < System.currentTimeMillis()) return
+        val startOfToday = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        // Compare against start of day so same-day promises stored at midnight still fire
+        if (promiseDate < startOfToday) return
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+
+        val cleanAmountStr = udhariAmountOverride
+            ?.replace("₹", "")
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: customer.totalUdhari.stripTrailingZeros().toPlainString()
 
         val intent = Intent(context, PromiseReminderReceiver::class.java).apply {
             putExtra(PromiseReminderReceiver.EXTRA_CUSTOMER_ID, customer.id)
             putExtra(PromiseReminderReceiver.EXTRA_CUSTOMER_NAME, customer.name)
             putExtra(PromiseReminderReceiver.EXTRA_CUSTOMER_PHONE, customer.phone)
-            putExtra(PromiseReminderReceiver.EXTRA_UDHARI_AMOUNT, customer.totalUdhari.toPlainString())
+            putExtra(PromiseReminderReceiver.EXTRA_UDHARI_AMOUNT, cleanAmountStr)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -29,16 +48,18 @@ object ReminderScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Set to 9:00 AM on the target morning
+        // Set to 9:00:00.000 AM on the target morning
         val calendar = Calendar.getInstance().apply {
             timeInMillis = promiseDate
             set(Calendar.HOUR_OF_DAY, 9)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
 
-        val triggerTime = if (calendar.timeInMillis <= System.currentTimeMillis()) {
-            System.currentTimeMillis() + 60_000 // fire shortly if already past 9am on selected date
+        val now = System.currentTimeMillis()
+        val triggerTime = if (calendar.timeInMillis <= now) {
+            now + 60_000L // fire shortly if already past 9:00 AM on the selected date
         } else {
             calendar.timeInMillis
         }
@@ -52,7 +73,6 @@ object ReminderScheduler {
                         pendingIntent
                     )
                 } else {
-                    // Fallback to inexact alarm as specified in doc
                     alarmManager.setAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         triggerTime,
@@ -67,7 +87,6 @@ object ReminderScheduler {
                 )
             }
         } catch (e: SecurityException) {
-            // Fallback for safety
             alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
         }
     }
@@ -77,14 +96,27 @@ object ReminderScheduler {
         customerId: String,
         customerName: String,
         udhariAmount: String,
-        promiseDateMillis: Long
+        promiseDateMillis: Long,
+        customerPhone: String = ""
     ) {
+        val parsedAmount = udhariAmount
+            .replace("₹", "")
+            .replace(",", "")
+            .trim()
+            .toBigDecimalOrNull() ?: BigDecimal.ZERO
+
         val tempCustomer = Customer(
             id = customerId,
             name = customerName,
+            phone = customerPhone,
+            totalUdhari = parsedAmount,
             promiseDate = promiseDateMillis
         )
-        scheduleCustomerReminder(context, tempCustomer)
+        scheduleCustomerReminder(
+            context = context,
+            customer = tempCustomer,
+            udhariAmountOverride = udhariAmount.replace("₹", "").trim()
+        )
     }
 
     fun cancelReminder(context: Context, customerId: String) {
