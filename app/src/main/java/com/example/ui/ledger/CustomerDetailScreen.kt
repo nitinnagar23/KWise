@@ -201,17 +201,18 @@ fun CustomerDetailScreen(
                 onCancel = { activeOverlay = CustomerDetailOverlay.NONE },
                 onConfirmCollect = { amount, mode, dateMillis, noteText, newPromiseMillis, sendWhatsapp ->
                     val beforeBal = customer.totalUdhari
-                    val afterBal = beforeBal.subtract(amount).max(BigDecimal.ZERO)
+                    val afterBal = beforeBal.subtract(amount)
                     val taggedNote = if (noteText.isNotBlank()) "[$mode] $noteText" else "[$mode] Paid at shop"
                     scope.launch {
                         val savedPayment = repository.recordPayment(
                             customerId = customer.id,
                             amount = amount,
                             note = taggedNote,
+                            paymentMode = mode,
                             collectedByUserId = currentUser?.id.orEmpty(),
                             actorRole = currentUser?.role
                         )
-                        if (newPromiseMillis != null || afterBal.compareTo(BigDecimal.ZERO) == 0) {
+                        if (newPromiseMillis != null || afterBal.compareTo(BigDecimal.ZERO) <= 0) {
                             val updatedCust = customer.copy(
                                 totalUdhari = afterBal,
                                 promiseDate = if (afterBal > BigDecimal.ZERO) newPromiseMillis else null

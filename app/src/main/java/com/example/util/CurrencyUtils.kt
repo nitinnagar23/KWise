@@ -68,13 +68,15 @@ object CurrencyUtils {
         return if (isNegative) "-$result" else result
     }
 
-    fun formatWeightKg(kg: BigDecimal?): String {
-        if (kg == null) return "0 kg"
+    fun formatWeight(kg: BigDecimal?): String {
+        if (kg == null) return "0"
         val scaled = kg.setScale(2, ROUNDING).stripTrailingZeros()
-        return "${scaled.toPlainString()} kg"
+        return if (scaled.compareTo(BigDecimal.ZERO) == 0) "0" else scaled.toPlainString()
     }
 
-    fun formatWeight(kg: BigDecimal?): String = formatWeightKg(kg)
+    fun formatWeightKg(kg: BigDecimal?): String {
+        return "${formatWeight(kg)} kg"
+    }
 
     fun parseBigDecimal(str: String?): BigDecimal {
         if (str.isNullOrBlank()) return BigDecimal.ZERO

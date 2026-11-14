@@ -715,10 +715,10 @@ fun SupplierKhataScreen(
         val computed = asc.mapIndexed { idx, entry ->
             when (entry) {
                 is SupplierLedgerEntry.InvoiceEntry -> {
-                    running = running.add(entry.invoice.balanceAmount)
+                    running = running.add(entry.invoice.totalInvoiceCost.subtract(entry.invoice.paidAmount))
                 }
                 is SupplierLedgerEntry.PaymentEntry -> {
-                    running = running.subtract(entry.payment.amount).max(BigDecimal.ZERO)
+                    running = running.subtract(entry.payment.amount)
                 }
             }
             Triple(entry, running, idx)

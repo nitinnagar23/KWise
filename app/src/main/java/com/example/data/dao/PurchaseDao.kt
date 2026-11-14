@@ -30,6 +30,9 @@ interface PurchaseDao {
     @Query("UPDATE purchases SET isDeleted = 1, updatedAt = :updatedAt, syncStatus = 'PENDING' WHERE id = :purchaseId")
     suspend fun softDeletePurchase(purchaseId: String, updatedAt: Long = System.currentTimeMillis())
 
+    @Query("SELECT * FROM purchases WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) AND ABS(date - :invoiceDate) <= 5000")
+    suspend fun getPurchasesForInvoiceWindow(wholesalerName: String, invoiceDate: Long): List<PurchaseEntry>
+
     @Query("SELECT SUM(CAST(quantityKg AS REAL)) FROM purchases WHERE isDeleted = 0 AND productId = :productId")
     suspend fun getTotalPurchasedKgForProduct(productId: String): Double?
 }

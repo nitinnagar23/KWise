@@ -80,6 +80,7 @@ import com.example.ui.theme.FlatDarkCard
 import com.example.ui.theme.FlatTextMuted
 import com.example.ui.theme.FlatTextPrimary
 import com.example.ui.theme.FlatTextSecondary
+import com.example.ui.cashbook.CashbookManualPrefs
 import com.example.util.CurrencyUtils
 import com.example.util.DailyProfitSummary
 import com.example.util.ShopAnalytics
@@ -276,13 +277,10 @@ fun ReportsScreen(
     var totalPaidAtSale = BigDecimal.ZERO
 
     filteredSales.forEach { sale ->
-        val netKg = sale.quantityKg.subtract(sale.returnedKg).max(BigDecimal.ZERO)
-        val revenue = if (sale.quantityKg > BigDecimal.ZERO && sale.returnedKg > BigDecimal.ZERO) {
-            sale.pricePerKgAtSale.multiply(netKg)
-        } else {
-            sale.totalSalePrice
-        }
-        val cogs = sale.costPerKgAtSale.multiply(netKg)
+        // sale.quantityKg and sale.totalSalePrice are already net of any returned items
+        val netKg = sale.quantityKg.max(BigDecimal.ZERO)
+        val revenue = sale.totalSalePrice.max(BigDecimal.ZERO)
+        val cogs = sale.costPerKgAtSale.multiply(netKg).setScale(CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
         val profitForSale = revenue.subtract(cogs)
 
         totalRevenue = totalRevenue.add(revenue)
@@ -293,21 +291,40 @@ fun ReportsScreen(
         totalPaidAtSale = totalPaidAtSale.add(sale.paidAmount)
     }
 
-    val totalHandlingExpenses = remember(filteredPurchases) {
-        filteredPurchases.fold(BigDecimal.ZERO) { acc, inv ->
-            acc.add(inv.ladhan).add(inv.utaar).add(inv.gaadiKiraya)
-        }
+    // Purchase invoice freight (ladhan, utaar, gaadiKiraya) is already capitalized into landed COGS.
+    // Deduct only real operational expenses recorded in Cashbook so freight is never double-counted
+    // and no synthetic 22% overhead is fabricated.
+    val cashbookExpenseEntries = remember(filterStartTime, filterEndTime) {
+        CashbookManualPrefs.loadManualEntries(context)
+            .filter { !it.isCashIn && it.isExpense && it.date in filterStartTime..filterEndTime }
     }
-    val otherExpenses = remember(totalHandlingExpenses) {
-        if (totalHandlingExpenses > BigDecimal.ZERO) {
-            totalHandlingExpenses.multiply(BigDecimal("0.22")).setScale(0, RoundingMode.HALF_UP)
-        } else BigDecimal.ZERO
+    val totalHandlingExpenses = remember(cashbookExpenseEntries) {
+        cashbookExpenseEntries.filter { e ->
+            e.title.contains("Transport", ignoreCase = true) ||
+                e.title.contains("Freight", ignoreCase = true) ||
+                e.title.contains("Hamali", ignoreCase = true) ||
+                e.title.contains("Ladaan", ignoreCase = true) ||
+                e.title.contains("Utaar", ignoreCase = true)
+        }.fold(BigDecimal.ZERO) { acc, e -> acc.add(e.amount) }
+    }
+    val otherExpenses = remember(cashbookExpenseEntries, totalHandlingExpenses) {
+        val allCashbook = cashbookExpenseEntries.fold(BigDecimal.ZERO) { acc, e -> acc.add(e.amount) }
+        allCashbook.subtract(totalHandlingExpenses).max(BigDecimal.ZERO)
     }
     val totalAllExpenses = remember(totalHandlingExpenses, otherExpenses) {
         totalHandlingExpenses.add(otherExpenses)
     }
     val netProfitAfterExpenses = remember(totalGrossProfit, totalAllExpenses) {
         totalGrossProfit.subtract(totalAllExpenses)
+    }
+
+    val cashPaidAtSale = remember(filteredSales) {
+        filteredSales.filter { !it.paymentMode.equals("UPI", ignoreCase = true) }
+            .fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
+    }
+    val upiPaidAtSale = remember(filteredSales) {
+        filteredSales.filter { it.paymentMode.equals("UPI", ignoreCase = true) }
+            .fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
     }
 
     val totalCollectedRepayments = remember(filteredPayments) {
@@ -693,6 +710,8 @@ fun ReportsScreen(
                         totalUdhariExtended = totalUdhariExtended,
                         totalCollectedRepayments = totalCollectedRepayments,
                         totalPaidAtSale = totalPaidAtSale,
+                        cashAmount = cashPaidAtSale,
+                        upiAmount = upiPaidAtSale,
                         dailyProfits = dailyProfits,
                         lastSyncTimeMillis = appSettings.lastSyncTime,
                         onOpenExportAndBackup = { showExportAndBackupScreen = true },
@@ -743,6 +762,8 @@ private fun ReportsOverviewTab(
     totalUdhariExtended: BigDecimal,
     totalCollectedRepayments: BigDecimal,
     totalPaidAtSale: BigDecimal,
+    cashAmount: BigDecimal,
+    upiAmount: BigDecimal,
     dailyProfits: List<DailyProfitSummary>,
     lastSyncTimeMillis: Long,
     onOpenExportAndBackup: () -> Unit,
@@ -750,27 +771,23 @@ private fun ReportsOverviewTab(
     onOpenStockReport: () -> Unit,
     onOpenExpenseReport: () -> Unit
 ) {
-    // Breakdown of how customers paid (Cash vs UPI vs Udhari)
-    val cashAmount = remember(totalPaidAtSale) {
-        totalPaidAtSale.multiply(BigDecimal("0.66")).setScale(0, RoundingMode.HALF_UP)
-    }
-    val upiAmount = remember(totalPaidAtSale, cashAmount) {
-        totalPaidAtSale.subtract(cashAmount).max(BigDecimal.ZERO)
-    }
+    // Breakdown of how customers paid (Cash vs UPI vs Udhari) from actual recorded payment modes
     val paymentModesSum = remember(cashAmount, upiAmount, totalUdhariExtended) {
-        cashAmount.add(upiAmount).add(totalUdhariExtended)
+        cashAmount.add(upiAmount).add(totalUdhariExtended.max(BigDecimal.ZERO))
     }
     val cashPct = remember(cashAmount, paymentModesSum) {
         if (paymentModesSum > BigDecimal.ZERO) {
             cashAmount.multiply(BigDecimal("100")).divide(paymentModesSum, 0, RoundingMode.HALF_UP).toInt()
-        } else 47
+        } else 0
     }
     val upiPct = remember(upiAmount, paymentModesSum) {
         if (paymentModesSum > BigDecimal.ZERO) {
             upiAmount.multiply(BigDecimal("100")).divide(paymentModesSum, 0, RoundingMode.HALF_UP).toInt()
-        } else 24
+        } else 0
     }
-    val udhariPct = (100 - cashPct - upiPct).coerceAtLeast(0)
+    val udhariPct = if (paymentModesSum > BigDecimal.ZERO) {
+        (100 - cashPct - upiPct).coerceAtLeast(0)
+    } else 0
 
     val backupDateFormat = remember { SimpleDateFormat("d MMM, hh:mm a", Locale.getDefault()) }
     val effectiveBackupMillis = remember(lastSyncTimeMillis) {

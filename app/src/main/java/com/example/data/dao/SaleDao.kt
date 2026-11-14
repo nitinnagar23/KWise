@@ -27,7 +27,7 @@ interface SaleDao {
     @Query("SELECT * FROM sales WHERE isDeleted = 0 AND date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     fun observeSalesBetween(startDate: Long, endDate: Long): Flow<List<SaleEntry>>
 
-    @Query("SELECT * FROM sales WHERE id = :saleId LIMIT 1")
+    @Query("SELECT * FROM sales WHERE id = :saleId AND isDeleted = 0 LIMIT 1")
     suspend fun getSaleById(saleId: String): SaleEntry?
 
     @Query("SELECT * FROM sales WHERE syncStatus != 'SYNCED'")

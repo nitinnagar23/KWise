@@ -15,6 +15,7 @@ data class PaymentEntry(
     val linkedSaleId: String? = null,
     val note: String = "",
     val collectedByUserId: String,
+    val paymentMode: String = "CASH",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false,

@@ -197,7 +197,7 @@ fun BillingScreen(
         "FULL" -> grandTotal
         "HALF" -> grandTotal.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP)
         "UDHARI" -> BigDecimal.ZERO
-        else -> (paidAmountStr.toBigDecimalOrNull() ?: BigDecimal.ZERO).min(grandTotal)
+        else -> (paidAmountStr.toBigDecimalOrNull() ?: BigDecimal.ZERO).max(BigDecimal.ZERO)
     }
     val udhariDue = grandTotal.subtract(paidAmount).max(BigDecimal.ZERO)
 
@@ -318,14 +318,18 @@ fun BillingScreen(
                 )
             }
 
-            val (_, billData) = repository.recordMultiItemSale(
-                customerId = targetCustomer.id,
-                items = validItems,
-                paidAmount = if (isWalkInCashCustomer) grandTotal else paidAmount,
-                soldByUserId = currentUser?.id ?: "admin",
-                performedByRole = currentUser?.role
-            )
-            billingViewModel.setGeneratedBill(billData)
+            try {
+                val (_, billData) = repository.recordMultiItemSale(
+                    customerId = targetCustomer.id,
+                    items = validItems,
+                    paidAmount = if (isWalkInCashCustomer) grandTotal else paidAmount,
+                    soldByUserId = currentUser?.id ?: "admin",
+                    performedByRole = currentUser?.role
+                )
+                billingViewModel.setGeneratedBill(billData)
+            } catch (e: Exception) {
+                Toast.makeText(context, e.message ?: "Unable to save bill", Toast.LENGTH_LONG).show()
+            }
         }
     }
 

@@ -23,6 +23,8 @@ data class SaleEntry(
     val soldByUserId: String,
     val returnedKg: BigDecimal = BigDecimal.ZERO,
     val billStatus: String = "ACTIVE", // ACTIVE, EDITED, RETURNED, CANCELLED
+    val billNumber: String = "",
+    val paymentMode: String = "CASH",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val isDeleted: Boolean = false,
@@ -81,7 +83,8 @@ data class GroupedSaleBill(
 
 /**
  * Groups individual `SaleEntry` line items that were created in the same checkout
- * (same `customerId` and `date` within 2.5 seconds) into consolidated `GroupedSaleBill` objects.
+ * (same `billNumber`, or same `customerId` and `date` within 2.5 seconds for legacy rows)
+ * into consolidated `GroupedSaleBill` objects.
  */
 fun groupSalesIntoBills(
     sales: List<SaleEntry>,
@@ -99,8 +102,13 @@ fun groupSalesIntoBills(
             if (currentBatch.isEmpty()) {
                 currentBatch.add(s)
             } else {
-                val anchorDate = currentBatch.first().date
-                if (abs(s.date - anchorDate) <= 2500L) {
+                val anchor = currentBatch.first()
+                val sameBill = if (anchor.billNumber.isNotBlank() || s.billNumber.isNotBlank()) {
+                    anchor.billNumber.isNotBlank() && anchor.billNumber == s.billNumber
+                } else {
+                    abs(s.date - anchor.date) <= 2500L
+                }
+                if (sameBill) {
                     currentBatch.add(s)
                 } else {
                     rawGroups.add(currentBatch)
@@ -119,7 +127,8 @@ fun groupSalesIntoBills(
 
     val numberedBills = orderedAsc.mapIndexed { index, batch ->
         val primary = batch.first()
-        val code = (1001 + index).toString()
+        val storedCode = batch.firstNotNullOfOrNull { it.billNumber.takeIf { bn -> bn.isNotBlank() } }
+        val code = storedCode ?: (1001 + index).toString()
         GroupedSaleBill(
             primarySale = primary,
             items = batch,

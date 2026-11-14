@@ -125,7 +125,7 @@ fun splitBudget(
     // 1. Handle WEIGHT mode first (user specifies kg per item)
     if (mode == BudgetSplitMode.WEIGHT) {
         val rows = items.map { item ->
-            val rate = item.ratePerKg.max(BigDecimal.ONE)
+            val rate = item.ratePerKg.max(BigDecimal("0.01"))
             val rawKg = (item.requestedKg ?: BigDecimal.ZERO).max(BigDecimal.ZERO)
             val roundedKg = roundDownToStepKg(rawKg, effectiveStep)
             val actualAmt = roundedKg.multiply(rate).setScale(2, RoundingMode.HALF_UP)
@@ -301,8 +301,8 @@ fun splitBudget(
 }
 
 /**
- * Absorbs the leftover rupees into [targetProductId] by computing exact extra kg (rounded to 0.001 kg)
- * so the customer gets the full ₹ budget value on that item.
+ * Absorbs the leftover rupees into [targetProductId] by computing extra kg (rounded down to 0.001 kg)
+ * and recomputing actualAmount from newKg * ratePerKg so total spend never exceeds budget.
  */
 fun applyLeftoverToRow(
     result: BudgetSplitResult,
@@ -311,10 +311,12 @@ fun applyLeftoverToRow(
     if (result.leftoverRupees <= BigDecimal.ZERO) return result
     val updatedRows = result.rows.map { row ->
         if (row.productId == targetProductId && row.ratePerKg > BigDecimal.ZERO) {
-            val newActualAmount = row.actualAmount.add(result.leftoverRupees).setScale(2, RoundingMode.HALF_UP)
-            val newKg = newActualAmount.divide(row.ratePerKg, 3, RoundingMode.HALF_UP)
+            val maxTargetAmount = row.actualAmount.add(result.leftoverRupees).setScale(2, RoundingMode.HALF_UP)
+            val newKg = maxTargetAmount.divide(row.ratePerKg, 3, RoundingMode.DOWN)
+            val newActualAmount = newKg.multiply(row.ratePerKg).setScale(2, RoundingMode.HALF_UP)
+                .min(maxTargetAmount)
             row.copy(
-                targetAmount = newActualAmount,
+                targetAmount = maxTargetAmount,
                 allocatedKg = newKg,
                 actualAmount = newActualAmount,
                 exceedsStock = newKg > row.availableStockKg

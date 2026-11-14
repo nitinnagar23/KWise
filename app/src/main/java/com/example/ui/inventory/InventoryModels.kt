@@ -330,7 +330,7 @@ internal fun computeStockStatus(product: Product, meta: InventoryItemMeta): Inve
 
 internal fun formatProductBagsCount(product: Product): String {
     if (product.isLooseOnly || product.kgPerBag <= BigDecimal.ONE) {
-        return CurrencyUtils.formatWeight(product.currentStockKg.max(BigDecimal.ZERO))
+        return CurrencyUtils.formatWeightKg(product.currentStockKg.max(BigDecimal.ZERO))
     }
     val bags = product.currentStockKg.max(BigDecimal.ZERO)
         .divide(product.kgPerBag, 1, RoundingMode.HALF_UP)

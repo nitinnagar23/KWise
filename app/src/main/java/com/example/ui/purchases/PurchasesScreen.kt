@@ -124,13 +124,28 @@ fun PurchasesScreen(
             val meta = metadataMap[key]
             val openBal = meta?.openingBalance ?: BigDecimal.ZERO
             val phone = s.wholesalerPhone.ifBlank { meta?.primaryPhone ?: "" }
-            val totalPurch = s.totalPurchases.add(openBal)
-            val bal = totalPurch.subtract(s.totalPaid).max(BigDecimal.ZERO)
-            map[key] = s.copy(
-                wholesalerPhone = phone,
-                totalPurchases = totalPurch,
-                balancePayable = bal
-            )
+            val existing = map[key]
+            if (existing == null) {
+                val totalPurch = s.totalPurchases.add(openBal)
+                val bal = totalPurch.subtract(s.totalPaid).max(BigDecimal.ZERO)
+                map[key] = s.copy(
+                    wholesalerPhone = phone,
+                    totalPurchases = totalPurch,
+                    balancePayable = bal
+                )
+            } else {
+                val mergedPurch = existing.totalPurchases.add(s.totalPurchases)
+                val mergedPaid = existing.totalPaid.add(s.totalPaid)
+                val mergedBal = mergedPurch.subtract(mergedPaid).max(BigDecimal.ZERO)
+                map[key] = existing.copy(
+                    wholesalerPhone = existing.wholesalerPhone.ifBlank { phone },
+                    totalPurchases = mergedPurch,
+                    totalPaid = mergedPaid,
+                    balancePayable = mergedBal,
+                    invoiceCount = existing.invoiceCount + s.invoiceCount,
+                    lastTransactionDate = maxOf(existing.lastTransactionDate, s.lastTransactionDate)
+                )
+            }
         }
         metadataMap.forEach { (key, meta) ->
             if (!map.containsKey(key)) {

@@ -26,6 +26,7 @@ import com.example.model.User
 import com.example.model.can
 import com.example.model.canEditCustomerBasic
 import com.example.model.requirePermission
+import androidx.room.withTransaction
 import com.example.util.CurrencyUtils
 import com.example.util.SecurityUtils
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Locale
 import java.util.UUID
 
 data class SaleItemRequest(
@@ -116,7 +118,8 @@ class CattleFeedRepository(private val context: Context) {
         for (inv in invoices) {
             val name = inv.wholesalerName.trim()
             if (name.isBlank()) continue
-            val current = supplierMap[name] ?: SupplierKhataSummary(
+            val key = name.lowercase(Locale.ROOT)
+            val current = supplierMap[key] ?: SupplierKhataSummary(
                 wholesalerName = name,
                 wholesalerPhone = inv.wholesalerPhone
             )
@@ -124,7 +127,7 @@ class CattleFeedRepository(private val context: Context) {
             val totalPurchases = current.totalPurchases.add(inv.totalInvoiceCost)
             val totalPaid = current.totalPaid.add(inv.paidAmount)
             val lastDate = maxOf(current.lastTransactionDate, inv.date)
-            supplierMap[name] = current.copy(
+            supplierMap[key] = current.copy(
                 wholesalerPhone = phone,
                 totalPurchases = totalPurchases,
                 totalPaid = totalPaid,
@@ -136,10 +139,11 @@ class CattleFeedRepository(private val context: Context) {
         for (pay in payments) {
             val name = pay.wholesalerName.trim()
             if (name.isBlank()) continue
-            val current = supplierMap[name] ?: SupplierKhataSummary(wholesalerName = name)
+            val key = name.lowercase(Locale.ROOT)
+            val current = supplierMap[key] ?: SupplierKhataSummary(wholesalerName = name)
             val totalPaid = current.totalPaid.add(pay.amount)
             val lastDate = maxOf(current.lastTransactionDate, pay.date)
-            supplierMap[name] = current.copy(
+            supplierMap[key] = current.copy(
                 totalPaid = totalPaid,
                 lastTransactionDate = lastDate
             )
@@ -443,6 +447,9 @@ class CattleFeedRepository(private val context: Context) {
 
     suspend fun saveProduct(product: Product, actor: User? = null, performedByRole: Role? = null) = withContext(Dispatchers.IO) {
         enforceActiveUserPermission(Permission.EDIT_INVENTORY, actor, performedByRole)
+        if (product.kgPerBag <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Bag weight (kgPerBag) must be greater than zero")
+        }
         productDao.insertProduct(product.copy(syncStatus = SyncStatus.PENDING, updatedAt = System.currentTimeMillis()))
         triggerAutoSync()
     }
@@ -456,10 +463,10 @@ class CattleFeedRepository(private val context: Context) {
     /**
      * Records a Mixed-Unit Sale:
      * - Supports customized whole-bag rate (e.g. ₹1960/40kg) and custom loose per-kg rate (e.g. ₹50/kg)
-     * - Decrements Product stock (allows negative with soft warning handled in UI)
+     * - Validates and decrements Product stock atomically
      * - Stores snapshot of pricePerKgAtSale and costPerKgAtSale
-     * - Recalculates Customer totalUdhari
-     * - Generates shared BillData
+     * - Recalculates Customer totalUdhari (preserving advance credit on overpayment)
+     * - Generates shared BillData with sequential billNumber
      */
     suspend fun recordSale(
         customerId: String,
@@ -470,7 +477,8 @@ class CattleFeedRepository(private val context: Context) {
         customBagPrice: BigDecimal? = null,
         customLoosePricePerKg: BigDecimal? = null,
         paidAmount: BigDecimal,
-        soldByUserId: String
+        soldByUserId: String,
+        paymentMode: String = "CASH"
     ): Pair<SaleEntry, BillData> = withContext(Dispatchers.IO) {
         val result = recordMultiItemSale(
             customerId = customerId,
@@ -484,16 +492,18 @@ class CattleFeedRepository(private val context: Context) {
                 )
             ),
             paidAmount = paidAmount,
-            soldByUserId = soldByUserId
+            soldByUserId = soldByUserId,
+            paymentMode = paymentMode
         )
         Pair(result.first.first(), result.second)
     }
 
     /**
-     * Records a multi-item sale in a single transaction:
-     * - Generates SaleEntry for each item
-     * - Deducts stock for each product
-     * - Allocates cash/paidAmount across items
+     * Records a multi-item sale in a single atomic transaction:
+     * - Validates positive quantities/rates and checks aggregate per-product stock
+     * - Assigns sequential billNumber from AppSettings
+     * - Generates SaleEntry for each item and deducts stock
+     * - Allocates paidAmount across items (preserving any overpayment as customer advance credit)
      * - Updates customer udhari balance once
      * - Returns all created sales and consolidated BillData
      */
@@ -502,131 +512,203 @@ class CattleFeedRepository(private val context: Context) {
         items: List<SaleItemRequest>,
         paidAmount: BigDecimal,
         soldByUserId: String,
-        performedByRole: Role? = null
+        performedByRole: Role? = null,
+        paymentMode: String = "CASH"
     ): Pair<List<SaleEntry>, BillData> = withContext(Dispatchers.IO) {
-        val customer = customerDao.getCustomerById(customerId)
-            ?: throw IllegalArgumentException("Customer not found")
+        if (items.isEmpty()) {
+            throw IllegalArgumentException("At least one item is required to record a sale")
+        }
+        if (paidAmount < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Paid amount cannot be negative")
+        }
+
         val user = userDao.getUserById(soldByUserId) ?: getActiveUser()
         val effectiveRole = performedByRole ?: user?.role
         if (effectiveRole != null) {
             requirePermission(effectiveRole, Permission.CREATE_BILL)
         }
-        val now = System.currentTimeMillis()
 
-        var calculatedSubtotal = BigDecimal.ZERO
-        val createdSales = mutableListOf<SaleEntry>()
-        val billItems = mutableListOf<BillItem>()
+        val normalizedPaymentMode = paymentMode.trim().uppercase(Locale.ROOT).ifBlank { "CASH" }
 
-        for (itemReq in items) {
-            val product = productDao.getProductById(itemReq.productId)
-                ?: throw IllegalArgumentException("Product not found: ${itemReq.productId}")
+        val result = db.withTransaction {
+            val customer = customerDao.getCustomerById(customerId)
+                ?: throw IllegalArgumentException("Customer not found")
+            val now = System.currentTimeMillis()
 
-            if (effectiveRole != null && !can(effectiveRole, Permission.OVERRIDE_BILL_RATE)) {
-                val hasCustomBagRate = itemReq.customBagPrice != null &&
-                    itemReq.customBagPrice.compareTo(product.bagSellingPrice) != 0
-                val hasCustomLooseRate = itemReq.customLoosePricePerKg != null &&
-                    itemReq.customLoosePricePerKg.compareTo(product.effectiveLooseRatePerKg) != 0
-                if (hasCustomBagRate || hasCustomLooseRate) {
-                    throw SecurityException("Staff cannot override listed billing rates")
+            // First pass: validate inputs and aggregate requested weight per product across all lines
+            val requestedKgByProduct = mutableMapOf<String, BigDecimal>()
+            val productCache = mutableMapOf<String, Product>()
+
+            for (itemReq in items) {
+                if (itemReq.bags < 0 || itemReq.looseKg < BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Sale quantities cannot be negative")
+                }
+                if (itemReq.customBagPrice != null && itemReq.customBagPrice < BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Custom bag price cannot be negative")
+                }
+                if (itemReq.customLoosePricePerKg != null && itemReq.customLoosePricePerKg < BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Custom loose price cannot be negative")
+                }
+
+                val product = productCache.getOrPut(itemReq.productId) {
+                    productDao.getProductById(itemReq.productId)
+                        ?: throw IllegalArgumentException("Product not found: ${itemReq.productId}")
+                }
+
+                val bagWeight = product.safeKgPerBag.multiply(BigDecimal(itemReq.bags))
+                val totalQuantityKg = bagWeight.add(itemReq.looseKg)
+                    .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                if (totalQuantityKg <= BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Sale quantity for ${product.feedName} must be greater than zero")
+                }
+
+                requestedKgByProduct[product.id] = (requestedKgByProduct[product.id] ?: BigDecimal.ZERO).add(totalQuantityKg)
+            }
+
+            // Enforce stock availability per product
+            for ((prodId, totalRequestedKg) in requestedKgByProduct) {
+                val product = productCache.getValue(prodId)
+                if (totalRequestedKg > product.currentStockKg) {
+                    throw IllegalArgumentException(
+                        "Insufficient stock for ${product.feedName}: requested ${CurrencyUtils.formatWeightKg(totalRequestedKg)}, available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
+                    )
                 }
             }
 
-            val bagWeight = product.kgPerBag.multiply(BigDecimal(itemReq.bags))
-            val totalQuantityKg = bagWeight.add(itemReq.looseKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            // Allocate sequential bill number atomically
+            settingsDao.ensureDefaultSettings()
+            val currentSettings = settingsDao.getSettings()
+            val assignedBillNumInt = (currentSettings?.nextBillNumber ?: 1001).coerceAtLeast(1001)
+            val billNumber = assignedBillNumInt.toString()
+            settingsDao.updateNextBillNumber(assignedBillNumInt + 1)
 
-            val effectiveBagRate = itemReq.customBagPrice ?: product.bagSellingPrice
-            val effectiveLooseRate = itemReq.customLoosePricePerKg ?: product.effectiveLooseRatePerKg
+            val runningStockByProduct = productCache.mapValues { it.value.currentStockKg }.toMutableMap()
+            var calculatedSubtotal = BigDecimal.ZERO
+            val createdSales = mutableListOf<SaleEntry>()
+            val billItems = mutableListOf<BillItem>()
 
-            val bagTotal = if (itemReq.bags > 0) effectiveBagRate.multiply(BigDecimal(itemReq.bags)) else BigDecimal.ZERO
-            val looseTotal = if (itemReq.looseKg > BigDecimal.ZERO) effectiveLooseRate.multiply(itemReq.looseKg) else BigDecimal.ZERO
-            val itemSalePrice = bagTotal.add(looseTotal).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            for (itemReq in items) {
+                val product = productCache.getValue(itemReq.productId)
 
-            calculatedSubtotal = calculatedSubtotal.add(itemSalePrice)
+                if (effectiveRole != null && !can(effectiveRole, Permission.OVERRIDE_BILL_RATE)) {
+                    val hasCustomBagRate = itemReq.customBagPrice != null &&
+                        itemReq.customBagPrice.compareTo(product.bagSellingPrice) != 0
+                    val hasCustomLooseRate = itemReq.customLoosePricePerKg != null &&
+                        itemReq.customLoosePricePerKg.compareTo(product.effectiveLooseRatePerKg) != 0
+                    if (hasCustomBagRate || hasCustomLooseRate) {
+                        throw SecurityException("Staff cannot override listed billing rates")
+                    }
+                }
 
-            val effectivePricePerKg = if (totalQuantityKg > BigDecimal.ZERO) {
-                itemSalePrice.divide(totalQuantityKg, CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
-            } else effectiveLooseRate
+                val bagWeight = product.safeKgPerBag.multiply(BigDecimal(itemReq.bags))
+                val totalQuantityKg = bagWeight.add(itemReq.looseKg)
+                    .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
 
-            val costPerKg = product.averagePurchaseCostPerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                val effectiveBagRate = itemReq.customBagPrice ?: product.bagSellingPrice
+                val effectiveLooseRate = itemReq.customLoosePricePerKg ?: product.effectiveLooseRatePerKg
 
-            val sale = SaleEntry(
-                id = UUID.randomUUID().toString(),
-                date = now,
-                customerId = customerId,
-                productId = itemReq.productId,
-                quantityKg = totalQuantityKg,
-                pricePerKgAtSale = effectivePricePerKg,
-                costPerKgAtSale = costPerKg,
-                totalSalePrice = itemSalePrice,
-                paidAmount = BigDecimal.ZERO,
-                udhariAmount = itemSalePrice,
-                paymentStatus = PaymentStatus.UNPAID,
-                soldByUserId = soldByUserId,
-                syncStatus = SyncStatus.PENDING
-            )
-            createdSales.add(sale)
+                val bagTotal = if (itemReq.bags > 0) effectiveBagRate.multiply(BigDecimal(itemReq.bags)) else BigDecimal.ZERO
+                val looseTotal = if (itemReq.looseKg > BigDecimal.ZERO) effectiveLooseRate.multiply(itemReq.looseKg) else BigDecimal.ZERO
+                val itemSalePrice = bagTotal.add(looseTotal).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
-            // Deduct stock
-            val newStock = product.currentStockKg.subtract(totalQuantityKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-            productDao.updateProductStock(product.id, newStock.toPlainString())
+                calculatedSubtotal = calculatedSubtotal.add(itemSalePrice)
 
-            billItems.add(
-                BillItem(
-                    feedName = product.feedName,
-                    bags = itemReq.bags,
-                    looseKg = itemReq.looseKg,
-                    totalKg = totalQuantityKg,
-                    pricePerKg = effectivePricePerKg,
-                    itemTotal = itemSalePrice
+                val effectivePricePerKg = if (totalQuantityKg > BigDecimal.ZERO) {
+                    itemSalePrice.divide(totalQuantityKg, CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
+                } else effectiveLooseRate
+
+                val costPerKg = product.averagePurchaseCostPerKg.setScale(4, RoundingMode.HALF_UP)
+
+                val sale = SaleEntry(
+                    id = UUID.randomUUID().toString(),
+                    date = now,
+                    customerId = customerId,
+                    productId = itemReq.productId,
+                    quantityKg = totalQuantityKg,
+                    pricePerKgAtSale = effectivePricePerKg,
+                    costPerKgAtSale = costPerKg,
+                    totalSalePrice = itemSalePrice,
+                    paidAmount = BigDecimal.ZERO,
+                    udhariAmount = itemSalePrice,
+                    paymentStatus = PaymentStatus.UNPAID,
+                    soldByUserId = soldByUserId,
+                    billNumber = billNumber,
+                    paymentMode = normalizedPaymentMode,
+                    syncStatus = SyncStatus.PENDING
                 )
-            )
-        }
+                createdSales.add(sale)
 
-        // Allocate paid amount across sales
-        val normalizedPaid = paidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val overallUdhari = calculatedSubtotal.subtract(normalizedPaid).max(BigDecimal.ZERO).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                // Deduct stock from running balance so duplicate product lines accumulate accurately
+                val priorStock = runningStockByProduct[product.id] ?: product.currentStockKg
+                val newStock = priorStock.subtract(totalQuantityKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                runningStockByProduct[product.id] = newStock
+                productDao.updateProductStock(product.id, newStock.toPlainString())
 
-        var remainingPaidToAllocate = normalizedPaid
-        val finalSales = createdSales.map { s ->
-            val paidForThis = remainingPaidToAllocate.min(s.totalSalePrice)
-            remainingPaidToAllocate = remainingPaidToAllocate.subtract(paidForThis)
-            val udhariForThis = s.totalSalePrice.subtract(paidForThis)
-            val status = when {
-                paidForThis >= s.totalSalePrice -> PaymentStatus.PAID
-                paidForThis > BigDecimal.ZERO -> PaymentStatus.PARTIAL
-                else -> PaymentStatus.UNPAID
+                billItems.add(
+                    BillItem(
+                        feedName = product.feedName,
+                        bags = itemReq.bags,
+                        looseKg = itemReq.looseKg,
+                        totalKg = totalQuantityKg,
+                        pricePerKg = effectivePricePerKg,
+                        itemTotal = itemSalePrice
+                    )
+                )
             }
-            s.copy(
-                paidAmount = paidForThis,
-                udhariAmount = udhariForThis,
-                paymentStatus = status
+
+            // Allocate paid amount across sales (preserving any overpayment on the final line item as advance credit)
+            val normalizedPaid = paidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val overallUdhari = calculatedSubtotal.subtract(normalizedPaid).max(BigDecimal.ZERO)
+                .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+
+            var remainingPaidToAllocate = normalizedPaid
+            val finalSales = createdSales.mapIndexed { index, s ->
+                val paidForThis = if (index == createdSales.lastIndex) {
+                    remainingPaidToAllocate
+                } else {
+                    remainingPaidToAllocate.min(s.totalSalePrice)
+                }
+                remainingPaidToAllocate = remainingPaidToAllocate.subtract(paidForThis).max(BigDecimal.ZERO)
+                val udhariForThis = s.totalSalePrice.subtract(paidForThis).max(BigDecimal.ZERO)
+                    .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                val status = when {
+                    paidForThis >= s.totalSalePrice -> PaymentStatus.PAID
+                    paidForThis > BigDecimal.ZERO -> PaymentStatus.PARTIAL
+                    else -> PaymentStatus.UNPAID
+                }
+                s.copy(
+                    paidAmount = paidForThis,
+                    udhariAmount = udhariForThis,
+                    paymentStatus = status
+                )
+            }
+
+            for (sale in finalSales) {
+                saleDao.insertSale(sale)
+            }
+
+            val newTotalUdhari = recalculateCustomerUdhariInternal(customerId)
+
+            val billData = BillData(
+                billNumber = billNumber,
+                date = now,
+                customerName = customer.name,
+                customerPhone = customer.phone,
+                customerVillage = customer.village,
+                items = billItems,
+                subtotal = calculatedSubtotal,
+                paidAmount = normalizedPaid,
+                udhariAmount = overallUdhari,
+                previousUdhari = customer.totalUdhari,
+                newTotalUdhari = newTotalUdhari,
+                staffName = user?.name ?: "Staff"
             )
+
+            Pair(finalSales, billData)
         }
-
-        for (sale in finalSales) {
-            saleDao.insertSale(sale)
-        }
-
-        val newTotalUdhari = recalculateCustomerUdhariInternal(customerId)
-        val billNumber = (System.currentTimeMillis() % 1000000).toString()
-
-        val billData = BillData(
-            billNumber = billNumber,
-            date = now,
-            customerName = customer.name,
-            customerPhone = customer.phone,
-            customerVillage = customer.village,
-            items = billItems,
-            subtotal = calculatedSubtotal,
-            paidAmount = normalizedPaid,
-            udhariAmount = overallUdhari,
-            previousUdhari = customer.totalUdhari,
-            newTotalUdhari = newTotalUdhari,
-            staffName = user?.name ?: "Staff"
-        )
 
         triggerAutoSync()
-        Pair(finalSales, billData)
+        result
     }
 
     suspend fun updateDailyRate(
@@ -640,21 +722,21 @@ class CattleFeedRepository(private val context: Context) {
         val product = productDao.getProductById(productId) ?: return@withContext
         val oldBagPrice = product.bagSellingPrice
         val oldLoosePrice = product.effectiveLooseRatePerKg
-        val sellingPricePerKg = if (bagPrice != null && product.kgPerBag > BigDecimal.ONE && !product.isLooseOnly) {
-            bagPrice.divide(product.kgPerBag, 4, RoundingMode.HALF_UP)
+        val sellingPricePerKg = if (bagPrice != null && product.safeKgPerBag > BigDecimal.ONE && !product.isLooseOnly) {
+            bagPrice.divide(product.safeKgPerBag, 4, RoundingMode.HALF_UP)
         } else {
             looseRatePerKg
         }
         productDao.updateDailyRates(productId, sellingPricePerKg, looseRatePerKg)
 
         val actorUser = actor ?: getActiveUser() ?: User(id = "admin", name = "Admin", role = performedByRole ?: Role.ADMINISTRATOR, pinHash = "")
-        val newBagPrice = bagPrice ?: sellingPricePerKg.multiply(product.kgPerBag)
-        val prevStr = if (!product.isLooseOnly && product.kgPerBag > BigDecimal.ONE) {
+        val newBagPrice = bagPrice ?: sellingPricePerKg.multiply(product.safeKgPerBag)
+        val prevStr = if (!product.isLooseOnly && product.safeKgPerBag > BigDecimal.ONE) {
             "bag ${CurrencyUtils.formatInr(oldBagPrice)}"
         } else {
             "${CurrencyUtils.formatInr(oldLoosePrice)}/kg"
         }
-        val newStr = if (!product.isLooseOnly && product.kgPerBag > BigDecimal.ONE) {
+        val newStr = if (!product.isLooseOnly && product.safeKgPerBag > BigDecimal.ONE) {
             CurrencyUtils.formatInr(newBagPrice)
         } else {
             "${CurrencyUtils.formatInr(looseRatePerKg)}/kg"
@@ -687,12 +769,22 @@ class CattleFeedRepository(private val context: Context) {
         note: String,
         collectedByUserId: String,
         actorRole: Role? = null,
-        performedByRole: Role? = null
+        performedByRole: Role? = null,
+        paymentMode: String = "CASH"
     ): PaymentEntry = withContext(Dispatchers.IO) {
+        if (amount <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Payment amount must be greater than zero")
+        }
         val collector = userDao.getUserById(collectedByUserId) ?: getActiveUser()
         val effectiveRole = actorRole ?: performedByRole ?: collector?.role
         if (effectiveRole != null) {
             requirePermission(effectiveRole, Permission.ACCESS_COLLECTIONS)
+        }
+        val resolvedMode = when {
+            paymentMode.isNotBlank() && paymentMode.uppercase(Locale.ROOT) != "CASH" -> paymentMode.trim().uppercase(Locale.ROOT)
+            note.contains("[UPI]", ignoreCase = true) -> "UPI"
+            note.contains("[BANK]", ignoreCase = true) -> "BANK"
+            else -> paymentMode.trim().uppercase(Locale.ROOT).ifBlank { "CASH" }
         }
         val payment = PaymentEntry(
             id = UUID.randomUUID().toString(),
@@ -701,6 +793,7 @@ class CattleFeedRepository(private val context: Context) {
             amount = amount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING),
             note = note.trim(),
             collectedByUserId = collectedByUserId,
+            paymentMode = resolvedMode,
             syncStatus = SyncStatus.PENDING
         )
         paymentDao.insertPayment(payment)
@@ -710,8 +803,8 @@ class CattleFeedRepository(private val context: Context) {
     }
 
     /**
-     * Records Purchase & Updates Moving Average Cost
-     * newAvgCost = ((currentStockKg * currentAvgCost) + (newKg * newPurchasePrice)) / (currentStockKg + newKg)
+     * Records Purchase & Updates Moving Average Cost (at 4-decimal precision)
+     * newAvgCost = ((currentStockKg * currentAvgCost) + totalCost) / (currentStockKg + newKg)
      */
     suspend fun recordPurchase(
         wholesalerName: String,
@@ -721,6 +814,12 @@ class CattleFeedRepository(private val context: Context) {
         paymentStatus: String,
         recordedByUserId: String
     ): PurchaseEntry = withContext(Dispatchers.IO) {
+        if (quantityKg <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Purchase quantity must be greater than zero")
+        }
+        if (totalPurchaseCost <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Total purchase cost must be greater than zero")
+        }
         val recorder = userDao.getUserById(recordedByUserId) ?: getActiveUser()
         if (recorder != null) {
             requirePermission(recorder.role, Permission.EDIT_SUPPLIERS)
@@ -734,17 +833,17 @@ class CattleFeedRepository(private val context: Context) {
         val totalCost = totalPurchaseCost.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
         val unitPurchasePrice = if (newKg > BigDecimal.ZERO) {
-            totalCost.divide(newKg, 4, CurrencyUtils.ROUNDING)
+            totalCost.divide(newKg, 4, RoundingMode.HALF_UP)
         } else BigDecimal.ZERO
 
         val currentValuation = currentStock.multiply(currentAvgCost)
-        val newValuation = newKg.multiply(unitPurchasePrice)
+        val newValuation = totalCost
         val totalWeight = currentStock.add(newKg)
 
         val newAvgCost = if (totalWeight > BigDecimal.ZERO) {
-            currentValuation.add(newValuation).divide(totalWeight, CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            currentValuation.add(newValuation).divide(totalWeight, 4, RoundingMode.HALF_UP)
         } else {
-            unitPurchasePrice.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            unitPurchasePrice.setScale(4, RoundingMode.HALF_UP)
         }
 
         val newStock = product.currentStockKg.add(newKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
@@ -777,7 +876,8 @@ class CattleFeedRepository(private val context: Context) {
 
     /**
      * Recalculation of customer Udhari:
-     * sum of unpaid balances from sales minus standalone payments
+     * Opening balance + sum of (totalSalePrice - paidAmount) from active sales minus standalone payments.
+     * Negative values represent customer advance credit.
      */
     suspend fun recalculateCustomerUdhari(customerId: String, markPending: Boolean = true): BigDecimal = withContext(Dispatchers.IO) {
         val existingCustomer = customerDao.getCustomerById(customerId)
@@ -785,8 +885,8 @@ class CattleFeedRepository(private val context: Context) {
         var totalSaleUdhari = existingCustomer?.getOpeningUdhari() ?: BigDecimal.ZERO
         sales.forEach { s ->
             if (!s.isDeleted && s.billStatus != "CANCELLED") {
-                val balance = s.totalSalePrice.subtract(s.paidAmount).max(BigDecimal.ZERO)
-                totalSaleUdhari = totalSaleUdhari.add(balance)
+                val signedBalance = s.totalSalePrice.subtract(s.paidAmount)
+                totalSaleUdhari = totalSaleUdhari.add(signedBalance)
             }
         }
 
@@ -799,7 +899,6 @@ class CattleFeedRepository(private val context: Context) {
         }
 
         val netUdhari = totalSaleUdhari.subtract(totalStandalonePayments)
-            .max(BigDecimal.ZERO)
             .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
         val status = if (markPending) {
@@ -909,7 +1008,7 @@ class CattleFeedRepository(private val context: Context) {
      * Records a Multi-Item Purchase Invoice:
      * - Multi-item feed support (bags & loose kg)
      * - Optional Ladhan (loading), Utaar (unloading), and Gaadi Kiraya (freight)
-     * - Pro-rata landing cost & stock update for every inventory item
+     * - Pro-rata landing cost (with exact remainder conservation) & 4-decimal moving-average cost update
      * - Payment & Balance tracking for Wholesaler Ledger
      */
     suspend fun recordPurchaseInvoice(
@@ -925,6 +1024,16 @@ class CattleFeedRepository(private val context: Context) {
         recordedByUserId: String,
         performedByRole: Role? = null
     ): PurchaseInvoice = withContext(Dispatchers.IO) {
+        if (items.isEmpty()) {
+            throw IllegalArgumentException("At least one item is required for a purchase invoice")
+        }
+        if (ladhan < BigDecimal.ZERO || utaar < BigDecimal.ZERO || gaadiKiraya < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Handling charges cannot be negative")
+        }
+        if (paidAmount < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Paid amount cannot be negative")
+        }
+
         val actorRole = resolveActorRole(performedByRole)
         requirePermission(actorRole, Permission.ACCESS_SUPPLIERS)
         val now = System.currentTimeMillis()
@@ -935,136 +1044,170 @@ class CattleFeedRepository(private val context: Context) {
         val normGaadiKiraya = gaadiKiraya.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
         val totalHandlingCharges = normLadhan.add(normUtaar).add(normGaadiKiraya)
 
-        var goodsSubtotal = BigDecimal.ZERO
-        var totalInvoiceKg = BigDecimal.ZERO
+        val invoice = db.withTransaction {
+            var goodsSubtotal = BigDecimal.ZERO
+            var totalInvoiceKg = BigDecimal.ZERO
 
-        val calculatedItems = mutableListOf<PurchaseInvoiceItem>()
+            val calculatedItems = mutableListOf<PurchaseInvoiceItem>()
 
-        for (itemReq in items) {
-            val product = productDao.getProductById(itemReq.productId)
-                ?: throw IllegalArgumentException("Product not found: ${itemReq.productId}")
+            for (itemReq in items) {
+                if (itemReq.bags < 0 || itemReq.looseKg < BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Purchase quantities cannot be negative")
+                }
+                val product = productDao.getProductById(itemReq.productId)
+                    ?: throw IllegalArgumentException("Product not found: ${itemReq.productId}")
 
-            val bagWeight = product.kgPerBag.multiply(BigDecimal(itemReq.bags))
-            val totalItemKg = bagWeight.add(itemReq.looseKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                val bagKg = product.safeKgPerBag
+                val bagWeight = bagKg.multiply(BigDecimal(itemReq.bags))
+                val totalItemKg = bagWeight.add(itemReq.looseKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                if (totalItemKg <= BigDecimal.ZERO) {
+                    throw IllegalArgumentException("Purchase quantity for ${product.feedName} must be greater than zero")
+                }
 
-            val ratePerBag = itemReq.customBagPrice ?: if (!product.isLooseOnly && product.kgPerBag > BigDecimal.ONE) {
-                product.bagSellingPrice
-            } else null
+                // Resolve purchase rates using averagePurchaseCostPerKg (never retail sellingPricePerKg)
+                val defaultCostPerKg = product.averagePurchaseCostPerKg
+                val defaultCostPerBag = if (!product.isLooseOnly && bagKg > BigDecimal.ONE) {
+                    defaultCostPerKg.multiply(bagKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                } else null
 
-            val ratePerKg = itemReq.customPricePerKg ?: if (product.isLooseOnly || product.kgPerBag <= BigDecimal.ONE) {
-                product.sellingPricePerKg
-            } else {
-                (ratePerBag ?: product.bagSellingPrice).divide(product.kgPerBag, 4, RoundingMode.HALF_UP)
-            }
+                val ratePerBag: BigDecimal? = when {
+                    itemReq.customBagPrice != null -> itemReq.customBagPrice
+                    itemReq.customPricePerKg != null && !product.isLooseOnly && bagKg > BigDecimal.ONE ->
+                        itemReq.customPricePerKg.multiply(bagKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                    else -> defaultCostPerBag
+                }
 
-            val itemCost = if (!product.isLooseOnly && product.kgPerBag > BigDecimal.ONE && ratePerBag != null) {
-                val bagCost = ratePerBag.multiply(BigDecimal(itemReq.bags))
-                val looseCost = ratePerKg.multiply(itemReq.looseKg)
-                bagCost.add(looseCost).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-            } else {
-                ratePerKg.multiply(totalItemKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-            }
+                val ratePerKg: BigDecimal = when {
+                    itemReq.customPricePerKg != null -> itemReq.customPricePerKg
+                    itemReq.customBagPrice != null && !product.isLooseOnly && bagKg > BigDecimal.ONE ->
+                        itemReq.customBagPrice.divide(bagKg, 4, RoundingMode.HALF_UP)
+                    else -> defaultCostPerKg
+                }
 
-            goodsSubtotal = goodsSubtotal.add(itemCost)
-            totalInvoiceKg = totalInvoiceKg.add(totalItemKg)
+                if (ratePerKg <= BigDecimal.ZERO && (ratePerBag == null || ratePerBag <= BigDecimal.ZERO)) {
+                    throw IllegalArgumentException("Purchase rate must be greater than zero for ${product.feedName}")
+                }
 
-            calculatedItems.add(
-                PurchaseInvoiceItem(
-                    productId = product.id,
-                    feedName = product.feedName,
-                    bags = itemReq.bags,
-                    looseKg = itemReq.looseKg,
-                    totalKg = totalItemKg,
-                    ratePerBag = ratePerBag,
-                    ratePerKg = ratePerKg,
-                    itemCost = itemCost
+                val itemCost = if (!product.isLooseOnly && bagKg > BigDecimal.ONE && ratePerBag != null) {
+                    val bagCost = ratePerBag.multiply(BigDecimal(itemReq.bags))
+                    val looseCost = ratePerKg.multiply(itemReq.looseKg)
+                    bagCost.add(looseCost).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                } else {
+                    ratePerKg.multiply(totalItemKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                }
+
+                goodsSubtotal = goodsSubtotal.add(itemCost)
+                totalInvoiceKg = totalInvoiceKg.add(totalItemKg)
+
+                calculatedItems.add(
+                    PurchaseInvoiceItem(
+                        productId = product.id,
+                        feedName = product.feedName,
+                        bags = itemReq.bags,
+                        looseKg = itemReq.looseKg,
+                        totalKg = totalItemKg,
+                        ratePerBag = ratePerBag,
+                        ratePerKg = ratePerKg,
+                        itemCost = itemCost
+                    )
                 )
-            )
-        }
-
-        val grandTotal = goodsSubtotal.add(totalHandlingCharges).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val normPaid = paidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val balance = grandTotal.subtract(normPaid).max(BigDecimal.ZERO).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-
-        val paymentStatus = when {
-            normPaid >= grandTotal -> PaymentStatus.PAID
-            normPaid > BigDecimal.ZERO -> PaymentStatus.PARTIAL
-            else -> PaymentStatus.UNPAID
-        }
-
-        // Update product stock and moving average costs:
-        for (item in calculatedItems) {
-            val product = productDao.getProductById(item.productId) ?: continue
-
-            // Apportion freight/handling charges per item based on kg
-            val itemHandlingShare = if (totalInvoiceKg > BigDecimal.ZERO) {
-                totalHandlingCharges.multiply(item.totalKg).divide(totalInvoiceKg, CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
-            } else BigDecimal.ZERO
-
-            val itemLandedCost = item.itemCost.add(itemHandlingShare)
-
-            val currentStock = product.currentStockKg.max(BigDecimal.ZERO)
-            val currentAvgCost = product.averagePurchaseCostPerKg
-            val newKg = item.totalKg
-
-            val unitLandedRate = if (newKg > BigDecimal.ZERO) {
-                itemLandedCost.divide(newKg, 4, RoundingMode.HALF_UP)
-            } else BigDecimal.ZERO
-
-            val currentValuation = currentStock.multiply(currentAvgCost)
-            val newValuation = itemLandedCost
-            val totalWeight = currentStock.add(newKg)
-
-            val newAvgCost = if (totalWeight > BigDecimal.ZERO) {
-                currentValuation.add(newValuation).divide(totalWeight, CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-            } else {
-                unitLandedRate.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
             }
 
-            val newStock = product.currentStockKg.add(newKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            val grandTotal = goodsSubtotal.add(totalHandlingCharges).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val normPaid = paidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val balance = grandTotal.subtract(normPaid).max(BigDecimal.ZERO).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
-            productDao.updateProductStockAndAvgCost(
-                productId = product.id,
-                stockKg = newStock.toPlainString(),
-                avgCost = newAvgCost.toPlainString()
-            )
+            val paymentStatus = when {
+                normPaid >= grandTotal -> PaymentStatus.PAID
+                normPaid > BigDecimal.ZERO -> PaymentStatus.PARTIAL
+                else -> PaymentStatus.UNPAID
+            }
 
-            // Also record a PurchaseEntry for backwards compatibility with sync/reports
-            val purchaseEntry = PurchaseEntry(
+            var allocatedHandlingSoFar = BigDecimal.ZERO
+
+            // Update product stock and moving average costs (conserving exact handling remainder on last item)
+            calculatedItems.forEachIndexed { index, item ->
+                val product = productDao.getProductById(item.productId) ?: return@forEachIndexed
+
+                val itemHandlingShare = if (totalInvoiceKg > BigDecimal.ZERO) {
+                    if (index == calculatedItems.lastIndex) {
+                        totalHandlingCharges.subtract(allocatedHandlingSoFar).max(BigDecimal.ZERO)
+                            .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                    } else {
+                        val share = totalHandlingCharges.multiply(item.totalKg)
+                            .divide(totalInvoiceKg, CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
+                        allocatedHandlingSoFar = allocatedHandlingSoFar.add(share)
+                        share
+                    }
+                } else BigDecimal.ZERO
+
+                val itemLandedCost = item.itemCost.add(itemHandlingShare)
+                    .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+
+                val currentStock = product.currentStockKg.max(BigDecimal.ZERO)
+                val currentAvgCost = product.averagePurchaseCostPerKg
+                val newKg = item.totalKg
+
+                val unitLandedRate = if (newKg > BigDecimal.ZERO) {
+                    itemLandedCost.divide(newKg, 4, RoundingMode.HALF_UP)
+                } else BigDecimal.ZERO
+
+                val currentValuation = currentStock.multiply(currentAvgCost)
+                val newValuation = itemLandedCost
+                val totalWeight = currentStock.add(newKg)
+
+                val newAvgCost = if (totalWeight > BigDecimal.ZERO) {
+                    currentValuation.add(newValuation).divide(totalWeight, 4, RoundingMode.HALF_UP)
+                } else {
+                    unitLandedRate.setScale(4, RoundingMode.HALF_UP)
+                }
+
+                val newStock = product.currentStockKg.add(newKg).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+
+                productDao.updateProductStockAndAvgCost(
+                    productId = product.id,
+                    stockKg = newStock.toPlainString(),
+                    avgCost = newAvgCost.toPlainString()
+                )
+
+                val purchaseEntry = PurchaseEntry(
+                    id = UUID.randomUUID().toString(),
+                    date = now,
+                    wholesalerName = wholesalerName.trim(),
+                    productId = product.id,
+                    quantityKg = newKg,
+                    totalPurchaseCost = itemLandedCost,
+                    paymentStatus = paymentStatus.name,
+                    recordedByUserId = recordedByUserId,
+                    syncStatus = SyncStatus.PENDING
+                )
+                purchaseDao.insertPurchase(purchaseEntry)
+            }
+
+            val createdInvoice = PurchaseInvoice(
                 id = UUID.randomUUID().toString(),
+                invoiceNumber = invNum,
                 date = now,
                 wholesalerName = wholesalerName.trim(),
-                productId = product.id,
-                quantityKg = newKg,
-                totalPurchaseCost = itemLandedCost,
-                paymentStatus = paymentStatus.name,
+                wholesalerPhone = wholesalerPhone.trim(),
+                itemsJson = PurchaseInvoice.serializeItems(calculatedItems),
+                ladhan = normLadhan,
+                utaar = normUtaar,
+                gaadiKiraya = normGaadiKiraya,
+                goodsSubtotal = goodsSubtotal,
+                totalInvoiceCost = grandTotal,
+                paidAmount = normPaid,
+                balanceAmount = balance,
+                paymentStatus = paymentStatus,
+                notes = notes.trim(),
                 recordedByUserId = recordedByUserId,
                 syncStatus = SyncStatus.PENDING
             )
-            purchaseDao.insertPurchase(purchaseEntry)
+
+            purchaseInvoiceDao.insertInvoice(createdInvoice)
+            createdInvoice
         }
 
-        val invoice = PurchaseInvoice(
-            id = UUID.randomUUID().toString(),
-            invoiceNumber = invNum,
-            date = now,
-            wholesalerName = wholesalerName.trim(),
-            wholesalerPhone = wholesalerPhone.trim(),
-            itemsJson = PurchaseInvoice.serializeItems(calculatedItems),
-            ladhan = normLadhan,
-            utaar = normUtaar,
-            gaadiKiraya = normGaadiKiraya,
-            goodsSubtotal = goodsSubtotal,
-            totalInvoiceCost = grandTotal,
-            paidAmount = normPaid,
-            balanceAmount = balance,
-            paymentStatus = paymentStatus,
-            notes = notes.trim(),
-            recordedByUserId = recordedByUserId,
-            syncStatus = SyncStatus.PENDING
-        )
-
-        purchaseInvoiceDao.insertInvoice(invoice)
         triggerAutoSync()
         invoice
     }
@@ -1077,6 +1220,9 @@ class CattleFeedRepository(private val context: Context) {
         recordedByUserId: String,
         performedByRole: Role? = null
     ): SupplierPayment = withContext(Dispatchers.IO) {
+        if (amount <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Supplier payment amount must be greater than zero")
+        }
         val actorRole = resolveActorRole(performedByRole)
         requirePermission(actorRole, Permission.ACCESS_SUPPLIERS)
         val payment = SupplierPayment(
@@ -1097,7 +1243,78 @@ class CattleFeedRepository(private val context: Context) {
     suspend fun softDeletePurchaseInvoice(invoiceId: String, performedByRole: Role? = null) = withContext(Dispatchers.IO) {
         val actorRole = resolveActorRole(performedByRole)
         requirePermission(actorRole, Permission.ACCESS_SUPPLIERS)
-        purchaseInvoiceDao.softDeleteInvoice(invoiceId)
+
+        db.withTransaction {
+            val invoice = purchaseInvoiceDao.getInvoiceById(invoiceId) ?: return@withTransaction
+            val items = invoice.getItems()
+
+            // First pass: verify each product has enough stock to reverse the purchase
+            val requiredKgByProduct = mutableMapOf<String, BigDecimal>()
+            for (item in items) {
+                if (item.totalKg > BigDecimal.ZERO) {
+                    requiredKgByProduct[item.productId] =
+                        (requiredKgByProduct[item.productId] ?: BigDecimal.ZERO).add(item.totalKg)
+                }
+            }
+
+            for ((prodId, requiredKg) in requiredKgByProduct) {
+                val product = productDao.getProductById(prodId) ?: continue
+                if (product.currentStockKg < requiredKg) {
+                    throw IllegalStateException(
+                        "Cannot delete invoice ${invoice.invoiceNumber}: current stock for ${product.feedName} (${CurrencyUtils.formatWeightKg(product.currentStockKg)}) is less than invoice quantity (${CurrencyUtils.formatWeightKg(requiredKg)})."
+                    )
+                }
+            }
+
+            val totalHandlingCharges = invoice.ladhan.add(invoice.utaar).add(invoice.gaadiKiraya)
+            val totalInvoiceKg = items.fold(BigDecimal.ZERO) { acc, it -> acc.add(it.totalKg) }
+            var allocatedHandlingSoFar = BigDecimal.ZERO
+
+            items.forEachIndexed { index, item ->
+                val product = productDao.getProductById(item.productId) ?: return@forEachIndexed
+                val itemHandlingShare = if (totalInvoiceKg > BigDecimal.ZERO) {
+                    if (index == items.lastIndex) {
+                        totalHandlingCharges.subtract(allocatedHandlingSoFar).max(BigDecimal.ZERO)
+                            .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+                    } else {
+                        val share = totalHandlingCharges.multiply(item.totalKg)
+                            .divide(totalInvoiceKg, CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
+                        allocatedHandlingSoFar = allocatedHandlingSoFar.add(share)
+                        share
+                    }
+                } else BigDecimal.ZERO
+
+                val itemLandedCost = item.itemCost.add(itemHandlingShare)
+                    .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+
+                val currentStock = product.currentStockKg.max(BigDecimal.ZERO)
+                val currentAvgCost = product.averagePurchaseCostPerKg
+                val removedKg = item.totalKg
+                val remainingStock = currentStock.subtract(removedKg).max(BigDecimal.ZERO)
+                    .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+
+                val priorValuation = currentStock.multiply(currentAvgCost).subtract(itemLandedCost).max(BigDecimal.ZERO)
+                val restoredAvgCost = if (remainingStock > BigDecimal.ZERO) {
+                    priorValuation.divide(remainingStock, 4, RoundingMode.HALF_UP)
+                } else {
+                    currentAvgCost
+                }
+
+                productDao.updateProductStockAndAvgCost(
+                    productId = product.id,
+                    stockKg = remainingStock.toPlainString(),
+                    avgCost = restoredAvgCost.toPlainString()
+                )
+            }
+
+            val linkedPurchases = purchaseDao.getPurchasesForInvoiceWindow(invoice.wholesalerName, invoice.date)
+            for (pe in linkedPurchases) {
+                purchaseDao.softDeletePurchase(pe.id)
+            }
+
+            purchaseInvoiceDao.softDeleteInvoice(invoiceId)
+        }
+
         triggerAutoSync()
     }
 
@@ -1160,9 +1377,10 @@ class CattleFeedRepository(private val context: Context) {
 
     /**
      * Edits an existing Sale Bill:
-     * - Adjusts Product stock by the difference in quantityKg
+     * - Rejects cancelled or deleted bills
+     * - Adjusts Product stock by the difference in quantityKg (validating stock availability)
      * - Updates SaleEntry total, paid, udhari, and sets billStatus = "EDITED"
-     * - Recalculates Customer Udhari
+     * - Recalculates Customer Udhari (preserving any overpayment as advance credit)
      * - Records a BillAuditLog entry
      */
     suspend fun editSaleBill(
@@ -1173,15 +1391,28 @@ class CattleFeedRepository(private val context: Context) {
         reason: String,
         performedBy: User
     ): SaleEntry? = withContext(Dispatchers.IO) {
+        if (newQuantityKg <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Quantity must be greater than zero")
+        }
+        if (newPricePerKg < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Price per kg cannot be negative")
+        }
+        if (newPaidAmount < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Paid amount cannot be negative")
+        }
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
         val existing = saleDao.getSaleById(saleId) ?: return@withContext null
+        if (existing.isDeleted || existing.billStatus == "CANCELLED") {
+            throw IllegalStateException("Cannot edit a cancelled or deleted bill")
+        }
+
         val product = productDao.getProductById(existing.productId)
         val customer = customerDao.getCustomerById(existing.customerId)
 
         val normQty = newQuantityKg.setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
         val normPrice = newPricePerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
         val normTotal = normQty.multiply(normPrice).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val normPaid = newPaidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING).min(normTotal)
+        val normPaid = newPaidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
         val normUdhari = normTotal.subtract(normPaid).max(BigDecimal.ZERO).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
         val status = when {
@@ -1194,6 +1425,11 @@ class CattleFeedRepository(private val context: Context) {
         if (product != null) {
             val stockDelta = existing.quantityKg.subtract(normQty)
             val updatedStock = product.currentStockKg.add(stockDelta).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            if (updatedStock < BigDecimal.ZERO) {
+                throw IllegalArgumentException(
+                    "Insufficient stock for ${product.feedName}: available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
+                )
+            }
             productDao.updateProductStock(product.id, updatedStock.toPlainString())
         }
 
@@ -1234,9 +1470,10 @@ class CattleFeedRepository(private val context: Context) {
 
     /**
      * Records a partial or full Return of items on a Sale Bill:
+     * - Rejects cancelled or deleted bills
      * - Restores returnedKg back to Product stock if putBackInStock is true
-     * - Reduces effective quantityKg and totalSalePrice proportionally
-     * - Recalculates Customer Udhari
+     * - Reduces effective quantityKg and totalSalePrice proportionally to exact stored totalSalePrice
+     * - Recalculates Customer Udhari (preserving any overpayment on paid bills as advance credit)
      * - Records a BillAuditLog entry
      */
     suspend fun returnSaleItems(
@@ -1249,6 +1486,9 @@ class CattleFeedRepository(private val context: Context) {
     ): SaleEntry? = withContext(Dispatchers.IO) {
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
         val existing = saleDao.getSaleById(saleId) ?: return@withContext null
+        if (existing.isDeleted || existing.billStatus == "CANCELLED") {
+            throw IllegalStateException("Cannot return items on a cancelled or deleted bill")
+        }
         val validReturnKg = returnKg.min(existing.quantityKg).max(BigDecimal.ZERO)
             .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
         if (validReturnKg <= BigDecimal.ZERO) return@withContext existing
@@ -1258,9 +1498,13 @@ class CattleFeedRepository(private val context: Context) {
 
         val remainingKg = existing.quantityKg.subtract(validReturnKg).max(BigDecimal.ZERO)
             .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-        val newTotal = remainingKg.multiply(existing.pricePerKgAtSale)
-            .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val newPaid = existing.paidAmount.min(newTotal)
+        val newTotal = if (existing.quantityKg > BigDecimal.ZERO && remainingKg > BigDecimal.ZERO) {
+            existing.totalSalePrice.multiply(remainingKg)
+                .divide(existing.quantityKg, CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+        } else {
+            BigDecimal.ZERO.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+        }
+        val newPaid = existing.paidAmount
         val newUdhari = newTotal.subtract(newPaid).max(BigDecimal.ZERO)
             .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
@@ -1317,7 +1561,7 @@ class CattleFeedRepository(private val context: Context) {
     }
 
     /**
-     * Adds a new line item (`SaleEntry` with the same `date` and `customerId` as `anchorSale`)
+     * Adds a new line item (`SaleEntry` with the same `date`, `billNumber`, and `customerId` as `anchorSale`)
      * to an existing consolidated bill during an Edit Bill flow.
      */
     suspend fun addLineItemToExistingBill(
@@ -1328,6 +1572,15 @@ class CattleFeedRepository(private val context: Context) {
         reason: String,
         performedBy: User
     ): SaleEntry? = withContext(Dispatchers.IO) {
+        if (anchorSale.isDeleted || anchorSale.billStatus == "CANCELLED") {
+            throw IllegalStateException("Cannot add items to a cancelled or deleted bill")
+        }
+        if (quantityKg <= BigDecimal.ZERO) {
+            throw IllegalArgumentException("Quantity must be greater than zero")
+        }
+        if (pricePerKg < BigDecimal.ZERO) {
+            throw IllegalArgumentException("Price per kg cannot be negative")
+        }
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
         val product = productDao.getProductById(productId) ?: return@withContext null
         val customer = customerDao.getCustomerById(anchorSale.customerId)
@@ -1335,6 +1588,12 @@ class CattleFeedRepository(private val context: Context) {
         val normQty = quantityKg.setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
         val normPrice = pricePerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
         val normTotal = normQty.multiply(normPrice).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+
+        if (normQty > product.currentStockKg) {
+            throw IllegalArgumentException(
+                "Insufficient stock for ${product.feedName}: requested ${CurrencyUtils.formatWeightKg(normQty)}, available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
+            )
+        }
 
         val updatedStock = product.currentStockKg.subtract(normQty).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
         productDao.updateProductStock(product.id, updatedStock.toPlainString())
@@ -1353,6 +1612,8 @@ class CattleFeedRepository(private val context: Context) {
             paymentStatus = PaymentStatus.UNPAID,
             soldByUserId = anchorSale.soldByUserId,
             billStatus = "EDITED",
+            billNumber = anchorSale.billNumber,
+            paymentMode = anchorSale.paymentMode,
             syncStatus = SyncStatus.PENDING
         )
         saleDao.insertSale(newSale)
@@ -1395,7 +1656,10 @@ class CattleFeedRepository(private val context: Context) {
         val customer = customerDao.getCustomerById(existing.customerId)
         val allCustomerSales = saleDao.getSalesListByCustomer(existing.customerId)
         val siblingSales = allCustomerSales.filter {
-            !it.isDeleted && it.billStatus != "CANCELLED" && kotlin.math.abs(it.date - existing.date) <= 2500L
+            !it.isDeleted && it.billStatus != "CANCELLED" && (
+                (existing.billNumber.isNotBlank() && it.billNumber == existing.billNumber) ||
+                    (existing.billNumber.isBlank() && it.billNumber.isBlank() && kotlin.math.abs(it.date - existing.date) <= 2500L)
+                )
         }.ifEmpty { listOf(existing) }
 
         var primaryUpdated: SaleEntry? = null

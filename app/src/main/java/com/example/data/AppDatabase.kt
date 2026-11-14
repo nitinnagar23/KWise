@@ -50,7 +50,7 @@ import java.util.UUID
         BillAuditLog::class,
         EstimateDraft::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -111,10 +111,10 @@ abstract class AppDatabase : RoomDatabase() {
                 "CREATE TABLE IF NOT EXISTS `products` (`id` TEXT NOT NULL, `feedName` TEXT NOT NULL, `baseUnit` TEXT NOT NULL, `kgPerBag` TEXT NOT NULL, `currentStockKg` TEXT NOT NULL, `averagePurchaseCostPerKg` TEXT NOT NULL, `sellingPricePerKg` TEXT NOT NULL, `looseSellingPricePerKg` TEXT NOT NULL, `isLooseOnly` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
             )
             db.execSQL(
-                "CREATE TABLE IF NOT EXISTS `sales` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `customerId` TEXT NOT NULL, `productId` TEXT NOT NULL, `quantityKg` TEXT NOT NULL, `pricePerKgAtSale` TEXT NOT NULL, `costPerKgAtSale` TEXT NOT NULL, `totalSalePrice` TEXT NOT NULL, `paidAmount` TEXT NOT NULL, `udhariAmount` TEXT NOT NULL, `paymentStatus` TEXT NOT NULL, `soldByUserId` TEXT NOT NULL, `returnedKg` TEXT NOT NULL, `billStatus` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
+                "CREATE TABLE IF NOT EXISTS `sales` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `customerId` TEXT NOT NULL, `productId` TEXT NOT NULL, `quantityKg` TEXT NOT NULL, `pricePerKgAtSale` TEXT NOT NULL, `costPerKgAtSale` TEXT NOT NULL, `totalSalePrice` TEXT NOT NULL, `paidAmount` TEXT NOT NULL, `udhariAmount` TEXT NOT NULL, `paymentStatus` TEXT NOT NULL, `soldByUserId` TEXT NOT NULL, `returnedKg` TEXT NOT NULL, `billStatus` TEXT NOT NULL, `billNumber` TEXT NOT NULL DEFAULT '', `paymentMode` TEXT NOT NULL DEFAULT 'CASH', `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
             )
             db.execSQL(
-                "CREATE TABLE IF NOT EXISTS `payments` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `customerId` TEXT NOT NULL, `amount` TEXT NOT NULL, `linkedSaleId` TEXT, `note` TEXT NOT NULL, `collectedByUserId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
+                "CREATE TABLE IF NOT EXISTS `payments` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `customerId` TEXT NOT NULL, `amount` TEXT NOT NULL, `linkedSaleId` TEXT, `note` TEXT NOT NULL, `collectedByUserId` TEXT NOT NULL, `paymentMode` TEXT NOT NULL DEFAULT 'CASH', `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
             )
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `purchases` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `wholesalerName` TEXT NOT NULL, `productId` TEXT NOT NULL, `quantityKg` TEXT NOT NULL, `totalPurchaseCost` TEXT NOT NULL, `paymentStatus` TEXT NOT NULL, `recordedByUserId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
@@ -126,7 +126,7 @@ abstract class AppDatabase : RoomDatabase() {
                 "CREATE TABLE IF NOT EXISTS `supplier_payments` (`id` TEXT NOT NULL, `date` INTEGER NOT NULL, `wholesalerName` TEXT NOT NULL, `amount` TEXT NOT NULL, `paymentMode` TEXT NOT NULL, `note` TEXT NOT NULL, `recordedByUserId` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, `syncStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
             )
             db.execSQL(
-                "CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `shopName` TEXT NOT NULL, `shopAddress` TEXT NOT NULL, `shopPhone` TEXT NOT NULL, `shopGstin` TEXT NOT NULL, `shopUpiId` TEXT NOT NULL, `themeMode` TEXT NOT NULL, `watchThreshold` TEXT NOT NULL, `criticalThreshold` TEXT NOT NULL, `appsScriptUrl` TEXT NOT NULL, `activeUserId` TEXT, `lastSyncTime` INTEGER NOT NULL, `storeAdminUid` TEXT NOT NULL, `language` TEXT NOT NULL, PRIMARY KEY(`id`))"
+                "CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `shopName` TEXT NOT NULL, `shopAddress` TEXT NOT NULL, `shopPhone` TEXT NOT NULL, `shopGstin` TEXT NOT NULL, `shopUpiId` TEXT NOT NULL, `themeMode` TEXT NOT NULL, `watchThreshold` TEXT NOT NULL, `criticalThreshold` TEXT NOT NULL, `appsScriptUrl` TEXT NOT NULL, `activeUserId` TEXT, `lastSyncTime` INTEGER NOT NULL, `storeAdminUid` TEXT NOT NULL, `language` TEXT NOT NULL, `nextBillNumber` INTEGER NOT NULL DEFAULT 1001, PRIMARY KEY(`id`))"
             )
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `role_change_logs` (`id` TEXT NOT NULL, `targetUserId` TEXT NOT NULL, `targetUserName` TEXT NOT NULL, `oldRole` TEXT, `newRole` TEXT NOT NULL, `changedByUserId` TEXT NOT NULL, `changedByUserName` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, PRIMARY KEY(`id`))"
@@ -152,6 +152,7 @@ abstract class AppDatabase : RoomDatabase() {
             safeAddColumn(db, "app_settings", "lastSyncTime", "INTEGER NOT NULL DEFAULT 0")
             safeAddColumn(db, "app_settings", "storeAdminUid", "TEXT NOT NULL DEFAULT ''")
             safeAddColumn(db, "app_settings", "language", "TEXT NOT NULL DEFAULT 'en'")
+            safeAddColumn(db, "app_settings", "nextBillNumber", "INTEGER NOT NULL DEFAULT 1001")
 
             safeAddColumn(db, "users", "email", "TEXT NOT NULL DEFAULT ''")
             safeAddColumn(db, "users", "phone", "TEXT NOT NULL DEFAULT ''")
@@ -192,10 +193,14 @@ abstract class AppDatabase : RoomDatabase() {
 
             safeAddColumn(db, "sales", "returnedKg", "TEXT NOT NULL DEFAULT '0'")
             safeAddColumn(db, "sales", "billStatus", "TEXT NOT NULL DEFAULT 'ACTIVE'")
+            safeAddColumn(db, "sales", "billNumber", "TEXT NOT NULL DEFAULT ''")
+            safeAddColumn(db, "sales", "paymentMode", "TEXT NOT NULL DEFAULT 'CASH'")
             safeAddColumn(db, "sales", "createdAt", "INTEGER NOT NULL DEFAULT 0")
             safeAddColumn(db, "sales", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
             safeAddColumn(db, "sales", "isDeleted", "INTEGER NOT NULL DEFAULT 0")
             safeAddColumn(db, "sales", "syncStatus", "TEXT NOT NULL DEFAULT 'PENDING'")
+
+            safeAddColumn(db, "payments", "paymentMode", "TEXT NOT NULL DEFAULT 'CASH'")
 
             try {
                 db.execSQL(
@@ -315,6 +320,9 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) = ensureAllTablesAndColumns(db)
         }
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) = ensureAllTablesAndColumns(db)
+        }
 
         private fun buildDatabase(appContext: Context): AppDatabase {
             return Room.databaseBuilder(
@@ -348,7 +356,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_7_8,
                     MIGRATION_7_9,
                     MIGRATION_8_9,
-                    MIGRATION_9_10
+                    MIGRATION_9_10,
+                    MIGRATION_10_11
                 )
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)

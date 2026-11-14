@@ -204,7 +204,7 @@ object ShopAnalytics {
             if (isOverdue) {
                 score -= (overdueDays * 2).coerceIn(10, 40)
             }
-            if (currentUdhari == BigDecimal.ZERO && totalPurchased > BigDecimal.ZERO) {
+            if (currentUdhari.compareTo(BigDecimal.ZERO) <= 0 && totalPurchased > BigDecimal.ZERO) {
                 score = maxOf(score, 90)
             }
             val finalScore = score.coerceIn(5, 100)

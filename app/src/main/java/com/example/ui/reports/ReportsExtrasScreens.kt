@@ -127,12 +127,7 @@ fun GstReportScreen(
         var hsn2309 = BigDecimal.ZERO
         var nilRated = BigDecimal.ZERO
         filteredSales.forEach { sale ->
-            val netKg = sale.quantityKg.subtract(sale.returnedKg).max(BigDecimal.ZERO)
-            val rev = if (sale.quantityKg > BigDecimal.ZERO && sale.returnedKg > BigDecimal.ZERO) {
-                sale.pricePerKgAtSale.multiply(netKg)
-            } else {
-                sale.totalSalePrice
-            }
+            val rev = sale.totalSalePrice.max(BigDecimal.ZERO)
             val prod = productsMap[sale.productId]
             val pName = prod?.feedName ?: ""
             val isNil = prod?.isLooseOnly == true ||

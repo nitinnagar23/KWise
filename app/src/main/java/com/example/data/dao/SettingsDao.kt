@@ -91,5 +91,8 @@ interface SettingsDao {
 
     @Query("UPDATE app_settings SET lastSyncTime = :timestamp WHERE id = 1")
     suspend fun updateLastSyncTime(timestamp: Long)
+
+    @Query("UPDATE app_settings SET nextBillNumber = :nextBillNumber WHERE id = 1")
+    suspend fun updateNextBillNumber(nextBillNumber: Int)
 }
 

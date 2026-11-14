@@ -1308,7 +1308,7 @@ fun SupplierStatementScreen(
                 is SupplierLedgerEntry.InvoiceEntry -> {
                     val inv = entry.invoice
                     val shortNo = formatShortPurchaseBillNo(inv.invoiceNumber, invCounter++)
-                    running = running.add(inv.balanceAmount)
+                    running = running.add(inv.totalInvoiceCost.subtract(inv.paidAmount))
                     val itemsDesc = inv.getItems().joinToString(", ") { item ->
                         if (item.bags > 0) "${item.feedName} × ${item.bags} bags"
                         else "${item.feedName} × ${CurrencyUtils.formatWeight(item.totalKg)} kg"
@@ -1332,7 +1332,7 @@ fun SupplierStatementScreen(
                 }
                 is SupplierLedgerEntry.PaymentEntry -> {
                     val pay = entry.payment
-                    running = running.subtract(pay.amount).max(BigDecimal.ZERO)
+                    running = running.subtract(pay.amount)
                     val modeLabel = when (pay.paymentMode.uppercase(Locale.ROOT)) {
                         "UPI" -> "UPI"
                         "BANK", "BANK_TRANSFER" -> "Bank"
@@ -1908,14 +1908,14 @@ fun SupplierStatementScreen(
                                             .padding(end = 4.dp)
                                     )
                                     Text(
-                                        text = row.billAmount?.let { numFmt.format(it.toLong()) } ?: "",
+                                        text = row.billAmount?.let { formatStatementNumber(it, numFmt) } ?: "",
                                         fontSize = 11.5.sp,
                                         color = FlatTextPrimary,
                                         textAlign = TextAlign.End,
                                         modifier = Modifier.width(50.dp)
                                     )
                                     Text(
-                                        text = row.paidAmount?.let { numFmt.format(it.toLong()) } ?: "",
+                                        text = row.paidAmount?.let { formatStatementNumber(it, numFmt) } ?: "",
                                         fontSize = 11.5.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = SupGreen,
@@ -1923,7 +1923,7 @@ fun SupplierStatementScreen(
                                         modifier = Modifier.width(50.dp)
                                     )
                                     Text(
-                                        text = numFmt.format(row.runningBalance.toLong()),
+                                        text = formatStatementNumber(row.runningBalance, numFmt),
                                         fontSize = 11.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
@@ -1955,7 +1955,7 @@ fun SupplierStatementScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = numFmt.format(totalBillSum.toLong()),
+                                text = formatStatementNumber(totalBillSum, numFmt),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
@@ -1963,7 +1963,7 @@ fun SupplierStatementScreen(
                                 modifier = Modifier.width(50.dp)
                             )
                             Text(
-                                text = numFmt.format(totalPaidSum.toLong()),
+                                text = formatStatementNumber(totalPaidSum, numFmt),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
@@ -2122,14 +2122,14 @@ private fun shareOrSaveSupplierStatement(
             canvas.drawText(shortDet, 105f, y, paint)
 
             paint.textAlign = Paint.Align.RIGHT
-            r.billAmount?.let { canvas.drawText(numFmt.format(it.toLong()), 400f, y, paint) }
+            r.billAmount?.let { canvas.drawText(formatStatementNumber(it, numFmt), 400f, y, paint) }
             r.paidAmount?.let {
                 paint.color = android.graphics.Color.parseColor("#0E6F43")
-                canvas.drawText(numFmt.format(it.toLong()), 475f, y, paint)
+                canvas.drawText(formatStatementNumber(it, numFmt), 475f, y, paint)
             }
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             paint.color = android.graphics.Color.parseColor("#0F172A")
-            canvas.drawText(numFmt.format(r.runningBalance.toLong()), (width - 32).toFloat(), y, paint)
+            canvas.drawText(formatStatementNumber(r.runningBalance, numFmt), (width - 32).toFloat(), y, paint)
             paint.textAlign = Paint.Align.LEFT
             y += 28f
         }
@@ -2139,8 +2139,8 @@ private fun shareOrSaveSupplierStatement(
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         canvas.drawText("Total", 105f, y, paint)
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText(numFmt.format(totalBill.toLong()), 400f, y, paint)
-        canvas.drawText(numFmt.format(totalPaid.toLong()), 475f, y, paint)
+        canvas.drawText(formatStatementNumber(totalBill, numFmt), 400f, y, paint)
+        canvas.drawText(formatStatementNumber(totalPaid, numFmt), 475f, y, paint)
 
         y += 40f
         paint.textSize = 18f
@@ -2190,3 +2190,18 @@ private fun shareOrSaveSupplierStatement(
         context.startActivity(Intent.createChooser(fallback, "Share Supplier Statement"))
     }
 }
+
+private fun formatStatementNumber(amount: BigDecimal, numFmt: NumberFormat): String {
+    val scaled = amount.setScale(2, RoundingMode.HALF_UP)
+    val stripped = scaled.stripTrailingZeros()
+    return if (stripped.scale() <= 0) {
+        numFmt.format(scaled.toLong())
+    } else {
+        val decimalsFmt = (numFmt.clone() as NumberFormat).apply {
+            minimumFractionDigits = 2
+            maximumFractionDigits = 2
+        }
+        decimalsFmt.format(scaled)
+    }
+}
+

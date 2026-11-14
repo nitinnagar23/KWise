@@ -15,10 +15,10 @@ interface SupplierPaymentDao {
     @Query("SELECT * FROM supplier_payments WHERE isDeleted = 0 ORDER BY date DESC")
     suspend fun getAllPaymentsList(): List<SupplierPayment>
 
-    @Query("SELECT * FROM supplier_payments WHERE isDeleted = 0 AND wholesalerName = :wholesalerName ORDER BY date DESC")
+    @Query("SELECT * FROM supplier_payments WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) ORDER BY date DESC")
     fun getPaymentsForWholesaler(wholesalerName: String): Flow<List<SupplierPayment>>
 
-    @Query("SELECT * FROM supplier_payments WHERE isDeleted = 0 AND wholesalerName = :wholesalerName ORDER BY date ASC")
+    @Query("SELECT * FROM supplier_payments WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) ORDER BY date ASC")
     suspend fun getPaymentsListForWholesaler(wholesalerName: String): List<SupplierPayment>
 
     @Query("SELECT * FROM supplier_payments WHERE syncStatus != 'SYNCED'")

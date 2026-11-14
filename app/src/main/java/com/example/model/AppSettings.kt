@@ -20,5 +20,6 @@ data class AppSettings(
     val activeUserId: String? = null,
     val lastSyncTime: Long = 0L,
     val storeAdminUid: String = "",
-    val language: String = "en"
+    val language: String = "en",
+    val nextBillNumber: Int = 1001
 )

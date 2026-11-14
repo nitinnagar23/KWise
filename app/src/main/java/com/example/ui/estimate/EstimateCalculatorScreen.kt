@@ -446,7 +446,7 @@ fun EstimateCalculatorScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = CurrencyUtils.formatWeight(activeTotalWeight),
+                                text = CurrencyUtils.formatWeightKg(activeTotalWeight),
                                 fontSize = 20.sp,
                                 color = FlatTextPrimary,
                                 fontWeight = FontWeight.Bold
@@ -510,12 +510,12 @@ fun EstimateCalculatorScreen(
                                         append("Budget Split (${CurrencyUtils.formatInr(budgetSplitResult.budget)})\n")
                                         budgetSplitResult.rows.forEachIndexed { i, row ->
                                             if (row.allocatedKg > BigDecimal.ZERO) {
-                                                append("${i + 1}. *${row.productName}*: ${CurrencyUtils.formatWeight(row.allocatedKg)} @ ${CurrencyUtils.formatInr(row.ratePerKg)}/kg = ${CurrencyUtils.formatInr(row.actualAmount)}\n")
+                                                append("${i + 1}. *${row.productName}*: ${CurrencyUtils.formatWeightKg(row.allocatedKg)} @ ${CurrencyUtils.formatInr(row.ratePerKg)}/kg = ${CurrencyUtils.formatInr(row.actualAmount)}\n")
                                             }
                                         }
                                     }
                                     append("------------------------\n")
-                                    append("*Total Weight:* ${CurrencyUtils.formatWeight(activeTotalWeight)}\n")
+                                    append("*Total Weight:* ${CurrencyUtils.formatWeightKg(activeTotalWeight)}\n")
                                     append("*Total Payable:* ${CurrencyUtils.formatInr(activeTotalPrice)}\n")
                                 }
                                 val sendIntent = Intent().apply {
@@ -1285,8 +1285,8 @@ fun EstimateCalculatorScreen(
                                             Icon(Icons.Default.Warning, contentDescription = null, tint = CAmber, modifier = Modifier.size(16.dp))
                                             Text(
                                                 text = tr(
-                                                    "${overRow.productName}: Needed ${CurrencyUtils.formatWeight(overRow.allocatedKg)} exceeds stock (${CurrencyUtils.formatWeight(overRow.availableStockKg)})",
-                                                    "${overRow.productName}: आवश्यक ${CurrencyUtils.formatWeight(overRow.allocatedKg)} स्टॉक (${CurrencyUtils.formatWeight(overRow.availableStockKg)}) से अधिक है"
+                                                    "${overRow.productName}: Needed ${CurrencyUtils.formatWeightKg(overRow.allocatedKg)} exceeds stock (${CurrencyUtils.formatWeightKg(overRow.availableStockKg)})",
+                                                    "${overRow.productName}: आवश्यक ${CurrencyUtils.formatWeightKg(overRow.allocatedKg)} स्टॉक (${CurrencyUtils.formatWeightKg(overRow.availableStockKg)}) से अधिक है"
                                                 ),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = CAmber,
@@ -1474,7 +1474,7 @@ fun EstimateCalculatorScreen(
 
                         if (itemWeight > liveProd.currentStockKg) {
                             warnings.add(
-                                "${liveProd.feedName}: Needed ${CurrencyUtils.formatWeight(itemWeight)}, only ${CurrencyUtils.formatWeight(liveProd.currentStockKg)} in stock!"
+                                "${liveProd.feedName}: Needed ${CurrencyUtils.formatWeightKg(itemWeight)}, only ${CurrencyUtils.formatWeightKg(liveProd.currentStockKg)} in stock!"
                             )
                         }
                         if (item.snapshotSellingPricePerBag != null &&
@@ -1497,7 +1497,7 @@ fun EstimateCalculatorScreen(
                 } else {
                     budgetSplitResult.rows.filter { it.exceedsStock }.forEach { row ->
                         warnings.add(
-                            "${row.productName}: Needed ${CurrencyUtils.formatWeight(row.allocatedKg)}, only ${CurrencyUtils.formatWeight(row.availableStockKg)} in stock!"
+                            "${row.productName}: Needed ${CurrencyUtils.formatWeightKg(row.allocatedKg)}, only ${CurrencyUtils.formatWeightKg(row.availableStockKg)} in stock!"
                         )
                     }
                 }
@@ -1507,7 +1507,7 @@ fun EstimateCalculatorScreen(
             val paidAmount = when (paymentType) {
                 "CASH" -> activeTotalPrice
                 "UDHARI" -> BigDecimal.ZERO
-                "PARTIAL" -> customPaidText.toBigDecimalOrNull()?.max(BigDecimal.ZERO)?.min(activeTotalPrice) ?: BigDecimal.ZERO
+                "PARTIAL" -> customPaidText.toBigDecimalOrNull()?.max(BigDecimal.ZERO) ?: BigDecimal.ZERO
                 else -> activeTotalPrice
             }
             val udhariGenerated = activeTotalPrice.subtract(paidAmount).max(BigDecimal.ZERO)
@@ -1556,28 +1556,32 @@ fun EstimateCalculatorScreen(
                     }
 
                     if (requests.isNotEmpty()) {
-                        repository.recordMultiItemSale(
-                            customerId = targetCustomer.id,
-                            items = requests,
-                            paidAmount = paidAmount,
-                            soldByUserId = currentUser?.id ?: "",
-                            performedByRole = currentUser?.role
-                        )
-                        activeDraftId?.let { repository.deleteEstimateDraft(it) }
-                        activeDraftId = null
-                        showConvertToSaleDialog = false
-                        val defaultProd = sortedProductsWithRecentFirst.firstOrNull()
-                        lineItems = listOf(
-                            EstimateLineItem(
-                                id = nextId++,
-                                product = defaultProd,
-                                bags = if (defaultProd?.isLooseOnly == true) 0 else 1,
-                                looseKg = if (defaultProd?.isLooseOnly == true) "5" else "0",
-                                snapshotSellingPricePerBag = defaultProd?.bagSellingPrice,
-                                snapshotLoosePricePerKg = defaultProd?.effectiveLooseRatePerKg
+                        try {
+                            repository.recordMultiItemSale(
+                                customerId = targetCustomer.id,
+                                items = requests,
+                                paidAmount = paidAmount,
+                                soldByUserId = currentUser?.id ?: "",
+                                performedByRole = currentUser?.role
                             )
-                        )
-                        snackbarHostState.showSnackbar("Sale recorded for ${targetCustomer.name}!")
+                            activeDraftId?.let { repository.deleteEstimateDraft(it) }
+                            activeDraftId = null
+                            showConvertToSaleDialog = false
+                            val defaultProd = sortedProductsWithRecentFirst.firstOrNull()
+                            lineItems = listOf(
+                                EstimateLineItem(
+                                    id = nextId++,
+                                    product = defaultProd,
+                                    bags = if (defaultProd?.isLooseOnly == true) 0 else 1,
+                                    looseKg = if (defaultProd?.isLooseOnly == true) "5" else "0",
+                                    snapshotSellingPricePerBag = defaultProd?.bagSellingPrice,
+                                    snapshotLoosePricePerKg = defaultProd?.effectiveLooseRatePerKg
+                                )
+                            )
+                            snackbarHostState.showSnackbar("Sale recorded for ${targetCustomer.name}!")
+                        } catch (e: Exception) {
+                            snackbarHostState.showSnackbar(e.message ?: "Unable to record sale")
+                        }
                     }
                 }
             }
@@ -2274,7 +2278,7 @@ private fun EstimateItemRowCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${tr("Weight", "वजन")}: ${CurrencyUtils.formatWeight(itemWeight)}",
+                    text = "${tr("Weight", "वजन")}: ${CurrencyUtils.formatWeightKg(itemWeight)}",
                     fontSize = 13.5.sp,
                     color = FlatTextSecondary,
                     fontWeight = FontWeight.SemiBold
@@ -2561,7 +2565,7 @@ private fun SearchableProductPickerDialog(
                                     }
                                     Text(
                                         text = if (prod.isLooseOnly) {
-                                            "${tr("Loose", "खुला")}: ${CurrencyUtils.formatInr(prod.effectiveLooseRatePerKg)}/kg • ${tr("Stock", "स्टॉक")}: ${CurrencyUtils.formatWeight(prod.currentStockKg)}"
+                                            "${tr("Loose", "खुला")}: ${CurrencyUtils.formatInr(prod.effectiveLooseRatePerKg)}/kg • ${tr("Stock", "स्टॉक")}: ${CurrencyUtils.formatWeightKg(prod.currentStockKg)}"
                                         } else {
                                             "${tr("Bag", "बोरी")}: ${CurrencyUtils.formatInr(prod.bagSellingPrice)} • ${tr("Loose", "खुला")}: ${CurrencyUtils.formatInr(prod.effectiveLooseRatePerKg)}/kg"
                                         },

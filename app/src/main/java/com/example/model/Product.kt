@@ -24,6 +24,12 @@ data class Product(
     val syncStatus: SyncStatus = SyncStatus.PENDING
 ) {
     /**
+     * Positive bag weight divisor guaranteed to be > 0 (defaults to 1 kg if misconfigured <= 0).
+     */
+    val safeKgPerBag: BigDecimal
+        get() = if (kgPerBag > BigDecimal.ZERO) kgPerBag else BigDecimal.ONE
+
+    /**
      * Effective loose rate per kg. If looseSellingPricePerKg is not explicitly set (> 0),
      * defaults to sellingPricePerKg.
      */

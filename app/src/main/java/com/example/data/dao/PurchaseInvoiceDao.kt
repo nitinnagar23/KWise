@@ -15,10 +15,10 @@ interface PurchaseInvoiceDao {
     @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 ORDER BY date DESC")
     suspend fun getAllInvoicesList(): List<PurchaseInvoice>
 
-    @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND wholesalerName = :wholesalerName ORDER BY date DESC")
+    @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) ORDER BY date DESC")
     fun getInvoicesForWholesaler(wholesalerName: String): Flow<List<PurchaseInvoice>>
 
-    @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND wholesalerName = :wholesalerName ORDER BY date ASC")
+    @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) ORDER BY date ASC")
     suspend fun getInvoicesListForWholesaler(wholesalerName: String): List<PurchaseInvoice>
 
     @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND id = :id LIMIT 1")
