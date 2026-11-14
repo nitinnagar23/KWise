@@ -56,9 +56,10 @@ class DevicePairingTest {
     }
 
     @Test
-    fun `test pairing code format is 6 digits`() {
-        val code = "482915"
-        assertEquals(6, code.length)
+    fun `test pairing code format is 8 digits`() {
+        val code = com.example.data.repository.PairingRepository.generateSecurePairingCode()
+        assertEquals(com.example.data.repository.PairingRepository.PAIRING_CODE_LENGTH, code.length)
+        assertEquals(8, code.length)
         assertTrue(code.all { it.isDigit() })
     }
 }

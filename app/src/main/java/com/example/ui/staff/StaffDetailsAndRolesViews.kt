@@ -261,27 +261,27 @@ internal fun StaffDevicesTabContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 6 Individual Digit Boxes
-                val cleanDigits = pairingCode.padEnd(6, '–').take(6)
+                // 8 Individual Digit Boxes
+                val cleanDigits = pairingCode.padEnd(8, '–').take(8)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    for (i in 0 until 6) {
+                    for (i in 0 until 8) {
                         val ch = cleanDigits[i].toString()
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(58.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .height(54.dp)
+                                .clip(RoundedCornerShape(10.dp))
                                 .background(kw(0xFFF0FAF5))
-                                .border(1.5.dp, StaffBrandGreen, RoundedCornerShape(12.dp)),
+                                .border(1.5.dp, StaffBrandGreen, RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = ch,
-                                fontSize = 23.sp,
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = StaffBrandGreen
                             )

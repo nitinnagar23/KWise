@@ -10,10 +10,37 @@ import java.math.BigDecimal
 import java.util.Calendar
 
 object ReminderScheduler {
+    private const val REMINDER_PREFS = "khatawise_promise_reminders"
+
+    private fun dayBucket(timeMillis: Long): String {
+        val cal = Calendar.getInstance().apply { timeInMillis = timeMillis }
+        return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.DAY_OF_YEAR)}"
+    }
+
+    fun hasReminderFiredForDate(context: Context, customerId: String, dateMillis: Long): Boolean {
+        val prefs = context.getSharedPreferences(REMINDER_PREFS, Context.MODE_PRIVATE)
+        return prefs.getString("fired_$customerId", null) == dayBucket(dateMillis)
+    }
+
+    fun markReminderFiredForDate(
+        context: Context,
+        customerId: String,
+        dateMillis: Long = System.currentTimeMillis()
+    ) {
+        val prefs = context.getSharedPreferences(REMINDER_PREFS, Context.MODE_PRIVATE)
+        prefs.edit().putString("fired_$customerId", dayBucket(dateMillis)).apply()
+    }
+
+    fun clearReminderFiredRecord(context: Context, customerId: String) {
+        val prefs = context.getSharedPreferences(REMINDER_PREFS, Context.MODE_PRIVATE)
+        prefs.edit().remove("fired_$customerId").apply()
+    }
+
     fun scheduleCustomerReminder(
         context: Context,
         customer: Customer,
-        udhariAmountOverride: String? = null
+        udhariAmountOverride: String? = null,
+        isRescheduleAfterBootOrUpdate: Boolean = false
     ) {
         val promiseDate = customer.promiseDate ?: return
         val startOfToday = Calendar.getInstance().apply {
@@ -25,6 +52,26 @@ object ReminderScheduler {
 
         // Compare against start of day so same-day promises stored at midnight still fire
         if (promiseDate < startOfToday) return
+
+        // Set to 9:00:00.000 AM on the target morning
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = promiseDate
+            set(Calendar.HOUR_OF_DAY, 9)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        val now = System.currentTimeMillis()
+
+        // Avoid re-firing on the same promise day after reboot or app update once already notified (N9)
+        if (isRescheduleAfterBootOrUpdate || calendar.timeInMillis <= now) {
+            if (hasReminderFiredForDate(context, customer.id, promiseDate) ||
+                hasReminderFiredForDate(context, customer.id, now)
+            ) {
+                return
+            }
+        }
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 
@@ -48,18 +95,8 @@ object ReminderScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Set to 9:00:00.000 AM on the target morning
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = promiseDate
-            set(Calendar.HOUR_OF_DAY, 9)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val now = System.currentTimeMillis()
         val triggerTime = if (calendar.timeInMillis <= now) {
-            now + 60_000L // fire shortly if already past 9:00 AM on the selected date
+            now + 60_000L // fire shortly if already past 9:00 AM on the selected date and not yet fired today
         } else {
             calendar.timeInMillis
         }
@@ -99,6 +136,7 @@ object ReminderScheduler {
         promiseDateMillis: Long,
         customerPhone: String = ""
     ) {
+        clearReminderFiredRecord(context, customerId)
         val parsedAmount = udhariAmount
             .replace("₹", "")
             .replace(",", "")
@@ -115,11 +153,13 @@ object ReminderScheduler {
         scheduleCustomerReminder(
             context = context,
             customer = tempCustomer,
-            udhariAmountOverride = udhariAmount.replace("₹", "").trim()
+            udhariAmountOverride = udhariAmount.replace("₹", "").trim(),
+            isRescheduleAfterBootOrUpdate = false
         )
     }
 
     fun cancelReminder(context: Context, customerId: String) {
+        clearReminderFiredRecord(context, customerId)
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val intent = Intent(context, PromiseReminderReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(

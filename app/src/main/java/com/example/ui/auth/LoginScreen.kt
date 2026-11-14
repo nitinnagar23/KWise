@@ -164,8 +164,8 @@ fun LoginScreen(
     var isHandlingPostAuth by remember { mutableStateOf(false) }
 
     val enterAllSixDigitsMsg = tr(
-        "Please enter all 6 digits of the pairing code.",
-        "कृपया पेयरिंग कोड के सभी 6 अंक दर्ज करें।"
+        "Please enter all 8 digits of the pairing code.",
+        "कृपया पेयरिंग कोड के सभी 8 अंक दर्ज करें।"
     )
 
     BackHandler(enabled = isPairingMode && pendingShopConfirmationToken == null && waitingApprovalToken == null) {
@@ -799,8 +799,8 @@ fun LoginScreen(
 
                         Text(
                             text = tr(
-                                "Enter the 6-digit code from your shop admin. It works for 10 minutes.",
-                                "अपने दुकान एडमिन से प्राप्त 6-अंकीय कोड दर्ज करें। यह 10 मिनट तक काम करता है।"
+                                "Enter the 8-digit code from your shop admin. It works for 10 minutes.",
+                                "अपने दुकान एडमिन से प्राप्त 8-अंकीय कोड दर्ज करें। यह 10 मिनट तक काम करता है।"
                             ),
                             fontSize = 14.sp,
                             color = LoginSubtleText,
@@ -819,7 +819,7 @@ fun LoginScreen(
                             )
                         }
 
-                        // 6 Individual Rounded Digit Boxes
+                        // 8 Individual Rounded Digit Boxes
                         StaffSixDigitCodeInput(
                             code = pairingCodeInput,
                             onCodeChange = { updated ->
@@ -833,7 +833,7 @@ fun LoginScreen(
                         // Primary Green "Connect device" Button
                         Button(
                             onClick = {
-                                if (pairingCodeInput.length != 6) {
+                                if (pairingCodeInput.length < PairingRepository.PAIRING_CODE_LENGTH) {
                                     pairingErrorMessage = enterAllSixDigitsMsg
                                     return@Button
                                 }
@@ -982,8 +982,8 @@ fun LoginScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val extractedDigits = Regex("\\d{6}").find(qrInputText)?.value
-                            ?: qrInputText.filter { it.isDigit() }.take(6)
+                        val extractedDigits = Regex("\\d{8}").find(qrInputText)?.value
+                            ?: qrInputText.filter { it.isDigit() }.take(8)
                         if (extractedDigits.isNotEmpty()) {
                             pairingCodeInput = extractedDigits
                         }

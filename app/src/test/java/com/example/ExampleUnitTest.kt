@@ -215,6 +215,83 @@ class ExampleUnitTest {
         assertEquals(0, res.rows[1].targetAmount.compareTo(java.math.BigDecimal("300.00")))
         assertEquals(0, res.rows[1].allocatedKg.compareTo(java.math.BigDecimal("10.000")))
     }
+
+    @Test
+    fun budgetSplitApplyLeftoverMatchesAllocatedKgTimesRate() {
+        val initial = com.example.util.splitBudget(
+            budget = java.math.BigDecimal("500"),
+            items = listOf(
+                com.example.util.BudgetSplitItemInput(
+                    productId = "p1",
+                    productName = "Chana",
+                    ratePerKg = java.math.BigDecimal("80.00"),
+                    availableStockKg = java.math.BigDecimal("500")
+                ),
+                com.example.util.BudgetSplitItemInput(
+                    productId = "p2",
+                    productName = "Wheat",
+                    ratePerKg = java.math.BigDecimal("35.00"),
+                    availableStockKg = java.math.BigDecimal("500")
+                ),
+                com.example.util.BudgetSplitItemInput(
+                    productId = "p3",
+                    productName = "Mustard",
+                    ratePerKg = java.math.BigDecimal("60.00"),
+                    availableStockKg = java.math.BigDecimal("500")
+                )
+            ),
+            mode = com.example.util.BudgetSplitMode.EQUAL
+        )
+        val after = com.example.util.applyLeftoverToRow(initial, "p1")
+        val p1 = after.rows.first { it.productId == "p1" }
+        val expectedActual = p1.allocatedKg.multiply(p1.ratePerKg).setScale(2, java.math.RoundingMode.HALF_UP)
+        assertEquals(expectedActual, p1.actualAmount)
+        assertEquals(
+            after.budget.subtract(after.totalActualAmount).setScale(2, java.math.RoundingMode.HALF_UP),
+            after.leftoverRupees
+        )
+    }
+
+    @Test
+    fun pinLockoutCannotBeBypassedByJumpingWallClockForwardOrBackward() {
+        val hash = com.example.util.SecurityUtils.hashPin("1234")
+        val userId = "clock_tamper_user"
+        com.example.util.SecurityUtils.resetLockout(userId)
+
+        val baseWallMs = 1_700_000_000_000L
+        val baseElapsedMs = 50_000L
+
+        repeat(5) {
+            com.example.util.SecurityUtils.verifyPinWithLockout(
+                pin = "0000",
+                storedHash = hash,
+                userId = userId,
+                nowMs = baseWallMs,
+                elapsedRealtimeMs = baseElapsedMs
+            )
+        }
+
+        // Advancing wall clock by 10 minutes while monotonic elapsedRealtime only advanced 10 seconds
+        // must keep the user locked out!
+        assertTrue(
+            com.example.util.SecurityUtils.isLockedOut(
+                nowMs = baseWallMs + 10 * 60 * 1000L,
+                userId = userId,
+                elapsedRealtimeMs = baseElapsedMs + 10_000L
+            )
+        )
+
+        // Rolling wall clock backwards by 1 hour also keeps the user locked out
+        assertTrue(
+            com.example.util.SecurityUtils.isLockedOut(
+                nowMs = baseWallMs - 60 * 60 * 1000L,
+                userId = userId,
+                elapsedRealtimeMs = baseElapsedMs + 15_000L
+            )
+        )
+
+        com.example.util.SecurityUtils.resetLockout(userId)
+    }
 }
 
 

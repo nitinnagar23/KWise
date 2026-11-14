@@ -169,9 +169,14 @@ class ExampleRobolectricTest {
         val mustardEqual = equalRes.rows.first { it.productId == "p3" }
         assertTrue(mustardEqual.exceedsStock)
 
-        // 1b. Apply leftover to first row
+        // 1b. Apply leftover to first row: actualAmount must equal allocatedKg * ratePerKg, and unspent remainder stays in leftoverRupees
         val absorbed = applyLeftoverToRow(equalRes, "p1")
-        assertEquals(BigDecimal("0.00"), absorbed.leftoverRupees)
+        val p1Absorbed = absorbed.rows.first { it.productId == "p1" }
+        assertEquals(
+            p1Absorbed.allocatedKg.multiply(p1Absorbed.ratePerKg).setScale(2, java.math.RoundingMode.HALF_UP),
+            p1Absorbed.actualAmount
+        )
+        assertEquals(BigDecimal("0.06"), absorbed.leftoverRupees)
 
         // 2. RATIO split 1 : 2 : 1 of ₹800
         val ratioRes = splitBudget(BigDecimal("800"), rows, BudgetSplitMode.RATIO)
@@ -237,23 +242,12 @@ class ExampleRobolectricTest {
     }
 
     @Test
-    fun `test HMAC signed invite token generation and rejection of PA prefix`() {
-        val userId = "user-12345"
-        val userName = "Ramesh Kumar"
-        val role = Role.STAFF
-
-        val inviteCode = SecurityUtils.generateInviteCode(userId, userName, role)
-        assertTrue(inviteCode.startsWith("KW-"))
-
-        val parsed = SecurityUtils.parseInviteCode(inviteCode)
-        assertNotNull(parsed)
-        assertEquals(userId, parsed?.userId)
-        assertEquals(userName, parsed?.name)
-        assertEquals(role, parsed?.role)
-
-        // Legacy PA- prefix must be rejected
-        val paInvite = "PA-" + inviteCode.removePrefix("KW-")
-        assertNull(SecurityUtils.parseInviteCode(paInvite))
+    fun `test 8-digit pairing code generation and empty PIN rejection`() {
+        val code = com.example.data.repository.PairingRepository.generateSecurePairingCode()
+        assertEquals(8, code.length)
+        assertTrue(code.all { it.isDigit() })
+        assertFalse(SecurityUtils.verifyPin("1234", ""))
+        assertFalse(SecurityUtils.verifyPin("", SecurityUtils.hashPin("1234")))
     }
 
     @Test

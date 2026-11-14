@@ -59,12 +59,13 @@ import java.util.Locale
 internal fun StaffSixDigitCodeInput(
     code: String,
     onCodeChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    codeLength: Int = 8
 ) {
     BasicTextField(
         value = code,
         onValueChange = { input ->
-            val filtered = input.filter { it.isDigit() }.take(6)
+            val filtered = input.filter { it.isDigit() }.take(codeLength)
             onCodeChange(filtered)
         },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -75,10 +76,10 @@ internal fun StaffSixDigitCodeInput(
         decorationBox = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                for (index in 0 until 6) {
+                for (index in 0 until codeLength) {
                     val charStr = code.getOrNull(index)?.toString() ?: ""
                     val isFilled = charStr.isNotEmpty()
                     val isCurrentSlot = index == code.length
@@ -92,15 +93,15 @@ internal fun StaffSixDigitCodeInput(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(56.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(10.dp))
                             .background(boxBg)
-                            .border(borderWidth, boxBorder, RoundedCornerShape(12.dp)),
+                            .border(borderWidth, boxBorder, RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = charStr,
-                            fontSize = 22.sp,
+                            fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
                             color = LoginBrandGreen,
                             textAlign = TextAlign.Center

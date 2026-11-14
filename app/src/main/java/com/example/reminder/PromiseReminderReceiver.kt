@@ -87,6 +87,16 @@ class PromiseReminderReceiver : BroadcastReceiver() {
                 }
 
                 notificationManager.notify(customerId.hashCode(), builder.build())
+                ReminderScheduler.markReminderFiredForDate(
+                    context = context,
+                    customerId = customerId,
+                    dateMillis = liveCustomer?.promiseDate ?: System.currentTimeMillis()
+                )
+                ReminderScheduler.markReminderFiredForDate(
+                    context = context,
+                    customerId = customerId,
+                    dateMillis = System.currentTimeMillis()
+                )
             } finally {
                 pendingResult?.finish()
             }

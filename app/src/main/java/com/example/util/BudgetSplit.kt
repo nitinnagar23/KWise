@@ -313,10 +313,11 @@ fun applyLeftoverToRow(
         if (row.productId == targetProductId && row.ratePerKg > BigDecimal.ZERO) {
             val maxTargetAmount = row.actualAmount.add(result.leftoverRupees).setScale(2, RoundingMode.HALF_UP)
             val newKg = maxTargetAmount.divide(row.ratePerKg, 3, RoundingMode.DOWN)
+            val newActualAmount = newKg.multiply(row.ratePerKg).setScale(2, RoundingMode.HALF_UP)
             row.copy(
                 targetAmount = maxTargetAmount,
                 allocatedKg = newKg,
-                actualAmount = maxTargetAmount,
+                actualAmount = newActualAmount,
                 exceedsStock = newKg > row.availableStockKg
             )
         } else {

@@ -17,7 +17,8 @@ service cloud.firestore {
     function isStaffMember(userId) {
       return isAuthenticated() && (
         request.auth.uid == userId ||
-        exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid))
+        (exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid)) &&
+         getStaffDoc(userId).data.get('isActive', true) != false)
       );
     }
 
@@ -87,7 +88,7 @@ service cloud.firestore {
     }
 
     function isValidPairingToken(data, code) {
-      return data.code is string && data.code.size() >= 6 && data.code.size() <= 12 &&
+      return data.code is string && data.code.size() >= 8 && data.code.size() <= 12 &&
              data.code == code &&
              data.adminUid is string && data.adminUid.size() > 0 &&
              data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 100 &&
@@ -96,6 +97,18 @@ service cloud.firestore {
              data.expiresAt is number &&
              data.expiresAt > request.time.toMillis() &&
              data.expiresAt <= request.time.toMillis() + 15 * 60 * 1000;
+    }
+
+    function hasValidClaimedPairing(userId, staffId, data) {
+      return 'pairingCode' in data &&
+             data.pairingCode is string &&
+             data.pairingCode.size() >= 8 &&
+             data.pairingCode.size() <= 12 &&
+             exists(/databases/$(database)/documents/pairings/$(data.pairingCode)) &&
+             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.status == 'CLAIMED' &&
+             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.claimedByUid == staffId &&
+             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.adminUid == userId &&
+             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.assignedRole == data.get('role', 'CASHIER');
     }
 
     match /users/{userId} {
@@ -139,7 +152,8 @@ service cloud.firestore {
           request.auth.uid == staffId &&
           request.resource.data.get('staffUid', staffId) == staffId &&
           request.resource.data.get('role', 'CASHIER') in ['CASHIER', 'MANAGER', 'STAFF'] &&
-          request.resource.data.get('isActive', true) == true
+          request.resource.data.get('isActive', true) == true &&
+          hasValidClaimedPairing(userId, staffId, request.resource.data)
         );
         allow update: if isAdmin(userId) || (
           isAuthenticated() &&
@@ -158,12 +172,12 @@ service cloud.firestore {
 
       allow delete: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
 
-      allow get: if resource == null ||
+      allow get: if isAuthenticated() && (
+                    resource == null ||
                     (resource.data.status == 'ACTIVE' && request.time.toMillis() < resource.data.expiresAt) ||
-                    (isAuthenticated() && (
-                      resource.data.adminUid == request.auth.uid ||
-                      resource.data.claimedByUid == request.auth.uid
-                    ));
+                    resource.data.adminUid == request.auth.uid ||
+                    resource.data.claimedByUid == request.auth.uid
+                  );
 
       allow list: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
 

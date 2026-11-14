@@ -1500,18 +1500,33 @@ fun BillingScreen(
                 }
             },
             confirmButton = {
+                val adminPinRequiredMsg = tr(
+                    "Admin must set a 4-digit PIN in Settings before approving credit overrides.",
+                    "क्रेडिट ओवरराइड मंजूर करने से पहले एडमिन को सेटिंग्स में 4-अंकीय पिन सेट करना होगा।"
+                )
+                val invalidAdminPinMsg = tr("Invalid Administrator PIN", "गलत एडमिन पिन")
                 Button(
                     onClick = {
                         if (isManager) {
-                            val admins = allUsers.filter { !it.isDeleted && it.isActive && it.role == Role.ADMINISTRATOR }
-                            val approved = admins.any { admin ->
-                                admin.pinHash.isBlank() || SecurityUtils.verifyPin(adminApprovalPin, admin.pinHash)
+                            val adminsWithPin = allUsers.filter {
+                                !it.isDeleted && it.isActive && it.role == Role.ADMINISTRATOR && it.pinHash.isNotBlank()
                             }
-                            if (approved) {
-                                showOverLimitConfirmDialog = false
-                                executeSaveBill()
+                            if (adminsWithPin.isEmpty()) {
+                                pinError = adminPinRequiredMsg
                             } else {
-                                pinError = "Invalid Administrator PIN"
+                                val approved = adminsWithPin.any { admin ->
+                                    SecurityUtils.verifyPinWithLockout(
+                                        pin = adminApprovalPin,
+                                        storedHash = admin.pinHash,
+                                        userId = admin.id
+                                    ).isSuccess
+                                }
+                                if (approved) {
+                                    showOverLimitConfirmDialog = false
+                                    executeSaveBill()
+                                } else {
+                                    pinError = invalidAdminPinMsg
+                                }
                             }
                         } else {
                             showOverLimitConfirmDialog = false

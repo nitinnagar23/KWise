@@ -38,7 +38,11 @@ class BootCompletedReceiver : BroadcastReceiver() {
                         customer.promiseDate != null &&
                         customer.totalUdhari > BigDecimal.ZERO
                     ) {
-                        ReminderScheduler.scheduleCustomerReminder(context, customer)
+                        ReminderScheduler.scheduleCustomerReminder(
+                            context = context,
+                            customer = customer,
+                            isRescheduleAfterBootOrUpdate = true
+                        )
                     }
                 }
             } catch (_: Throwable) {

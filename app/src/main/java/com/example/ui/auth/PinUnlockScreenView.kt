@@ -147,9 +147,8 @@ internal fun PinUnlockFullScreen(
             }
 
             for (candidate in candidates) {
-                if (candidate.pinHash.isEmpty()) {
-                    matchedUser = candidate
-                    break
+                if (candidate.pinHash.isBlank()) {
+                    continue
                 }
                 val res = SecurityUtils.verifyPinWithLockout(
                     pin = enteredPin,

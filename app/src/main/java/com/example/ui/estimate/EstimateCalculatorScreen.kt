@@ -1826,8 +1826,16 @@ fun EstimateCalculatorScreen(
                     confirmButton = {
                         Button(
                             onClick = {
-                                val admins = allUsers.filter { it.role == Role.ADMINISTRATOR && it.isActive }
-                                val verified = admins.any { it.pinHash.isBlank() || SecurityUtils.verifyPin(adminPinInput, it.pinHash) }
+                                val adminsWithPin = allUsers.filter {
+                                    !it.isDeleted && it.role == Role.ADMINISTRATOR && it.isActive && it.pinHash.isNotBlank()
+                                }
+                                val verified = adminsWithPin.isNotEmpty() && adminsWithPin.any { admin ->
+                                    SecurityUtils.verifyPinWithLockout(
+                                        pin = adminPinInput,
+                                        storedHash = admin.pinHash,
+                                        userId = admin.id
+                                    ).isSuccess
+                                }
                                 if (verified) {
                                     showAdminPinForLimitOverride = false
                                     executeSaleConversion()

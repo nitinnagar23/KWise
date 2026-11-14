@@ -62,11 +62,12 @@ test("Eve cannot read or write Alice's store profile", async () => {
   await assertFails(eveDb.collection("users").doc(ALICE_UID).update({ storeName: "Hacked" }));
 });
 
-test("Alice can create 10-minute pairing token and unauthenticated device can verify it", async () => {
+test("Alice can create 10-minute 8-digit pairing token and only authenticated devices can verify it", async () => {
   const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
+  const bobDb = testEnv.authenticatedContext(BOB_UID).firestore();
   const unauthedDb = testEnv.unauthenticatedContext().firestore();
 
-  const code = "482915";
+  const code = "48291507";
   const now = Date.now();
   const expiresAt = now + 10 * 60 * 1000;
 
@@ -83,19 +84,20 @@ test("Alice can create 10-minute pairing token and unauthenticated device can ve
     })
   );
 
-  // Unauthenticated counter staff device can check the code to see shop details
-  await assertSucceeds(unauthedDb.collection("pairings").doc(code).get());
+  // Unauthenticated lookup is blocked (N3)
+  await assertFails(unauthedDb.collection("pairings").doc(code).get());
 
-  // Non-existent code lookup succeeds with non-existent snapshot rather than permission denied
-  await assertSucceeds(unauthedDb.collection("pairings").doc("999999").get());
+  // Authenticated counter staff device can check the code to see shop details
+  await assertSucceeds(bobDb.collection("pairings").doc(code).get());
+  await assertSucceeds(bobDb.collection("pairings").doc("99999999").get());
 });
 
-test("Bob can claim active pairing code and then access Alice's store as staff", async () => {
+test("Bob can claim active pairing code and then access Alice's store as staff; Eve cannot self-add without claimed pairing; deactivated staff lose access", async () => {
   const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
   const bobDb = testEnv.authenticatedContext(BOB_UID).firestore();
   const eveDb = testEnv.authenticatedContext(EVE_UID).firestore();
 
-  const code = "123456";
+  const code = "12345678";
   const now = Date.now();
   const expiresAt = now + 10 * 60 * 1000;
 
@@ -113,6 +115,17 @@ test("Bob can claim active pairing code and then access Alice's store as staff",
     expiresAt: expiresAt,
   });
 
+  // Eve cannot add herself as staff without claiming a pairing token (N1)
+  await assertFails(
+    eveDb.collection("users").doc(ALICE_UID).collection("staff").doc(EVE_UID).set({
+      staffUid: EVE_UID,
+      name: "Eve Attacker",
+      role: "CASHIER",
+      isActive: true,
+      pairedAt: Date.now(),
+    })
+  );
+
   // Bob claims the pairing code
   await assertSucceeds(
     bobDb.collection("pairings").doc(code).update({
@@ -123,12 +136,26 @@ test("Bob can claim active pairing code and then access Alice's store as staff",
     })
   );
 
-  // Bob writes staff registration under Alice's store
+  // Eve still cannot use Bob's claimed pairing code to register herself (N1)
+  await assertFails(
+    eveDb.collection("users").doc(ALICE_UID).collection("staff").doc(EVE_UID).set({
+      staffUid: EVE_UID,
+      name: "Eve Attacker",
+      role: "CASHIER",
+      pairingCode: code,
+      isActive: true,
+      pairedAt: Date.now(),
+    })
+  );
+
+  // Bob writes staff registration under Alice's store referencing his claimed pairing code (N1)
   await assertSucceeds(
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
       staffUid: BOB_UID,
       name: "Bob Counter",
       role: "CASHIER",
+      pairingCode: code,
+      isActive: true,
       pairedAt: Date.now(),
     })
   );
@@ -183,6 +210,23 @@ test("Bob can claim active pairing code and then access Alice's store as staff",
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
       isActive: true,
       role: "ADMINISTRATOR",
+    })
+  );
+
+  // When Alice deactivates Bob (isActive = false), Bob immediately loses read/write access (N2)
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      isActive: false,
+    })
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("customers").doc("cust_bob").get()
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("transactions").doc("tx_bob_2").set({
+      customerId: "cust_bob",
+      type: "SALE_CASH",
+      amount: 500,
     })
   );
 });

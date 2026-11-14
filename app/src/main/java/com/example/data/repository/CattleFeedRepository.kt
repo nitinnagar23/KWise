@@ -256,31 +256,6 @@ class CattleFeedRepository(private val context: Context) {
         userDao.getUserById(userId)
     }
 
-    suspend fun claimStaffInvite(invite: com.example.util.ParsedInvite, pin: String): User = withContext(Dispatchers.IO) {
-        val existing = userDao.getUserById(invite.userId)
-        val user = if (existing != null) {
-            existing.copy(
-                name = invite.name,
-                role = invite.role,
-                pinHash = if (pin.isNotEmpty()) SecurityUtils.hashPin(pin) else existing.pinHash,
-                isActive = true,
-                updatedAt = System.currentTimeMillis()
-            )
-        } else {
-            User(
-                id = invite.userId,
-                name = invite.name,
-                role = invite.role,
-                pinHash = if (pin.isNotEmpty()) SecurityUtils.hashPin(pin) else "",
-                isActive = true,
-                syncStatus = SyncStatus.PENDING
-            )
-        }
-        userDao.insertUser(user)
-        setActiveUser(user.id)
-        user
-    }
-
     private suspend fun resolveActorRole(explicitRole: Role? = null, explicitUser: User? = null): Role? {
         return explicitRole ?: explicitUser?.role ?: getActiveUser()?.role
     }
@@ -294,7 +269,7 @@ class CattleFeedRepository(private val context: Context) {
         requirePermission(role, permission)
     }
 
-    suspend fun addStaffMember(name: String, role: Role, currentAdmin: User): Pair<User, String> = withContext(Dispatchers.IO) {
+    suspend fun addStaffMember(name: String, role: Role, currentAdmin: User): User = withContext(Dispatchers.IO) {
         requirePermission(currentAdmin.role, Permission.MANAGE_STAFF)
         val newUserId = UUID.randomUUID().toString()
         val user = User(
@@ -318,8 +293,7 @@ class CattleFeedRepository(private val context: Context) {
             )
         )
 
-        val inviteCode = SecurityUtils.generateInviteCode(newUserId, user.name, role)
-        Pair(user, inviteCode)
+        user
     }
 
     suspend fun changeStaffRole(targetUser: User, newRole: Role, adminUser: User) = withContext(Dispatchers.IO) {

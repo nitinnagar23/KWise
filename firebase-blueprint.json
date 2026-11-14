@@ -120,6 +120,7 @@
         "email": { "type": "string" },
         "deviceInfo": { "type": "string" },
         "role": { "type": "string", "enum": ["CASHIER", "MANAGER", "STAFF", "ADMINISTRATOR"] },
+        "pairingCode": { "type": "string" },
         "isActive": { "type": "boolean" },
         "pairedAt": { "type": "number" },
         "lastActiveAt": { "type": "number" },

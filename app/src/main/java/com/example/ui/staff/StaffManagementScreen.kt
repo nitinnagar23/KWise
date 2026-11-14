@@ -277,12 +277,12 @@ fun StaffManagementScreen(
     var pairingAssignedRole by remember { mutableStateOf("CASHIER") }
     var activePairingToken by remember { mutableStateOf<DevicePairingToken?>(null) }
     var generatedLocalCode by remember {
-        mutableStateOf(String.format(Locale.getDefault(), "%06d", SecureRandom().nextInt(1000000)))
+        mutableStateOf(PairingRepository.generateSecurePairingCode())
     }
     var pairingRemainingSeconds by remember { mutableLongStateOf(600L) }
 
     fun generateFreshPairingCode(showToast: Boolean) {
-        val randomPin = String.format(Locale.getDefault(), "%06d", SecureRandom().nextInt(1000000))
+        val randomPin = PairingRepository.generateSecurePairingCode()
         generatedLocalCode = randomPin
         pairingRemainingSeconds = 600L
         scope.launch {
@@ -796,7 +796,7 @@ fun StaffManagementScreen(
 
                 1 -> {
                     // TAB 2: Devices
-                    val displayCode = activePairingToken?.code?.takeIf { it.length == 6 } ?: generatedLocalCode
+                    val displayCode = activePairingToken?.code?.takeIf { it.length >= PairingRepository.PAIRING_CODE_LENGTH } ?: generatedLocalCode
                     StaffDevicesTabContent(
                         pairingCode = displayCode,
                         selectedRole = pairingAssignedRole,
