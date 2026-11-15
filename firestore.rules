@@ -14,19 +14,24 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid));
     }
 
+    function isApprovedActiveStaff(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid)) &&
+             getStaffDoc(userId).data.get('isActive', true) != false &&
+             (getStaffDoc(userId).data.get('isApproved', false) == true ||
+              getStaffDoc(userId).data.get('status', 'PENDING') == 'APPROVED');
+    }
+
     function isStaffMember(userId) {
       return isAuthenticated() && (
         request.auth.uid == userId ||
-        (exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid)) &&
-         getStaffDoc(userId).data.get('isActive', true) != false)
+        isApprovedActiveStaff(userId)
       );
     }
 
     function getStaffRole(userId) {
       return request.auth.uid == userId
         ? 'ADMINISTRATOR'
-        : (exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid)) &&
-           getStaffDoc(userId).data.get('isActive', true) != false
+        : (isApprovedActiveStaff(userId)
             ? getStaffDoc(userId).data.role
             : 'NONE');
     }
@@ -108,7 +113,21 @@ service cloud.firestore {
              get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.status == 'CLAIMED' &&
              get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.claimedByUid == staffId &&
              get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.adminUid == userId &&
-             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.assignedRole == data.get('role', 'CASHIER');
+             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.assignedRole == data.get('role', 'CASHIER') &&
+             get(/databases/$(database)/documents/pairings/$(data.pairingCode)).data.expiresAt > request.time.toMillis();
+    }
+
+    function isValidSelfPairedStaffDoc(userId, staffId, data) {
+      return data.keys().hasOnly([
+               'staffUid', 'name', 'email', 'deviceInfo', 'role', 'pairingCode',
+               'isActive', 'isApproved', 'status', 'pairedAt', 'lastActiveAt', 'updatedAt'
+             ]) &&
+             data.get('staffUid', staffId) == staffId &&
+             data.get('role', 'CASHIER') in ['CASHIER', 'MANAGER', 'STAFF'] &&
+             data.get('isActive', true) == true &&
+             data.get('isApproved', false) == false &&
+             data.get('status', 'PENDING') == 'PENDING' &&
+             hasValidClaimedPairing(userId, staffId, data);
     }
 
     match /users/{userId} {
@@ -146,14 +165,11 @@ service cloud.firestore {
       }
 
       match /staff/{staffId} {
-        allow read: if isStaffMember(userId);
+        allow read: if isStaffMember(userId) || (isAuthenticated() && request.auth.uid == staffId);
         allow create: if isAdmin(userId) || (
           isAuthenticated() &&
           request.auth.uid == staffId &&
-          request.resource.data.get('staffUid', staffId) == staffId &&
-          request.resource.data.get('role', 'CASHIER') in ['CASHIER', 'MANAGER', 'STAFF'] &&
-          request.resource.data.get('isActive', true) == true &&
-          hasValidClaimedPairing(userId, staffId, request.resource.data)
+          isValidSelfPairedStaffDoc(userId, staffId, request.resource.data)
         );
         allow update: if isAdmin(userId) || (
           isAuthenticated() &&
@@ -161,10 +177,8 @@ service cloud.firestore {
             request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['lastActiveAt', 'deviceInfo', 'name', 'email', 'updatedAt', 'pairedAt']) ||
             (
-              request.resource.data.get('staffUid', staffId) == staffId &&
-              request.resource.data.get('role', 'CASHIER') in ['CASHIER', 'MANAGER', 'STAFF'] &&
-              request.resource.data.get('isActive', true) == true &&
-              hasValidClaimedPairing(userId, staffId, request.resource.data)
+              request.resource.data.pairingCode != resource.data.get('pairingCode', '') &&
+              isValidSelfPairedStaffDoc(userId, staffId, request.resource.data)
             )
           )
         );
@@ -195,7 +209,12 @@ service cloud.firestore {
          request.resource.data.status == 'CLAIMED' &&
          request.resource.data.claimedByUid == request.auth.uid &&
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['status', 'claimedByUid', 'claimedByName', 'claimedByEmail', 'claimedAt']))
+           .hasOnly(['status', 'claimedByUid', 'claimedByName', 'claimedByEmail', 'claimedAt'])) ||
+        (resource.data.status == 'CLAIMED' &&
+         resource.data.claimedByUid == request.auth.uid &&
+         request.resource.data.status == 'USED' &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status', 'usedAt']))
       );
     }
   }

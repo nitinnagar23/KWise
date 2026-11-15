@@ -265,6 +265,67 @@ fun LoginScreen(
     // Screen 4: Full-screen Waiting for approval view (Login · Waiting for approval.pdf)
     val activeWaitingToken = waitingApprovalToken
     if (activeWaitingToken != null) {
+        val currentStaffUid = GoogleAuthManager.currentUser.value?.uid
+        androidx.compose.runtime.DisposableEffect(activeWaitingToken.adminUid, currentStaffUid) {
+            if (currentStaffUid.isNullOrBlank() || activeWaitingToken.adminUid.isBlank()) {
+                return@DisposableEffect onDispose {}
+            }
+            val registration = runCatching {
+                val dbId = context.getString(R.string.firestore_database_id).trim()
+                val db = if (dbId.isBlank() || dbId == "(default)") {
+                    FirebaseFirestore.getInstance()
+                } else {
+                    FirebaseFirestore.getInstance(dbId)
+                }
+                db.collection("users")
+                    .document(activeWaitingToken.adminUid)
+                    .collection("staff")
+                    .document(currentStaffUid)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+                        val isApproved = snapshot.getBoolean("isApproved") == true ||
+                            snapshot.getString("status") == "APPROVED"
+                        val isActive = snapshot.getBoolean("isActive") != false
+                        if (isApproved && isActive) {
+                            val approvedRoleStr = snapshot.getString("role") ?: activeWaitingToken.assignedRole
+                            val approvedName = snapshot.getString("name")?.takeIf { it.isNotBlank() } ?: staffDisplayName
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    val resolvedRole = when (approvedRoleStr.uppercase()) {
+                                        "ADMINISTRATOR" -> Role.ADMINISTRATOR
+                                        "MANAGER" -> Role.MANAGER
+                                        else -> Role.STAFF
+                                    }
+                                    val existing = allUsers.find { it.id == currentStaffUid }
+                                    if (existing != null) {
+                                        repository.insertUser(
+                                            existing.copy(
+                                                name = approvedName.ifBlank { existing.name },
+                                                role = resolvedRole,
+                                                isActive = true,
+                                                updatedAt = System.currentTimeMillis()
+                                            )
+                                        )
+                                    }
+                                    repository.setActiveUser(currentStaffUid)
+                                    com.example.PashuAaharApp.instance.firestoreSyncEngine.startRealtimeListeners(activeWaitingToken.adminUid)
+                                    com.example.PashuAaharApp.instance.firestoreSyncEngine.triggerSync()
+                                }
+                                waitingApprovalToken = null
+                                pendingShopConfirmationToken = null
+                                onLoginSuccess()
+                            }
+                        }
+                    }
+            }.getOrNull()
+
+            onDispose {
+                try {
+                    registration?.remove()
+                } catch (_: Throwable) {}
+            }
+        }
+
         StaffWaitingForApprovalScreen(
             token = activeWaitingToken,
             adminName = adminDisplayName,
@@ -273,24 +334,45 @@ fun LoginScreen(
             deviceModel = deviceModelName,
             onApprovedOrContinue = {
                 val gUser = GoogleAuthManager.currentUser.value
-                if (gUser != null) {
+                if (gUser != null && activeWaitingToken.adminUid.isNotBlank()) {
                     scope.launch {
-                        claimDeviceWithCode(
-                            code = activeWaitingToken.code,
-                            staffUser = gUser,
-                            pairingRepo = pairingRepository,
-                            repo = repository,
-                            onSuccess = {
-                                waitingApprovalToken = null
-                                pendingShopConfirmationToken = null
-                                onLoginSuccess()
-                            },
-                            onError = { err ->
-                                waitingApprovalToken = null
-                                pendingShopConfirmationToken = null
-                                pairingErrorMessage = err
+                        val approvedSnapshot = withContext(Dispatchers.IO) {
+                            runCatching {
+                                val dbId = context.getString(R.string.firestore_database_id).trim()
+                                val db = if (dbId.isBlank() || dbId == "(default)") {
+                                    FirebaseFirestore.getInstance()
+                                } else {
+                                    FirebaseFirestore.getInstance(dbId)
+                                }
+                                db.collection("users")
+                                    .document(activeWaitingToken.adminUid)
+                                    .collection("staff")
+                                    .document(gUser.uid)
+                                    .get()
+                                    .await()
+                            }.getOrNull()
+                        }
+                        val isApproved = approvedSnapshot != null &&
+                            approvedSnapshot.exists() &&
+                            (approvedSnapshot.getBoolean("isApproved") == true ||
+                                approvedSnapshot.getString("status") == "APPROVED") &&
+                            approvedSnapshot.getBoolean("isActive") != false
+                        if (isApproved) {
+                            withContext(Dispatchers.IO) {
+                                repository.setActiveUser(gUser.uid)
+                                com.example.PashuAaharApp.instance.firestoreSyncEngine.startRealtimeListeners(activeWaitingToken.adminUid)
+                                com.example.PashuAaharApp.instance.firestoreSyncEngine.triggerSync()
                             }
-                        )
+                            waitingApprovalToken = null
+                            pendingShopConfirmationToken = null
+                            onLoginSuccess()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Waiting for store admin to approve your device in Staff & Devices.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 } else {
                     waitingApprovalToken = null
@@ -1244,11 +1326,7 @@ private suspend fun claimDeviceWithCode(
                     shopPhone = token.storePhone
                 )
 
-                val savedStaff = repo.insertUser(staffMember)
-                repo.setActiveUser(savedStaff.id)
-
-                com.example.PashuAaharApp.instance.firestoreSyncEngine.startRealtimeListeners(token.adminUid)
-                com.example.PashuAaharApp.instance.firestoreSyncEngine.triggerSync()
+                repo.insertUser(staffMember)
             }
 
             withContext(Dispatchers.Main) {

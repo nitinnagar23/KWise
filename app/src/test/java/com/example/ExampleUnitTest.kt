@@ -320,8 +320,36 @@ class ExampleUnitTest {
         assertTrue(thirdCandidateMatched)
         com.example.util.SecurityUtils.resetLockout(lockoutKey)
     }
+
+    @Test
+    fun devicePinUnlockLockout_preventsUserSwitchingBypass() {
+        val deviceLockoutKey = "device_pin_unlock"
+        val userAKey = "staff_user_a"
+        val userBKey = "staff_user_b"
+        com.example.util.SecurityUtils.resetLockout(deviceLockoutKey)
+        com.example.util.SecurityUtils.resetLockout(userAKey)
+        com.example.util.SecurityUtils.resetLockout(userBKey)
+
+        // 3 wrong attempts with user A selected
+        repeat(3) {
+            val dRes = com.example.util.SecurityUtils.recordFailedPinAttempt(userId = deviceLockoutKey)
+            com.example.util.SecurityUtils.recordFailedPinAttempt(userId = userAKey)
+            assertFalse(dRes.isLockedOut)
+        }
+
+        // Switch selected user to user B and make 2 more wrong attempts -> total 5 on device -> locked out!
+        val fourthDeviceRes = com.example.util.SecurityUtils.recordFailedPinAttempt(userId = deviceLockoutKey)
+        com.example.util.SecurityUtils.recordFailedPinAttempt(userId = userBKey)
+        assertFalse(fourthDeviceRes.isLockedOut)
+
+        val fifthDeviceRes = com.example.util.SecurityUtils.recordFailedPinAttempt(userId = deviceLockoutKey)
+        com.example.util.SecurityUtils.recordFailedPinAttempt(userId = userBKey)
+        assertTrue("5th failed attempt across switched users must lock the device", fifthDeviceRes.isLockedOut)
+        assertTrue(fifthDeviceRes.remainingLockoutSeconds > 0L)
+        assertTrue(com.example.util.SecurityUtils.isPinLockedOut(deviceLockoutKey))
+
+        com.example.util.SecurityUtils.resetLockout(deviceLockoutKey)
+        com.example.util.SecurityUtils.resetLockout(userAKey)
+        com.example.util.SecurityUtils.resetLockout(userBKey)
+    }
 }
-
-
-
-

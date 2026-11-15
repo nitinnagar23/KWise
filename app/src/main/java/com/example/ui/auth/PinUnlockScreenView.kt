@@ -127,10 +127,14 @@ internal fun PinUnlockFullScreen(
         scope.launch {
             val activeUsers = repository.getActiveUsersList()
             val primaryTarget = selectedUser ?: activeUsers.firstOrNull()
-            val lockoutKey = primaryTarget?.id ?: "device_pin"
+            val deviceLockoutKey = "device_pin_unlock"
+            val userLockoutKey = primaryTarget?.id ?: deviceLockoutKey
 
-            if (SecurityUtils.isPinLockedOut(lockoutKey)) {
-                val remSec = SecurityUtils.getRemainingLockoutSeconds(lockoutKey)
+            if (SecurityUtils.isPinLockedOut(deviceLockoutKey) || SecurityUtils.isPinLockedOut(userLockoutKey)) {
+                val remSec = maxOf(
+                    SecurityUtils.getRemainingLockoutSeconds(deviceLockoutKey),
+                    SecurityUtils.getRemainingLockoutSeconds(userLockoutKey)
+                )
                 pinError = String.format(Locale.getDefault(), lockedMsgTemplate, remSec)
                 pinInput = ""
                 isVerifying = false
@@ -159,19 +163,30 @@ internal fun PinUnlockFullScreen(
             }
 
             if (matchedUser != null) {
-                SecurityUtils.resetLockout(lockoutKey, context)
+                SecurityUtils.resetLockout(deviceLockoutKey, context)
+                SecurityUtils.resetLockout(userLockoutKey, context)
                 SecurityUtils.resetLockout(matchedUser.id, context)
                 repository.setActiveUser(matchedUser.id)
                 pinInput = ""
                 isVerifying = false
                 onUnlockSuccess()
             } else {
-                val res = SecurityUtils.recordFailedPinAttempt(
-                    userId = lockoutKey,
+                val deviceRes = SecurityUtils.recordFailedPinAttempt(
+                    userId = deviceLockoutKey,
                     context = context
                 )
-                pinError = if (res.isLockedOut) {
-                    String.format(Locale.getDefault(), lockedMsgTemplate, res.remainingLockoutSeconds)
+                val userRes = if (userLockoutKey != deviceLockoutKey) {
+                    SecurityUtils.recordFailedPinAttempt(
+                        userId = userLockoutKey,
+                        context = context
+                    )
+                } else {
+                    deviceRes
+                }
+                val locked = deviceRes.isLockedOut || userRes.isLockedOut
+                val remSec = maxOf(deviceRes.remainingLockoutSeconds, userRes.remainingLockoutSeconds)
+                pinError = if (locked) {
+                    String.format(Locale.getDefault(), lockedMsgTemplate, remSec)
                 } else {
                     incorrectPinMsg
                 }
@@ -396,7 +411,8 @@ internal fun PinUnlockFullScreen(
                                         scope.launch {
                                             val target = selectedUser ?: repository.getActiveUsersList().firstOrNull()
                                             if (target != null) {
-                                                SecurityUtils.resetLockout(target.id)
+                                                SecurityUtils.resetLockout("device_pin_unlock", context)
+                                                SecurityUtils.resetLockout(target.id, context)
                                                 repository.setActiveUser(target.id)
                                                 onUnlockSuccess()
                                             }

@@ -106,7 +106,8 @@
         "expiresAt": { "type": "number" },
         "claimedByUid": { "type": "string" },
         "claimedByName": { "type": "string" },
-        "claimedAt": { "type": "number" }
+        "claimedAt": { "type": "number" },
+        "usedAt": { "type": "number" }
       },
       "required": ["code", "adminUid", "storeName", "assignedRole", "status", "expiresAt"]
     },
@@ -121,6 +122,8 @@
         "deviceInfo": { "type": "string" },
         "role": { "type": "string", "enum": ["CASHIER", "MANAGER", "STAFF", "ADMINISTRATOR"] },
         "pairingCode": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED"] },
+        "isApproved": { "type": "boolean" },
         "isActive": { "type": "boolean" },
         "pairedAt": { "type": "number" },
         "lastActiveAt": { "type": "number" },

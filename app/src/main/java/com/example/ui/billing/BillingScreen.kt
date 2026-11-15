@@ -1505,17 +1505,22 @@ fun BillingScreen(
                     "क्रेडिट ओवरराइड मंजूर करने से पहले एडमिन को सेटिंग्स में 4-अंकीय पिन सेट करना होगा।"
                 )
                 val invalidAdminPinMsg = tr("Invalid Administrator PIN", "गलत एडमिन पिन")
+                val lockedAdminPinTemplate = tr(
+                    "Too many failed attempts! Locked for %ds.",
+                    "बहुत सारे गलत प्रयास! %d सेकंड के लिए लॉक।"
+                )
                 Button(
                     onClick = {
                         if (isManager) {
                             val adminsWithPin = allUsers.filter {
                                 !it.isDeleted && it.isActive && it.role == Role.ADMINISTRATOR && it.pinHash.isNotBlank()
                             }
-                            val lockoutKey = "admin_override"
+                            val lockoutKey = "admin_override_${adminsWithPin.firstOrNull()?.id ?: "global"}"
                             if (adminsWithPin.isEmpty()) {
                                 pinError = adminPinRequiredMsg
                             } else if (SecurityUtils.isPinLockedOut(lockoutKey)) {
-                                pinError = invalidAdminPinMsg
+                                val remSec = SecurityUtils.getRemainingLockoutSeconds(lockoutKey)
+                                pinError = String.format(java.util.Locale.getDefault(), lockedAdminPinTemplate, remSec)
                             } else {
                                 val approved = adminsWithPin.any { admin ->
                                     SecurityUtils.verifyPin(adminApprovalPin, admin.pinHash)
@@ -1525,8 +1530,16 @@ fun BillingScreen(
                                     showOverLimitConfirmDialog = false
                                     executeSaveBill()
                                 } else {
-                                    SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
-                                    pinError = invalidAdminPinMsg
+                                    val res = SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
+                                    pinError = if (res.isLockedOut) {
+                                        String.format(
+                                            java.util.Locale.getDefault(),
+                                            lockedAdminPinTemplate,
+                                            res.remainingLockoutSeconds
+                                        )
+                                    } else {
+                                        invalidAdminPinMsg
+                                    }
                                 }
                             }
                         } else {

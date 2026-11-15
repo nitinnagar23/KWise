@@ -331,8 +331,11 @@ fun StaffManagementScreen(
         if (!code.isNullOrBlank()) {
             pairingRepo.listenToPairingToken(code).collectLatest { updatedToken ->
                 if (updatedToken != null) {
+                    val prevStatus = activePairingToken?.status
                     activePairingToken = updatedToken
-                    if (updatedToken.status == "CLAIMED") {
+                    if ((updatedToken.status == "CLAIMED" || updatedToken.status == "USED") &&
+                        prevStatus != "CLAIMED" && prevStatus != "USED"
+                    ) {
                         Toast.makeText(
                             context,
                             "Counter Device connected by ${updatedToken.claimedByName ?: "Staff"}!",
@@ -390,6 +393,7 @@ fun StaffManagementScreen(
                     try {
                         val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
                         val updates = hashMapOf<String, Any>(
+                            "staffUid" to userId,
                             "name" to customName,
                             "registeredName" to detailTarget.registeredName,
                             "email" to userEntity.email,
@@ -403,7 +407,7 @@ fun StaffManagementScreen(
                         FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
                             .collection("users").document(adminUid).collection("staff")
                             .document(userId)
-                            .set(updates)
+                            .set(updates, com.google.firebase.firestore.SetOptions.merge())
                             .await()
                     } catch (_: Exception) {}
 
@@ -475,6 +479,14 @@ fun StaffManagementScreen(
                 deviceToUnpair = null
                 scope.launch {
                     repository.deleteUser(dev.id)
+                    try {
+                        val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
+                        FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
+                            .collection("users").document(adminUid).collection("staff")
+                            .document(dev.id)
+                            .delete()
+                            .await()
+                    } catch (_: Exception) {}
                     Toast.makeText(
                         context,
                         "${dev.title} unpaired",

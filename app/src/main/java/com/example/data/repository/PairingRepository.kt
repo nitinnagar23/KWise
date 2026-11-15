@@ -344,9 +344,11 @@ class PairingRepository(private val context: Context) {
 
         val status = snapshot.safeString("status")
         val expiresAt = snapshot.safeLong("expiresAt", 0L) ?: 0L
+        val claimedByUid = snapshot.safeString("claimedByUid")
         val now = System.currentTimeMillis()
 
-        if (status != "ACTIVE") {
+        val isRetryBySameClaimant = status == "CLAIMED" && claimedByUid == staffUid && staffUid.isNotBlank()
+        if (status != "ACTIVE" && !isRetryBySameClaimant) {
             recordLookupOutcome(false, context)
             throw IllegalStateException("This pairing code has already been redeemed or expired.")
         }
@@ -366,18 +368,20 @@ class PairingRepository(private val context: Context) {
         val storeName = snapshot.safeString("storeName", "KhataWise Store").ifBlank { "KhataWise Store" }
         val assignedRole = snapshot.safeString("assignedRole", "CASHIER").ifBlank { "CASHIER" }
 
-        // Claim token in Firestore
-        val updates = mapOf(
-            "status" to "CLAIMED",
-            "claimedByUid" to staffUid,
-            "claimedByName" to staffName.ifBlank { "Staff Device" },
-            "claimedByEmail" to staffEmail,
-            "claimedAt" to now
-        )
-        docRef.update(updates).await()
+        // Claim token in Firestore if not already claimed by this same staff user on an earlier interrupted attempt (N20)
+        if (!isRetryBySameClaimant) {
+            val updates = mapOf(
+                "status" to "CLAIMED",
+                "claimedByUid" to staffUid,
+                "claimedByName" to staffName.ifBlank { "Staff Device" },
+                "claimedByEmail" to staffEmail,
+                "claimedAt" to now
+            )
+            docRef.update(updates).await()
+        }
 
-        // Record staff member under store with pairingCode proof required by Firestore rules (N1 & N14).
-        // Do not swallow failures: if staff registration fails, surface the error so the device is not left without store access.
+        // Record staff member under store with pairingCode proof required by Firestore rules (N1, N14, N18, N19).
+        // New self-paired staff start as PENDING / isApproved = false until approved by the store admin.
         val staffDoc = mapOf(
             "staffUid" to staffUid,
             "name" to staffName.ifBlank { "Staff Device" },
@@ -386,11 +390,23 @@ class PairingRepository(private val context: Context) {
             "role" to assignedRole,
             "pairingCode" to cleanCode,
             "isActive" to true,
+            "isApproved" to false,
+            "status" to "PENDING",
             "pairedAt" to now,
             "lastActiveAt" to now,
             "updatedAt" to now
         )
         db.collection("users").document(adminUid).collection("staff").document(staffUid).set(staffDoc).await()
+
+        // Consume the pairing token so it can never be reused to re-create or restore a staff document later (N18)
+        runCatching {
+            docRef.update(
+                mapOf(
+                    "status" to "USED",
+                    "usedAt" to System.currentTimeMillis()
+                )
+            ).await()
+        }
 
         DevicePairingToken(
             code = cleanCode,
@@ -399,7 +415,7 @@ class PairingRepository(private val context: Context) {
             storeAddress = snapshot.safeString("storeAddress"),
             storePhone = snapshot.safeString("storePhone"),
             assignedRole = assignedRole,
-            status = "CLAIMED",
+            status = "USED",
             createdAt = snapshot.safeLong("createdAt") ?: now,
             expiresAt = expiresAt,
             claimedByUid = staffUid,

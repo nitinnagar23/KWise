@@ -144,11 +144,27 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
       role: "CASHIER",
       pairingCode: code,
       isActive: true,
+      isApproved: false,
+      status: "PENDING",
       pairedAt: Date.now(),
     })
   );
 
-  // Bob writes staff registration under Alice's store referencing his claimed pairing code (N1)
+  // Bob cannot self-approve when creating his staff registration (N19)
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
+      staffUid: BOB_UID,
+      name: "Bob Counter",
+      role: "CASHIER",
+      pairingCode: code,
+      isActive: true,
+      isApproved: true,
+      status: "APPROVED",
+      pairedAt: Date.now(),
+    })
+  );
+
+  // Bob writes PENDING staff registration under Alice's store referencing his claimed pairing code (N1 & N19)
   await assertSucceeds(
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
       staffUid: BOB_UID,
@@ -156,7 +172,39 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
       role: "CASHIER",
       pairingCode: code,
       isActive: true,
+      isApproved: false,
+      status: "PENDING",
       pairedAt: Date.now(),
+    })
+  );
+
+  // Bob consumes the pairing token so it cannot be reused later (N18)
+  await assertSucceeds(
+    bobDb.collection("pairings").doc(code).update({
+      status: "USED",
+      usedAt: Date.now(),
+    })
+  );
+
+  // While Bob is still PENDING approval, he can read his own staff doc, but CANNOT read or write Alice's store data (N19)
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).get()
+  );
+  await assertFails(bobDb.collection("users").doc(ALICE_UID).get());
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("customers").doc("cust_bob").set({
+      name: "Suresh Farmer",
+      phone: "9876543210",
+      creditLimit: 15000,
+      currentBalance: 0,
+    })
+  );
+
+  // Alice (store admin) approves Bob (N19)
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      isApproved: true,
+      status: "APPROVED",
     })
   );
 
@@ -194,7 +242,7 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     })
   );
 
-  // Staff member Bob can update his own lastActiveAt / deviceInfo, but CANNOT escalate role to ADMINISTRATOR
+  // Staff member Bob can update his own lastActiveAt / deviceInfo, but CANNOT escalate role or approval
   await assertSucceeds(
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
       lastActiveAt: Date.now(),
@@ -230,7 +278,38 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     })
   );
 
-  // If Alice issues a new pairing code for Bob (e.g. as MANAGER), Bob can claim it and re-pair his existing staff doc (N14)
+  // Deactivated Bob CANNOT undo his deactivation by re-submitting his old pairing code (N18)
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
+      staffUid: BOB_UID,
+      name: "Bob Counter",
+      role: "CASHIER",
+      pairingCode: code,
+      isActive: true,
+      isApproved: false,
+      status: "PENDING",
+      pairedAt: Date.now(),
+    })
+  );
+
+  // When Alice removes Bob (deletes his staff doc), Bob CANNOT re-add himself using his old pairing code (N18)
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).delete()
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
+      staffUid: BOB_UID,
+      name: "Bob Counter",
+      role: "CASHIER",
+      pairingCode: code,
+      isActive: true,
+      isApproved: false,
+      status: "PENDING",
+      pairedAt: Date.now(),
+    })
+  );
+
+  // If Alice issues a NEW pairing code for Bob (e.g. as MANAGER), Bob can claim it, re-pair as PENDING, and Alice approves (N14 & N18)
   const newCode = "87654321";
   await aliceDb.collection("pairings").doc(newCode).set({
     code: newCode,
@@ -256,6 +335,39 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
       role: "MANAGER",
       pairingCode: newCode,
       isActive: true,
+      isApproved: false,
+      status: "PENDING",
+      pairedAt: Date.now(),
+    })
+  );
+  await assertSucceeds(
+    bobDb.collection("pairings").doc(newCode).update({
+      status: "USED",
+      usedAt: Date.now(),
+    })
+  );
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      isApproved: true,
+      status: "APPROVED",
+    })
+  );
+
+  // If Alice later demotes Bob from MANAGER to STAFF, Bob CANNOT restore MANAGER using newCode (N18)
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).update({
+      role: "STAFF",
+    })
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
+      staffUid: BOB_UID,
+      name: "Bob Counter",
+      role: "MANAGER",
+      pairingCode: newCode,
+      isActive: true,
+      isApproved: false,
+      status: "PENDING",
       pairedAt: Date.now(),
     })
   );

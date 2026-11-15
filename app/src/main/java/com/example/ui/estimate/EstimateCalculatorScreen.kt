@@ -1781,6 +1781,16 @@ fun EstimateCalculatorScreen(
             )
 
             if (showAdminPinForLimitOverride) {
+                var adminPinErrorMessage by remember { mutableStateOf<String?>(null) }
+                val adminPinRequiredMsg = tr(
+                    "Admin must set a 4-digit PIN in Settings before approving credit overrides.",
+                    "क्रेडिट ओवरराइड मंजूर करने से पहले एडमिन को सेटिंग्स में 4-अंकीय पिन सेट करना होगा।"
+                )
+                val invalidAdminPinMsg = tr("Invalid Admin PIN", "गलत एडमिन पिन")
+                val lockedAdminPinTemplate = tr(
+                    "Too many failed attempts! Locked for %ds.",
+                    "बहुत सारे गलत प्रयास! %d सेकंड के लिए लॉक।"
+                )
                 AlertDialog(
                     onDismissRequest = { showAdminPinForLimitOverride = false },
                     containerColor = FlatDarkCard,
@@ -1806,6 +1816,7 @@ fun EstimateCalculatorScreen(
                                 onValueChange = {
                                     adminPinInput = it.filter { c -> c.isDigit() }.take(4)
                                     adminPinError = false
+                                    adminPinErrorMessage = null
                                 },
                                 label = { Text(tr("4-Digit Admin PIN", "4-अंकों का एडमिन पिन")) },
                                 visualTransformation = PasswordVisualTransformation(),
@@ -1816,7 +1827,7 @@ fun EstimateCalculatorScreen(
                             )
                             if (adminPinError) {
                                 Text(
-                                    text = tr("Invalid Admin PIN", "गलत एडमिन पिन"),
+                                    text = adminPinErrorMessage ?: invalidAdminPinMsg,
                                     color = CRedUdhari,
                                     style = MaterialTheme.typography.labelSmall
                                 )
@@ -1829,9 +1840,14 @@ fun EstimateCalculatorScreen(
                                 val adminsWithPin = allUsers.filter {
                                     !it.isDeleted && it.role == Role.ADMINISTRATOR && it.isActive && it.pinHash.isNotBlank()
                                 }
-                                val lockoutKey = "admin_override"
-                                if (adminsWithPin.isEmpty() || SecurityUtils.isPinLockedOut(lockoutKey)) {
+                                val lockoutKey = "admin_override_${adminsWithPin.firstOrNull()?.id ?: "global"}"
+                                if (adminsWithPin.isEmpty()) {
                                     adminPinError = true
+                                    adminPinErrorMessage = adminPinRequiredMsg
+                                } else if (SecurityUtils.isPinLockedOut(lockoutKey)) {
+                                    val remSec = SecurityUtils.getRemainingLockoutSeconds(lockoutKey)
+                                    adminPinError = true
+                                    adminPinErrorMessage = String.format(Locale.getDefault(), lockedAdminPinTemplate, remSec)
                                 } else {
                                     val verified = adminsWithPin.any { admin ->
                                         SecurityUtils.verifyPin(adminPinInput, admin.pinHash)
@@ -1841,8 +1857,17 @@ fun EstimateCalculatorScreen(
                                         showAdminPinForLimitOverride = false
                                         executeSaleConversion()
                                     } else {
-                                        SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
+                                        val res = SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
                                         adminPinError = true
+                                        adminPinErrorMessage = if (res.isLockedOut) {
+                                            String.format(
+                                                Locale.getDefault(),
+                                                lockedAdminPinTemplate,
+                                                res.remainingLockoutSeconds
+                                            )
+                                        } else {
+                                            invalidAdminPinMsg
+                                        }
                                     }
                                 }
                             },
