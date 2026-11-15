@@ -148,13 +148,15 @@ fun StaffManagementScreen(
                     val acceptedLocalIds = allUsers.filter { !it.isDeleted && it.isActive }.map { it.id }.toSet()
                     val pendingList = snapshot.documents.mapNotNull { doc ->
                         val uid = doc.getString("staffUid") ?: doc.id
+                        val hasPairingCode = doc.contains("pairingCode")
                         val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
-                        val isLegacyAccepted = !hasApprovalFields &&
+                        val isLegacyAccepted = !hasPairingCode &&
+                            !hasApprovalFields &&
                             doc.getBoolean("isActive") != false &&
-                            (uid in acceptedLocalIds || uid == adminUid || doc.getLong("pairedAt") == null)
+                            (uid in acceptedLocalIds || uid == adminUid)
 
                         if (isLegacyAccepted) {
-                            // One-time migration for staff documents created before approval fields existed (N24)
+                            // One-time migration for pre-pairingCode staff documents created before approval fields existed (N24, N28)
                             doc.reference.set(
                                 mapOf(
                                     "isApproved" to true,

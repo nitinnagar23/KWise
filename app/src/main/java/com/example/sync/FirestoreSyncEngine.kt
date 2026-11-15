@@ -547,8 +547,9 @@ class FirestoreSyncEngine(
                                     val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
                                     val isOwnerDoc = staffUid == storeAdminUid
                                     val existing = localDb.userDao().getUserById(staffUid)
+                                    val hasPairingCode = doc.contains("pairingCode")
                                     val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
-                                    val isLegacyDoc = !hasApprovalFields && doc.safeBoolean("isActive", true)
+                                    val isLegacyDoc = !hasPairingCode && !hasApprovalFields && doc.safeBoolean("isActive", true)
                                     if (!isStaffDevice && isLegacyDoc && (isOwnerDoc || existing != null)) {
                                         runCatching {
                                             doc.reference.set(
@@ -560,7 +561,7 @@ class FirestoreSyncEngine(
                                     val isApproved = isOwnerDoc ||
                                         doc.safeBoolean("isApproved", false) ||
                                         doc.safeString("status", "PENDING") == "APPROVED" ||
-                                        (isLegacyDoc && existing != null)
+                                        isLegacyDoc
                                     if (!isApproved) continue
 
                                     val name = doc.safeString("name", "Staff").ifBlank { "Staff" }
@@ -740,8 +741,9 @@ class FirestoreSyncEngine(
                         val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
                         val isOwnerDoc = staffUid == storeUid
                         val existing = localDb.userDao().getUserById(staffUid)
+                        val hasPairingCode = doc.contains("pairingCode")
                         val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
-                        val isLegacyDoc = !hasApprovalFields && doc.safeBoolean("isActive", true)
+                        val isLegacyDoc = !hasPairingCode && !hasApprovalFields && doc.safeBoolean("isActive", true)
                         if (isStoreOwner && isLegacyDoc) {
                             runCatching {
                                 doc.reference.set(

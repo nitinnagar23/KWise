@@ -164,7 +164,19 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     })
   );
 
-  // Bob writes PENDING staff registration under Alice's store referencing his claimed pairing code (N1 & N19)
+  // Bob cannot omit isApproved or status to masquerade as a legacy staff document (N28)
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
+      staffUid: BOB_UID,
+      name: "Bob Counter",
+      role: "CASHIER",
+      pairingCode: code,
+      isActive: true,
+      pairedAt: Date.now(),
+    })
+  );
+
+  // Bob writes PENDING staff registration under Alice's store referencing his claimed pairing code (N1 & N19 & N28)
   await assertSucceeds(
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
       staffUid: BOB_UID,
@@ -371,5 +383,17 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
       pairedAt: Date.now(),
     })
   );
-});
 
+  // Legacy staff document created by admin before pairingCode/isApproved/status existed retains store access immediately (N29)
+  const LEGACY_UID = "legacy_staff_01";
+  const legacyDb = testEnv.authenticatedContext(LEGACY_UID).firestore();
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(LEGACY_UID).set({
+      staffUid: LEGACY_UID,
+      name: "Legacy Cashier",
+      role: "STAFF",
+      isActive: true,
+    })
+  );
+  await assertSucceeds(legacyDb.collection("users").doc(ALICE_UID).get());
+});
