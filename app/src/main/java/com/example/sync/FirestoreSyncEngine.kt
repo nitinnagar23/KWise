@@ -546,6 +546,23 @@ class FirestoreSyncEngine(
                                 try {
                                     val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
                                     val isOwnerDoc = staffUid == storeAdminUid
+                                    val existing = localDb.userDao().getUserById(staffUid)
+                                    val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
+                                    val isLegacyDoc = !hasApprovalFields && doc.safeBoolean("isActive", true)
+                                    if (!isStaffDevice && isLegacyDoc && (isOwnerDoc || existing != null)) {
+                                        runCatching {
+                                            doc.reference.set(
+                                                mapOf("isApproved" to true, "status" to "APPROVED"),
+                                                SetOptions.merge()
+                                            )
+                                        }
+                                    }
+                                    val isApproved = isOwnerDoc ||
+                                        doc.safeBoolean("isApproved", false) ||
+                                        doc.safeString("status", "PENDING") == "APPROVED" ||
+                                        (isLegacyDoc && existing != null)
+                                    if (!isApproved) continue
+
                                     val name = doc.safeString("name", "Staff").ifBlank { "Staff" }
                                     val email = doc.safeString("email").ifBlank { doc.safeString("claimedByEmail") }
                                     val phone = doc.safeString("phone")
@@ -560,7 +577,6 @@ class FirestoreSyncEngine(
                                     val isActive = if (isOwnerDoc) true else doc.safeBoolean("isActive", true)
                                     val updatedAt = doc.safeLong("updatedAt") ?: System.currentTimeMillis()
 
-                                    val existing = localDb.userDao().getUserById(staffUid)
                                     if (existing == null) {
                                         localDb.userDao().insertUser(
                                             User(
@@ -716,13 +732,30 @@ class FirestoreSyncEngine(
                 }
             }
 
-            // Pull Staff
+            // Pull Staff & migrate legacy accepted staff documents missing approval fields (N24)
             try {
                 val staffDocs = firestore.collection("users").document(storeUid).collection("staff").get().await()
                 for (doc in staffDocs.documents) {
                     try {
                         val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
                         val isOwnerDoc = staffUid == storeUid
+                        val existing = localDb.userDao().getUserById(staffUid)
+                        val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
+                        val isLegacyDoc = !hasApprovalFields && doc.safeBoolean("isActive", true)
+                        if (isStoreOwner && isLegacyDoc) {
+                            runCatching {
+                                doc.reference.set(
+                                    mapOf("isApproved" to true, "status" to "APPROVED"),
+                                    SetOptions.merge()
+                                ).await()
+                            }
+                        }
+                        val isApproved = isOwnerDoc ||
+                            doc.safeBoolean("isApproved", false) ||
+                            doc.safeString("status", "PENDING") == "APPROVED" ||
+                            isLegacyDoc
+                        if (!isApproved) continue
+
                         val name = doc.safeString("name", "Staff").ifBlank { "Staff" }
                         val email = doc.safeString("email").ifBlank { doc.safeString("claimedByEmail") }
                         val phone = doc.safeString("phone")
@@ -737,7 +770,6 @@ class FirestoreSyncEngine(
                         val isActive = if (isOwnerDoc) true else doc.safeBoolean("isActive", true)
                         val updatedAt = doc.safeLong("updatedAt") ?: System.currentTimeMillis()
 
-                        val existing = localDb.userDao().getUserById(staffUid)
                         if (existing == null) {
                             localDb.userDao().insertUser(
                                 User(
@@ -1268,6 +1300,8 @@ class FirestoreSyncEngine(
                                 "deviceInfo" to u.deviceInfo,
                                 "lastActiveAt" to u.lastActiveAt,
                                 "isActive" to u.isActive,
+                                "isApproved" to true,
+                                "status" to "APPROVED",
                                 "updatedAt" to u.updatedAt
                             )
                             firestore.collection("users").document(storeUid).collection("staff")

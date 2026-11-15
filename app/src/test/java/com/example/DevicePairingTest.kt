@@ -51,6 +51,10 @@ class DevicePairingTest {
         )
 
         assertFalse("Claimed token should not be active for new pairing", claimedToken.isActive())
+        assertTrue("Claimed token should be recognized as connected", claimedToken.isClaimedOrUsed())
+        val usedToken = claimedToken.copy(status = "USED")
+        assertFalse("Used token should not be active for new pairing", usedToken.isActive())
+        assertTrue("Used token should also be recognized as connected by admin dialog", usedToken.isClaimedOrUsed())
         assertEquals("MANAGER", claimedToken.assignedRole)
         assertEquals("staff_uid_456", claimedToken.claimedByUid)
     }

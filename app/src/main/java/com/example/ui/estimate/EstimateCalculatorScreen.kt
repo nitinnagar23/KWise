@@ -1840,7 +1840,7 @@ fun EstimateCalculatorScreen(
                                 val adminsWithPin = allUsers.filter {
                                     !it.isDeleted && it.role == Role.ADMINISTRATOR && it.isActive && it.pinHash.isNotBlank()
                                 }
-                                val lockoutKey = "admin_override_${adminsWithPin.firstOrNull()?.id ?: "global"}"
+                                val lockoutKey = "admin_override"
                                 if (adminsWithPin.isEmpty()) {
                                     adminPinError = true
                                     adminPinErrorMessage = adminPinRequiredMsg

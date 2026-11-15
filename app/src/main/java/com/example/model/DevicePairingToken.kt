@@ -16,4 +16,5 @@ data class DevicePairingToken(
 ) {
     fun isExpired(): Boolean = System.currentTimeMillis() >= expiresAt
     fun isActive(): Boolean = status == "ACTIVE" && !isExpired()
+    fun isClaimedOrUsed(): Boolean = status == "CLAIMED" || status == "USED"
 }

@@ -398,14 +398,15 @@ class PairingRepository(private val context: Context) {
         )
         db.collection("users").document(adminUid).collection("staff").document(staffUid).set(staffDoc).await()
 
-        // Consume the pairing token so it can never be reused to re-create or restore a staff document later (N18)
+        // Consume the pairing token so it can never be reused to re-create or restore a staff document later (N18, N27)
+        val usedPayload = mapOf(
+            "status" to "USED",
+            "usedAt" to System.currentTimeMillis()
+        )
         runCatching {
-            docRef.update(
-                mapOf(
-                    "status" to "USED",
-                    "usedAt" to System.currentTimeMillis()
-                )
-            ).await()
+            docRef.update(usedPayload).await()
+        }.onFailure {
+            runCatching { docRef.update(usedPayload).await() }
         }
 
         DevicePairingToken(

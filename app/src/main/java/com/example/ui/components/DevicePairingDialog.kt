@@ -107,7 +107,7 @@ fun DevicePairingDialog(
     }.collectAsState(initial = currentToken)
 
     val activeToken = liveToken ?: currentToken
-    val isClaimed = activeToken?.status == "CLAIMED"
+    val isClaimed = activeToken?.isClaimedOrUsed() == true
     val isExpired = remainingMillis <= 0 && !isClaimed
 
     AlertDialog(

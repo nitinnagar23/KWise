@@ -145,11 +145,30 @@ fun StaffManagementScreen(
             db.collection("users").document(adminUid).collection("staff")
                 .addSnapshotListener { snapshot, error ->
                     if (error != null || snapshot == null) return@addSnapshotListener
+                    val acceptedLocalIds = allUsers.filter { !it.isDeleted && it.isActive }.map { it.id }.toSet()
                     val pendingList = snapshot.documents.mapNotNull { doc ->
-                        val status = doc.getString("status") ?: ""
-                        val isApproved = doc.getBoolean("isApproved") ?: true
-                        if (status == "PENDING" || !isApproved) {
-                            val uid = doc.getString("staffUid") ?: doc.id
+                        val uid = doc.getString("staffUid") ?: doc.id
+                        val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
+                        val isLegacyAccepted = !hasApprovalFields &&
+                            doc.getBoolean("isActive") != false &&
+                            (uid in acceptedLocalIds || uid == adminUid || doc.getLong("pairedAt") == null)
+
+                        if (isLegacyAccepted) {
+                            // One-time migration for staff documents created before approval fields existed (N24)
+                            doc.reference.set(
+                                mapOf(
+                                    "isApproved" to true,
+                                    "status" to "APPROVED"
+                                ),
+                                com.google.firebase.firestore.SetOptions.merge()
+                            )
+                            return@mapNotNull null
+                        }
+
+                        // Match firestore.rules isApprovedActiveStaff() default: missing fields default to false / PENDING
+                        val isApproved = doc.getBoolean("isApproved") == true ||
+                            (doc.getString("status") ?: "PENDING") == "APPROVED"
+                        if (!isApproved) {
                             val name = doc.getString("name") ?: "Staff"
                             val email = doc.getString("email") ?: ""
                             val dev = doc.getString("deviceInfo") ?: ""
