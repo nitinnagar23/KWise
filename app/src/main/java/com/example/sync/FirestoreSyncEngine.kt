@@ -547,21 +547,9 @@ class FirestoreSyncEngine(
                                     val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
                                     val isOwnerDoc = staffUid == storeAdminUid
                                     val existing = localDb.userDao().getUserById(staffUid)
-                                    val hasPairingCode = doc.contains("pairingCode")
-                                    val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
-                                    val isLegacyDoc = !hasPairingCode && !hasApprovalFields && doc.safeBoolean("isActive", true)
-                                    if (!isStaffDevice && isLegacyDoc && (isOwnerDoc || existing != null)) {
-                                        runCatching {
-                                            doc.reference.set(
-                                                mapOf("isApproved" to true, "status" to "APPROVED"),
-                                                SetOptions.merge()
-                                            )
-                                        }
-                                    }
                                     val isApproved = isOwnerDoc ||
                                         doc.safeBoolean("isApproved", false) ||
-                                        doc.safeString("status", "PENDING") == "APPROVED" ||
-                                        isLegacyDoc
+                                        doc.safeString("status", "PENDING") == "APPROVED"
                                     if (!isApproved) continue
 
                                     val name = doc.safeString("name", "Staff").ifBlank { "Staff" }
@@ -733,7 +721,7 @@ class FirestoreSyncEngine(
                 }
             }
 
-            // Pull Staff & migrate legacy accepted staff documents missing approval fields (N24)
+            // Pull Staff (only approved staff documents)
             try {
                 val staffDocs = firestore.collection("users").document(storeUid).collection("staff").get().await()
                 for (doc in staffDocs.documents) {
@@ -741,21 +729,9 @@ class FirestoreSyncEngine(
                         val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
                         val isOwnerDoc = staffUid == storeUid
                         val existing = localDb.userDao().getUserById(staffUid)
-                        val hasPairingCode = doc.contains("pairingCode")
-                        val hasApprovalFields = doc.contains("isApproved") || doc.contains("status")
-                        val isLegacyDoc = !hasPairingCode && !hasApprovalFields && doc.safeBoolean("isActive", true)
-                        if (isStoreOwner && isLegacyDoc) {
-                            runCatching {
-                                doc.reference.set(
-                                    mapOf("isApproved" to true, "status" to "APPROVED"),
-                                    SetOptions.merge()
-                                ).await()
-                            }
-                        }
                         val isApproved = isOwnerDoc ||
                             doc.safeBoolean("isApproved", false) ||
-                            doc.safeString("status", "PENDING") == "APPROVED" ||
-                            isLegacyDoc
+                            doc.safeString("status", "PENDING") == "APPROVED"
                         if (!isApproved) continue
 
                         val name = doc.safeString("name", "Staff").ifBlank { "Staff" }

@@ -384,16 +384,16 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     })
   );
 
-  // Legacy staff document created by admin before pairingCode/isApproved/status existed retains store access immediately (N29)
-  const LEGACY_UID = "legacy_staff_01";
-  const legacyDb = testEnv.authenticatedContext(LEGACY_UID).firestore();
+  // Staff document without approval fields is denied store access until approved (S1)
+  const UNAPPROVED_UID = "unapproved_staff_01";
+  const unapprovedDb = testEnv.authenticatedContext(UNAPPROVED_UID).firestore();
   await assertSucceeds(
-    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(LEGACY_UID).set({
-      staffUid: LEGACY_UID,
-      name: "Legacy Cashier",
+    aliceDb.collection("users").doc(ALICE_UID).collection("staff").doc(UNAPPROVED_UID).set({
+      staffUid: UNAPPROVED_UID,
+      name: "Unapproved Cashier",
       role: "STAFF",
       isActive: true,
     })
   );
-  await assertSucceeds(legacyDb.collection("users").doc(ALICE_UID).get());
+  await assertFails(unapprovedDb.collection("users").doc(ALICE_UID).get());
 });

@@ -14,18 +14,11 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid));
     }
 
-    function isLegacyStaffDoc(docData) {
-      return !('pairingCode' in docData) &&
-             !('isApproved' in docData) &&
-             !('status' in docData);
-    }
-
     function isApprovedActiveStaff(userId) {
       return exists(/databases/$(database)/documents/users/$(userId)/staff/$(request.auth.uid)) &&
              getStaffDoc(userId).data.get('isActive', true) != false &&
              (getStaffDoc(userId).data.get('isApproved', false) == true ||
-              getStaffDoc(userId).data.get('status', 'PENDING') == 'APPROVED' ||
-              isLegacyStaffDoc(getStaffDoc(userId).data));
+              getStaffDoc(userId).data.get('status', 'PENDING') == 'APPROVED');
     }
 
     function isStaffMember(userId) {
