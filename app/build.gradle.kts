@@ -34,8 +34,10 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
-  val isReleaseBuildRequested = gradle.startParameter.taskNames.any {
-    it.contains("Release", ignoreCase = true)
+  val releasePackagingTasks = setOf("assembleRelease", "bundleRelease", "packageRelease", "publishRelease")
+  val isReleaseBuildRequested = gradle.startParameter.taskNames.any { taskName ->
+    val simpleName = taskName.substringAfterLast(':')
+    releasePackagingTasks.any { simpleName.equals(it, ignoreCase = true) }
   }
 
   signingConfigs {

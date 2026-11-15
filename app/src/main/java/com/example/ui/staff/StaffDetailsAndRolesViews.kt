@@ -443,8 +443,8 @@ internal fun StaffDevicesTabContent(
                     )
                     Text(
                         text = tr(
-                            "Enter the 6-digit code above on a staff phone to pair it with this shop.",
-                            "इस दुकान से जोड़ने के लिए स्टाफ के फ़ोन पर ऊपर दिया गया 6-अंकीय कोड दर्ज करें।"
+                            "Enter the 8-digit code above on a staff phone to pair it with this shop.",
+                            "इस दुकान से जोड़ने के लिए स्टाफ के फ़ोन पर ऊपर दिया गया 8-अंकीय कोड दर्ज करें।"
                         ),
                         fontSize = 13.sp,
                         color = FlatTextSecondary,

@@ -138,7 +138,6 @@ internal fun PinUnlockFullScreen(
             }
 
             var matchedUser: User? = null
-            var latestLockoutResult: com.example.util.PinVerifyResult? = null
 
             val candidates = if (primaryTarget != null) {
                 listOf(primaryTarget) + activeUsers.filter { it.id != primaryTarget.id }
@@ -150,13 +149,7 @@ internal fun PinUnlockFullScreen(
                 if (candidate.pinHash.isBlank()) {
                     continue
                 }
-                val res = SecurityUtils.verifyPinWithLockout(
-                    pin = enteredPin,
-                    storedHash = candidate.pinHash,
-                    userId = lockoutKey
-                )
-                latestLockoutResult = res
-                if (res.isSuccess) {
+                if (SecurityUtils.verifyPin(enteredPin, candidate.pinHash)) {
                     matchedUser = candidate
                     if (!candidate.pinHash.startsWith("PBKDF2$")) {
                         repository.updateStaffMember(candidate.id, candidate.role, enteredPin)
@@ -166,14 +159,18 @@ internal fun PinUnlockFullScreen(
             }
 
             if (matchedUser != null) {
-                SecurityUtils.resetLockout(lockoutKey)
+                SecurityUtils.resetLockout(lockoutKey, context)
+                SecurityUtils.resetLockout(matchedUser.id, context)
                 repository.setActiveUser(matchedUser.id)
                 pinInput = ""
                 isVerifying = false
                 onUnlockSuccess()
             } else {
-                val res = latestLockoutResult
-                pinError = if (res != null && res.isLockedOut) {
+                val res = SecurityUtils.recordFailedPinAttempt(
+                    userId = lockoutKey,
+                    context = context
+                )
+                pinError = if (res.isLockedOut) {
                     String.format(Locale.getDefault(), lockedMsgTemplate, res.remainingLockoutSeconds)
                 } else {
                     incorrectPinMsg

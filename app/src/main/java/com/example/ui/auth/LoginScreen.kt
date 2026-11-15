@@ -163,7 +163,7 @@ fun LoginScreen(
 
     var isHandlingPostAuth by remember { mutableStateOf(false) }
 
-    val enterAllSixDigitsMsg = tr(
+    val enterAllEightDigitsMsg = tr(
         "Please enter all 8 digits of the pairing code.",
         "कृपया पेयरिंग कोड के सभी 8 अंक दर्ज करें।"
     )
@@ -348,9 +348,10 @@ fun LoginScreen(
                                 isClaimingPairing = false
                                 waitingApprovalToken = shopToken
                             },
-                            onError = {
+                            onError = { err ->
                                 isClaimingPairing = false
-                                waitingApprovalToken = shopToken
+                                pendingShopConfirmationToken = null
+                                pairingErrorMessage = err
                             }
                         )
                     }
@@ -372,9 +373,10 @@ fun LoginScreen(
                                         isClaimingPairing = false
                                         waitingApprovalToken = shopToken
                                     },
-                                    onError = {
+                                    onError = { err ->
                                         isClaimingPairing = false
-                                        waitingApprovalToken = shopToken
+                                        pendingShopConfirmationToken = null
+                                        pairingErrorMessage = err
                                     }
                                 )
                             }
@@ -820,7 +822,7 @@ fun LoginScreen(
                         }
 
                         // 8 Individual Rounded Digit Boxes
-                        StaffSixDigitCodeInput(
+                        StaffPairingCodeInput(
                             code = pairingCodeInput,
                             onCodeChange = { updated ->
                                 pairingCodeInput = updated
@@ -834,20 +836,51 @@ fun LoginScreen(
                         Button(
                             onClick = {
                                 if (pairingCodeInput.length < PairingRepository.PAIRING_CODE_LENGTH) {
-                                    pairingErrorMessage = enterAllSixDigitsMsg
+                                    pairingErrorMessage = enterAllEightDigitsMsg
                                     return@Button
                                 }
                                 isClaimingPairing = true
                                 pairingErrorMessage = null
-                                scope.launch {
-                                    val result = pairingRepository.getPairingToken(pairingCodeInput)
-                                    result.onSuccess { token ->
-                                        isClaimingPairing = false
-                                        pendingShopConfirmationToken = token
-                                    }.onFailure { ex ->
-                                        isClaimingPairing = false
-                                        pairingErrorMessage = ex.localizedMessage ?: "Invalid or expired pairing code."
+                                val gUser = runCatching { com.google.firebase.auth.FirebaseAuth.getInstance().currentUser }.getOrNull()
+                                if (gUser != null || activity == null) {
+                                    scope.launch {
+                                        val result = pairingRepository.getPairingToken(pairingCodeInput)
+                                        result.onSuccess { token ->
+                                            isClaimingPairing = false
+                                            pendingShopConfirmationToken = token
+                                        }.onFailure { ex ->
+                                            isClaimingPairing = false
+                                            pairingErrorMessage = ex.localizedMessage ?: "Invalid or expired pairing code."
+                                        }
                                     }
+                                } else {
+                                    GoogleAuthManager.onGoogleSignInClicked(
+                                        activity = activity,
+                                        credentialManager = credentialManager,
+                                        onAuthSuccess = { signedInStaff ->
+                                            staffDisplayName = signedInStaff.displayName.orEmpty()
+                                            staffEmail = signedInStaff.email.orEmpty()
+                                            scope.launch {
+                                                val result = pairingRepository.getPairingToken(pairingCodeInput)
+                                                result.onSuccess { token ->
+                                                    isClaimingPairing = false
+                                                    pendingShopConfirmationToken = token
+                                                }.onFailure { ex ->
+                                                    isClaimingPairing = false
+                                                    pairingErrorMessage = ex.localizedMessage ?: "Invalid or expired pairing code."
+                                                }
+                                            }
+                                        },
+                                        onAuthError = { err ->
+                                            isClaimingPairing = false
+                                            pairingErrorMessage = err
+                                        },
+                                        scope = scope,
+                                        onAuthCancelled = {
+                                            isClaimingPairing = false
+                                            pairingErrorMessage = "Sign in with Google is required to verify a store pairing code."
+                                        }
+                                    )
                                 }
                             },
                             enabled = !isClaimingPairing,
@@ -964,8 +997,8 @@ fun LoginScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = tr(
-                            "Paste the pairing QR link or 6-digit code from the admin phone:",
-                            "एडमिन फ़ोन से पेयरिंग QR लिंक या 6-अंकीय कोड पेस्ट करें:"
+                            "Paste the pairing QR link or 8-digit code from the admin phone:",
+                            "एडमिन फ़ोन से पेयरिंग QR लिंक या 8-अंकीय कोड पेस्ट करें:"
                         ),
                         fontSize = 13.sp,
                         color = LoginSubtleText
@@ -973,7 +1006,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = qrInputText,
                         onValueChange = { qrInputText = it },
-                        placeholder = { Text("khatawise://pair?code=482195") },
+                        placeholder = { Text("khatawise://pair?code=48219507") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )

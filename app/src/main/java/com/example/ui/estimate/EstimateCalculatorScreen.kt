@@ -1829,18 +1829,21 @@ fun EstimateCalculatorScreen(
                                 val adminsWithPin = allUsers.filter {
                                     !it.isDeleted && it.role == Role.ADMINISTRATOR && it.isActive && it.pinHash.isNotBlank()
                                 }
-                                val verified = adminsWithPin.isNotEmpty() && adminsWithPin.any { admin ->
-                                    SecurityUtils.verifyPinWithLockout(
-                                        pin = adminPinInput,
-                                        storedHash = admin.pinHash,
-                                        userId = admin.id
-                                    ).isSuccess
-                                }
-                                if (verified) {
-                                    showAdminPinForLimitOverride = false
-                                    executeSaleConversion()
-                                } else {
+                                val lockoutKey = "admin_override"
+                                if (adminsWithPin.isEmpty() || SecurityUtils.isPinLockedOut(lockoutKey)) {
                                     adminPinError = true
+                                } else {
+                                    val verified = adminsWithPin.any { admin ->
+                                        SecurityUtils.verifyPin(adminPinInput, admin.pinHash)
+                                    }
+                                    if (verified) {
+                                        SecurityUtils.resetLockout(lockoutKey)
+                                        showAdminPinForLimitOverride = false
+                                        executeSaleConversion()
+                                    } else {
+                                        SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
+                                        adminPinError = true
+                                    }
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = CGreenPrimary, contentColor = Color.White)

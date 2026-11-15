@@ -22,7 +22,7 @@ import kotlin.math.abs
 
 /**
  * High-clarity vector QR Code Canvas renderer with authentic finder patterns
- * and deterministic matrix layout based on the 6-digit pairing code.
+ * and deterministic matrix layout based on the 8-digit pairing code.
  */
 @Composable
 fun QrCodeView(

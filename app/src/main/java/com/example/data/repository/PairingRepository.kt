@@ -59,6 +59,19 @@ class PairingRepository(private val context: Context) {
             0L
         }
 
+        private fun resolveBootCount(context: Context?): Int {
+            val ctx = context ?: runCatching { com.example.KhataWiseApp.instance.applicationContext }.getOrNull() ?: return -1
+            return try {
+                android.provider.Settings.Global.getInt(
+                    ctx.contentResolver,
+                    android.provider.Settings.Global.BOOT_COUNT,
+                    -1
+                )
+            } catch (_: Throwable) {
+                -1
+            }
+        }
+
         private fun resolvePrefs(context: Context?): SharedPreferences? = runCatching {
             val ctx = context ?: com.example.KhataWiseApp.instance.applicationContext
             ctx.getSharedPreferences(RATE_LIMIT_PREFS, Context.MODE_PRIVATE)
@@ -71,16 +84,30 @@ class PairingRepository(private val context: Context) {
         @Synchronized
         internal fun checkLookupRateLimit(
             context: Context? = null,
-            nowEpochMs: Long = System.currentTimeMillis()
+            nowEpochMs: Long = System.currentTimeMillis(),
+            elapsedNow: Long = safeElapsedRealtime()
         ) {
             val prefs = resolvePrefs(context)
             if (prefs != null) {
                 failedLookupAttempts = prefs.getInt("failed_attempts", failedLookupAttempts)
                 lookupLockoutUntilEpochMs = prefs.getLong("lockout_until_epoch", lookupLockoutUntilEpochMs)
                 lookupLockoutStartedEpochMs = prefs.getLong("lockout_started_epoch", lookupLockoutStartedEpochMs)
+                val persistedElapsed = prefs.getLong("lockout_until_elapsed", 0L)
+                val persistedBoot = prefs.getInt("lockout_boot_count", -1)
+                val currentBoot = resolveBootCount(context)
+                val sameBoot = when {
+                    persistedElapsed <= 0L -> false
+                    currentBoot != -1 && persistedBoot != -1 -> currentBoot == persistedBoot
+                    elapsedNow > 0L ->
+                        elapsedNow <= persistedElapsed &&
+                            (persistedElapsed - elapsedNow) <= PAIRING_LOCKOUT_MS + 5_000L
+                    else -> true
+                }
+                if (sameBoot) {
+                    lookupLockoutUntilElapsedMs = persistedElapsed
+                }
             }
 
-            val elapsedNow = safeElapsedRealtime()
             if (elapsedNow > 0L && lookupLockoutUntilElapsedMs > elapsedNow) {
                 val remSec = ((lookupLockoutUntilElapsedMs - elapsedNow + 999L) / 1000L).coerceAtLeast(1L)
                 throw IllegalStateException("Too many invalid pairing attempts. Please wait ${remSec}s before trying again.")
@@ -109,7 +136,8 @@ class PairingRepository(private val context: Context) {
         internal fun recordLookupOutcome(
             success: Boolean,
             context: Context? = null,
-            nowEpochMs: Long = System.currentTimeMillis()
+            nowEpochMs: Long = System.currentTimeMillis(),
+            elapsedNow: Long = safeElapsedRealtime()
         ) {
             val prefs = resolvePrefs(context)
             if (success) {
@@ -117,16 +145,18 @@ class PairingRepository(private val context: Context) {
             } else {
                 val prev = prefs?.getInt("failed_attempts", failedLookupAttempts) ?: failedLookupAttempts
                 failedLookupAttempts = prev + 1
+                val bootCount = resolveBootCount(context)
                 if (failedLookupAttempts >= MAX_PAIRING_ATTEMPTS) {
                     lookupLockoutStartedEpochMs = nowEpochMs
                     lookupLockoutUntilEpochMs = nowEpochMs + PAIRING_LOCKOUT_MS
-                    val elapsed = safeElapsedRealtime()
-                    lookupLockoutUntilElapsedMs = if (elapsed > 0L) elapsed + PAIRING_LOCKOUT_MS else 0L
+                    lookupLockoutUntilElapsedMs = if (elapsedNow > 0L) elapsedNow + PAIRING_LOCKOUT_MS else 0L
                 }
                 prefs?.edit()
                     ?.putInt("failed_attempts", failedLookupAttempts)
                     ?.putLong("lockout_started_epoch", lookupLockoutStartedEpochMs)
                     ?.putLong("lockout_until_epoch", lookupLockoutUntilEpochMs)
+                    ?.putLong("lockout_until_elapsed", lookupLockoutUntilElapsedMs)
+                    ?.putInt("lockout_boot_count", bootCount)
                     ?.apply()
             }
         }
@@ -142,11 +172,19 @@ class PairingRepository(private val context: Context) {
     }
 
     private suspend fun ensureAuthenticated() {
-        runCatching {
-            val auth = FirebaseAuth.getInstance()
-            if (auth.currentUser == null) {
-                auth.signInAnonymously().await()
-            }
+        val auth = runCatching { FirebaseAuth.getInstance() }.getOrNull()
+            ?: throw IllegalStateException("Firebase Authentication is not available.")
+        if (auth.currentUser != null) return
+        try {
+            auth.signInAnonymously().await()
+        } catch (e: Throwable) {
+            throw IllegalStateException(
+                "Please sign in with your Google account before verifying a pairing code.",
+                e
+            )
+        }
+        if (auth.currentUser == null) {
+            throw IllegalStateException("Please sign in with your Google account before verifying a pairing code.")
         }
     }
 
@@ -318,8 +356,13 @@ class PairingRepository(private val context: Context) {
             throw IllegalStateException("This pairing code expired after 10 minutes. Please ask the store admin to generate a new code.")
         }
 
-        recordLookupOutcome(true, context)
         val adminUid = snapshot.safeString("adminUid")
+        if (adminUid.isBlank()) {
+            recordLookupOutcome(false, context)
+            throw IllegalStateException("Invalid pairing token: missing store owner account.")
+        }
+
+        recordLookupOutcome(true, context)
         val storeName = snapshot.safeString("storeName", "KhataWise Store").ifBlank { "KhataWise Store" }
         val assignedRole = snapshot.safeString("assignedRole", "CASHIER").ifBlank { "CASHIER" }
 
@@ -333,26 +376,21 @@ class PairingRepository(private val context: Context) {
         )
         docRef.update(updates).await()
 
-        // Record staff member under store with pairingCode proof required by Firestore rules (N1)
-        if (adminUid.isNotBlank()) {
-            val staffDoc = mapOf(
-                "staffUid" to staffUid,
-                "name" to staffName.ifBlank { "Staff Device" },
-                "email" to staffEmail,
-                "deviceInfo" to deviceInfo,
-                "role" to assignedRole,
-                "pairingCode" to cleanCode,
-                "isActive" to true,
-                "pairedAt" to now,
-                "lastActiveAt" to now,
-                "updatedAt" to now
-            )
-            try {
-                db.collection("users").document(adminUid).collection("staff").document(staffUid).set(staffDoc).await()
-            } catch (e: Throwable) {
-                Log.w(TAG, "Staff record write under admin failed: ${e.message}")
-            }
-        }
+        // Record staff member under store with pairingCode proof required by Firestore rules (N1 & N14).
+        // Do not swallow failures: if staff registration fails, surface the error so the device is not left without store access.
+        val staffDoc = mapOf(
+            "staffUid" to staffUid,
+            "name" to staffName.ifBlank { "Staff Device" },
+            "email" to staffEmail,
+            "deviceInfo" to deviceInfo,
+            "role" to assignedRole,
+            "pairingCode" to cleanCode,
+            "isActive" to true,
+            "pairedAt" to now,
+            "lastActiveAt" to now,
+            "updatedAt" to now
+        )
+        db.collection("users").document(adminUid).collection("staff").document(staffUid).set(staffDoc).await()
 
         DevicePairingToken(
             code = cleanCode,

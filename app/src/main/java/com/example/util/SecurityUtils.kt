@@ -26,7 +26,8 @@ object SecurityUtils {
         val failedAttempts: Int = 0,
         val lockoutUntilEpochMs: Long = 0L,
         val lockoutStartedAtEpochMs: Long = 0L,
-        val lockoutUntilElapsedMs: Long = 0L
+        val lockoutUntilElapsedMs: Long = 0L,
+        val lockoutBootCount: Int = -1
     )
 
     private val userLockouts = ConcurrentHashMap<String, UserLockoutState>()
@@ -37,6 +38,19 @@ object SecurityUtils {
             SystemClock.elapsedRealtime()
         } catch (_: Throwable) {
             0L
+        }
+    }
+
+    private fun resolveBootCount(context: Context? = null): Int {
+        val ctx = context ?: runCatching { com.example.KhataWiseApp.instance.applicationContext }.getOrNull() ?: return -1
+        return try {
+            android.provider.Settings.Global.getInt(
+                ctx.contentResolver,
+                android.provider.Settings.Global.BOOT_COUNT,
+                -1
+            )
+        } catch (_: Throwable) {
+            -1
         }
     }
 
@@ -51,7 +65,11 @@ object SecurityUtils {
         return userId.trim().ifEmpty { "default" }
     }
 
-    private fun loadUserState(userId: String, context: Context? = null): UserLockoutState {
+    private fun loadUserState(
+        userId: String,
+        context: Context? = null,
+        elapsedRealtimeMs: Long = safeElapsedRealtime()
+    ): UserLockoutState {
         val key = normalizeUserKey(userId)
         val cached = userLockouts[key]
         val prefs = resolveLockoutPrefs(context)
@@ -59,12 +77,31 @@ object SecurityUtils {
             val attemptsKey = "attempts_$key"
             val lockoutKey = "lockout_until_$key"
             val startedKey = "lockout_started_$key"
-            if (prefs.contains(attemptsKey) || prefs.contains(lockoutKey)) {
+            val elapsedKey = "lockout_elapsed_$key"
+            val bootKey = "lockout_boot_$key"
+            if (prefs.contains(attemptsKey) || prefs.contains(lockoutKey) || prefs.contains(elapsedKey)) {
+                val persistedElapsed = prefs.getLong(elapsedKey, 0L)
+                val persistedBoot = prefs.getInt(bootKey, -1)
+                val currentBoot = resolveBootCount(context)
+                val sameBootSession = when {
+                    persistedElapsed <= 0L -> false
+                    currentBoot != -1 && persistedBoot != -1 -> currentBoot == persistedBoot
+                    elapsedRealtimeMs > 0L ->
+                        elapsedRealtimeMs <= persistedElapsed &&
+                            (persistedElapsed - elapsedRealtimeMs) <= LOCKOUT_DURATION_MS + 5_000L
+                    else -> true
+                }
+                val resolvedElapsed = if (sameBootSession) {
+                    persistedElapsed
+                } else {
+                    cached?.lockoutUntilElapsedMs ?: 0L
+                }
                 val persisted = UserLockoutState(
                     failedAttempts = prefs.getInt(attemptsKey, 0),
                     lockoutUntilEpochMs = prefs.getLong(lockoutKey, 0L),
                     lockoutStartedAtEpochMs = prefs.getLong(startedKey, 0L),
-                    lockoutUntilElapsedMs = cached?.lockoutUntilElapsedMs ?: 0L
+                    lockoutUntilElapsedMs = resolvedElapsed,
+                    lockoutBootCount = persistedBoot
                 )
                 userLockouts[key] = persisted
                 return persisted
@@ -81,6 +118,8 @@ object SecurityUtils {
             .putInt("attempts_$key", state.failedAttempts)
             .putLong("lockout_until_$key", state.lockoutUntilEpochMs)
             .putLong("lockout_started_$key", state.lockoutStartedAtEpochMs)
+            .putLong("lockout_elapsed_$key", state.lockoutUntilElapsedMs)
+            .putInt("lockout_boot_$key", state.lockoutBootCount)
             .apply()
     }
 
@@ -147,9 +186,63 @@ object SecurityUtils {
     }
 
     /**
+     * Records a single failed PIN attempt for [userId] and returns the updated [PinVerifyResult].
+     * Used when checking a PIN against a list of candidate users so one wrong PIN entry counts
+     * as exactly one failed attempt rather than once per candidate (N11).
+     */
+    @Synchronized
+    fun recordFailedPinAttempt(
+        userId: String = "default",
+        nowMs: Long = System.currentTimeMillis(),
+        context: Context? = null,
+        elapsedRealtimeMs: Long = safeElapsedRealtime()
+    ): PinVerifyResult {
+        val key = normalizeUserKey(userId)
+        if (isLockedOut(nowMs = nowMs, userId = key, context = context, elapsedRealtimeMs = elapsedRealtimeMs)) {
+            return PinVerifyResult.LockedOut(
+                remainingLockoutSeconds(nowMs = nowMs, userId = key, context = context, elapsedRealtimeMs = elapsedRealtimeMs)
+            )
+        }
+        val current = loadUserState(key, context, elapsedRealtimeMs)
+        val nextAttempts = current.failedAttempts + 1
+        return if (nextAttempts >= MAX_PIN_ATTEMPTS) {
+            val untilEpoch = nowMs + LOCKOUT_DURATION_MS
+            val untilElapsed = if (elapsedRealtimeMs > 0L) elapsedRealtimeMs + LOCKOUT_DURATION_MS else 0L
+            val bootCount = resolveBootCount(context)
+            saveUserState(
+                key,
+                UserLockoutState(
+                    failedAttempts = nextAttempts,
+                    lockoutUntilEpochMs = untilEpoch,
+                    lockoutStartedAtEpochMs = nowMs,
+                    lockoutUntilElapsedMs = untilElapsed,
+                    lockoutBootCount = bootCount
+                ),
+                context
+            )
+            PinVerifyResult.LockedOut(
+                remainingLockoutSeconds(nowMs = nowMs, userId = key, context = context, elapsedRealtimeMs = elapsedRealtimeMs)
+            )
+        } else {
+            saveUserState(
+                key,
+                UserLockoutState(
+                    failedAttempts = nextAttempts,
+                    lockoutUntilEpochMs = 0L,
+                    lockoutStartedAtEpochMs = 0L,
+                    lockoutUntilElapsedMs = 0L,
+                    lockoutBootCount = -1
+                ),
+                context
+            )
+            PinVerifyResult.Failed(MAX_PIN_ATTEMPTS - nextAttempts)
+        }
+    }
+
+    /**
      * Verifies PIN while enforcing per-user persistent lockout after 5 wrong tries.
-     * Uses both monotonic elapsedRealtime and wall-clock time so advancing the device clock
-     * cannot end an active lockout early.
+     * Uses both monotonic elapsedRealtime (persisted with boot count) and wall-clock time so
+     * advancing the device clock—even after killing the app—cannot end an active lockout early.
      */
     @Synchronized
     fun verifyPinWithLockout(
@@ -171,37 +264,12 @@ object SecurityUtils {
             resetLockout(userId = key, context = context)
             PinVerifyResult.Success
         } else {
-            val current = loadUserState(key, context)
-            val nextAttempts = current.failedAttempts + 1
-            if (nextAttempts >= MAX_PIN_ATTEMPTS) {
-                val untilEpoch = nowMs + LOCKOUT_DURATION_MS
-                val untilElapsed = if (elapsedRealtimeMs > 0L) elapsedRealtimeMs + LOCKOUT_DURATION_MS else 0L
-                saveUserState(
-                    key,
-                    UserLockoutState(
-                        failedAttempts = nextAttempts,
-                        lockoutUntilEpochMs = untilEpoch,
-                        lockoutStartedAtEpochMs = nowMs,
-                        lockoutUntilElapsedMs = untilElapsed
-                    ),
-                    context
-                )
-                PinVerifyResult.LockedOut(
-                    remainingLockoutSeconds(nowMs = nowMs, userId = key, context = context, elapsedRealtimeMs = elapsedRealtimeMs)
-                )
-            } else {
-                saveUserState(
-                    key,
-                    UserLockoutState(
-                        failedAttempts = nextAttempts,
-                        lockoutUntilEpochMs = 0L,
-                        lockoutStartedAtEpochMs = 0L,
-                        lockoutUntilElapsedMs = 0L
-                    ),
-                    context
-                )
-                PinVerifyResult.Failed(MAX_PIN_ATTEMPTS - nextAttempts)
-            }
+            recordFailedPinAttempt(
+                userId = key,
+                nowMs = nowMs,
+                context = context,
+                elapsedRealtimeMs = elapsedRealtimeMs
+            )
         }
     }
 
@@ -226,9 +294,9 @@ object SecurityUtils {
         elapsedRealtimeMs: Long = safeElapsedRealtime()
     ): Boolean {
         val key = normalizeUserKey(userId)
-        var state = loadUserState(key, context)
+        var state = loadUserState(key, context, elapsedRealtimeMs)
 
-        // 1. In-session monotonic clock check (immune to wall-clock forward jumps)
+        // 1. Monotonic elapsedRealtime check (persisted across process death within the same boot)
         if (elapsedRealtimeMs > 0L && state.lockoutUntilElapsedMs > 0L) {
             if (elapsedRealtimeMs < state.lockoutUntilElapsedMs) {
                 return true
@@ -245,7 +313,7 @@ object SecurityUtils {
             return true
         }
 
-        // 3. Persisted wall-clock check (survives process death)
+        // 3. Persisted wall-clock check (survives device reboot)
         if (state.lockoutUntilEpochMs > nowMs) return true
         if (state.lockoutUntilEpochMs != 0L && nowMs >= state.lockoutUntilEpochMs) {
             saveUserState(key, UserLockoutState(), context)
@@ -264,7 +332,7 @@ object SecurityUtils {
         context: Context? = null,
         elapsedRealtimeMs: Long = safeElapsedRealtime()
     ): Int {
-        val state = loadUserState(userId, context)
+        val state = loadUserState(userId, context, elapsedRealtimeMs)
         val elapsedRemMs = if (elapsedRealtimeMs > 0L && state.lockoutUntilElapsedMs > elapsedRealtimeMs) {
             state.lockoutUntilElapsedMs - elapsedRealtimeMs
         } else {

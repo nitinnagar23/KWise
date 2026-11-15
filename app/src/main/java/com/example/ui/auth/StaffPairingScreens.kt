@@ -56,7 +56,7 @@ import com.example.util.tr
 import java.util.Locale
 
 @Composable
-internal fun StaffSixDigitCodeInput(
+internal fun StaffPairingCodeInput(
     code: String,
     onCodeChange: (String) -> Unit,
     modifier: Modifier = Modifier,

@@ -273,9 +273,13 @@ fun DevicePairingDialog(
                             )
                         }
 
-                        // 6-digit PIN Box
+                        // 8-digit PIN Box
                         val displayPin = activeToken.code.let {
-                            if (it.length == 6) "${it.substring(0, 3)}  ${it.substring(3)}" else it
+                            when (it.length) {
+                                8 -> "${it.substring(0, 4)}  ${it.substring(4)}"
+                                6 -> "${it.substring(0, 3)}  ${it.substring(3)}"
+                                else -> it
+                            }
                         }
 
                         Box(
@@ -293,7 +297,7 @@ fun DevicePairingDialog(
                             ) {
                                 Column {
                                     Text(
-                                        text = "6-DIGIT PAIRING PIN",
+                                        text = "8-DIGIT PAIRING PIN",
                                         fontSize = 11.sp,
                                         letterSpacing = 1.sp,
                                         color = FlatTextMuted
@@ -372,7 +376,7 @@ fun DevicePairingDialog(
                             }
                         } else {
                             Text(
-                                text = "Counter phone opens KhataWise -> 'Link Staff Device' -> enters this 6-digit PIN.",
+                                text = "Counter phone opens KhataWise -> 'Link Staff Device' -> enters this 8-digit PIN.",
                                 fontSize = 11.sp,
                                 color = FlatTextMuted,
                                 textAlign = TextAlign.Center

@@ -64,11 +64,9 @@ object ReminderScheduler {
 
         val now = System.currentTimeMillis()
 
-        // Avoid re-firing on the same promise day after reboot or app update once already notified (N9)
+        // Avoid re-firing on the same promise day after reboot or app update once already notified (N9 & N13)
         if (isRescheduleAfterBootOrUpdate || calendar.timeInMillis <= now) {
-            if (hasReminderFiredForDate(context, customer.id, promiseDate) ||
-                hasReminderFiredForDate(context, customer.id, now)
-            ) {
+            if (hasReminderFiredForDate(context, customer.id, promiseDate)) {
                 return
             }
         }

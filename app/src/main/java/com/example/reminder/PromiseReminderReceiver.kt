@@ -92,11 +92,6 @@ class PromiseReminderReceiver : BroadcastReceiver() {
                     customerId = customerId,
                     dateMillis = liveCustomer?.promiseDate ?: System.currentTimeMillis()
                 )
-                ReminderScheduler.markReminderFiredForDate(
-                    context = context,
-                    customerId = customerId,
-                    dateMillis = System.currentTimeMillis()
-                )
             } finally {
                 pendingResult?.finish()
             }

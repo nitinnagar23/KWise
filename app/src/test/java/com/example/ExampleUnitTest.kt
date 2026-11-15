@@ -292,6 +292,34 @@ class ExampleUnitTest {
 
         com.example.util.SecurityUtils.resetLockout(userId)
     }
+
+    @Test
+    fun multiCandidatePinCheckCountsOnlyOneFailurePerEnteredPin() {
+        val lockoutKey = "multi_candidate_lockout"
+        com.example.util.SecurityUtils.resetLockout(lockoutKey)
+
+        val candidateHashes = listOf(
+            com.example.util.SecurityUtils.hashPin("1111"),
+            com.example.util.SecurityUtils.hashPin("2222"),
+            com.example.util.SecurityUtils.hashPin("3333")
+        )
+
+        // Two wrong entries across 3 candidates must only record 2 failed attempts (not 6!),
+        // so the 3rd candidate's valid PIN ("3333") must still succeed on the 3rd try.
+        repeat(2) {
+            val matched = candidateHashes.any { com.example.util.SecurityUtils.verifyPin("9999", it) }
+            assertFalse(matched)
+            val res = com.example.util.SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
+            assertFalse("Should not be locked out after ${it + 1} wrong tries", res.isLockedOut)
+        }
+        assertEquals(2, com.example.util.SecurityUtils.getFailedAttempts(lockoutKey))
+        assertFalse(com.example.util.SecurityUtils.isPinLockedOut(lockoutKey))
+
+        // Now entering the 3rd candidate's correct PIN succeeds
+        val thirdCandidateMatched = candidateHashes.any { com.example.util.SecurityUtils.verifyPin("3333", it) }
+        assertTrue(thirdCandidateMatched)
+        com.example.util.SecurityUtils.resetLockout(lockoutKey)
+    }
 }
 
 

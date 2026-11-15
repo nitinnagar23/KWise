@@ -229,5 +229,35 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
       amount: 500,
     })
   );
+
+  // If Alice issues a new pairing code for Bob (e.g. as MANAGER), Bob can claim it and re-pair his existing staff doc (N14)
+  const newCode = "87654321";
+  await aliceDb.collection("pairings").doc(newCode).set({
+    code: newCode,
+    adminUid: ALICE_UID,
+    storeName: "Alice Feed Mart",
+    assignedRole: "MANAGER",
+    status: "ACTIVE",
+    createdAt: now,
+    expiresAt: expiresAt,
+  });
+  await assertSucceeds(
+    bobDb.collection("pairings").doc(newCode).update({
+      status: "CLAIMED",
+      claimedByUid: BOB_UID,
+      claimedByName: "Bob Counter",
+      claimedAt: Date.now(),
+    })
+  );
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).set({
+      staffUid: BOB_UID,
+      name: "Bob Counter",
+      role: "MANAGER",
+      pairingCode: newCode,
+      isActive: true,
+      pairedAt: Date.now(),
+    })
+  );
 });
 

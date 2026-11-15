@@ -924,8 +924,8 @@ fun StaffManagementScreen(
                     ) {
                         Text(
                             text = tr(
-                                "Gmail and Mobile Type are fetched automatically when staff connect their phone via a 6-digit pairing code and cannot be changed manually.",
-                                "जब स्टाफ 6-अंकीय पेयरिंग कोड के माध्यम से अपना फ़ोन जोड़ते हैं तो जीमेल और मोबाइल मॉडल अपने आप प्राप्त हो जाते हैं और उन्हें बदला नहीं जा सकता।"
+                                "Gmail and Mobile Type are fetched automatically when staff connect their phone via an 8-digit pairing code and cannot be changed manually.",
+                                "जब स्टाफ 8-अंकीय पेयरिंग कोड के माध्यम से अपना फ़ोन जोड़ते हैं तो जीमेल और मोबाइल मॉडल अपने आप प्राप्त हो जाते हैं और उन्हें बदला नहीं जा सकता।"
                             ),
                             fontSize = 12.sp,
                             color = FlatTextSecondary,

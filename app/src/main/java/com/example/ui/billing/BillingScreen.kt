@@ -1511,20 +1511,21 @@ fun BillingScreen(
                             val adminsWithPin = allUsers.filter {
                                 !it.isDeleted && it.isActive && it.role == Role.ADMINISTRATOR && it.pinHash.isNotBlank()
                             }
+                            val lockoutKey = "admin_override"
                             if (adminsWithPin.isEmpty()) {
                                 pinError = adminPinRequiredMsg
+                            } else if (SecurityUtils.isPinLockedOut(lockoutKey)) {
+                                pinError = invalidAdminPinMsg
                             } else {
                                 val approved = adminsWithPin.any { admin ->
-                                    SecurityUtils.verifyPinWithLockout(
-                                        pin = adminApprovalPin,
-                                        storedHash = admin.pinHash,
-                                        userId = admin.id
-                                    ).isSuccess
+                                    SecurityUtils.verifyPin(adminApprovalPin, admin.pinHash)
                                 }
                                 if (approved) {
+                                    SecurityUtils.resetLockout(lockoutKey)
                                     showOverLimitConfirmDialog = false
                                     executeSaveBill()
                                 } else {
+                                    SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
                                     pinError = invalidAdminPinMsg
                                 }
                             }

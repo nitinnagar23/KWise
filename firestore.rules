@@ -157,9 +157,16 @@ service cloud.firestore {
         );
         allow update: if isAdmin(userId) || (
           isAuthenticated() &&
-          request.auth.uid == staffId &&
-          request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['lastActiveAt', 'deviceInfo', 'name', 'email', 'updatedAt', 'pairedAt'])
+          request.auth.uid == staffId && (
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['lastActiveAt', 'deviceInfo', 'name', 'email', 'updatedAt', 'pairedAt']) ||
+            (
+              request.resource.data.get('staffUid', staffId) == staffId &&
+              request.resource.data.get('role', 'CASHIER') in ['CASHIER', 'MANAGER', 'STAFF'] &&
+              request.resource.data.get('isActive', true) == true &&
+              hasValidClaimedPairing(userId, staffId, request.resource.data)
+            )
+          )
         );
         allow delete: if isAdmin(userId);
       }
