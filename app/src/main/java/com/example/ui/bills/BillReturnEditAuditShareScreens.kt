@@ -218,21 +218,18 @@ fun BillReturnFlowScreen(
 
     // Compute total return value across selected items
     val itemsReturnValue = siblingItems.fold(BigDecimal.ZERO) { acc, s ->
-        if (selectedForReturn[s.id] == true) {
+        if (selectedForReturn[s.id] == true && s.quantityKg > BigDecimal.ZERO) {
             val p = productMap[s.productId]
             val isBagItem = p != null && !p.isLooseOnly && p.kgPerBag > BigDecimal.ONE && s.quantityKg >= p.kgPerBag
             val units = returnUnitsMap[s.id] ?: BigDecimal.ONE
             val returnKg = if (isBagItem && p != null) units.multiply(p.kgPerBag).min(s.quantityKg) else units.min(s.quantityKg)
-            val ratePerUnit = if (isBagItem && p != null) {
-                s.pricePerKgAtSale.multiply(p.kgPerBag).setScale(0, RoundingMode.HALF_UP)
+            val remainingKg = s.quantityKg.subtract(returnKg).max(BigDecimal.ZERO)
+            val newLineTotal = if (remainingKg > BigDecimal.ZERO) {
+                s.totalSalePrice.multiply(remainingKg).divide(s.quantityKg, CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
             } else {
-                s.pricePerKgAtSale
+                BigDecimal.ZERO.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
             }
-            val itemRetVal = if (isBagItem) {
-                ratePerUnit.multiply(units)
-            } else {
-                returnKg.multiply(s.pricePerKgAtSale).setScale(0, RoundingMode.HALF_UP)
-            }
+            val itemRetVal = s.totalSalePrice.subtract(newLineTotal).max(BigDecimal.ZERO)
             acc.add(itemRetVal)
         } else {
             acc
@@ -253,7 +250,7 @@ fun BillReturnFlowScreen(
         "CN-$num"
     }
 
-    val customerCurrentOutstanding = (customer?.totalUdhari ?: originalBillDue).max(originalBillDue)
+    val customerCurrentOutstanding = customer?.totalUdhari ?: originalBillDue
     val udhariReductionAmount = when (settlementMode) {
         ReturnSettlementMode.REDUCE_UDHARI -> totalReturnValue
         ReturnSettlementMode.REFUND_MONEY -> BigDecimal.ZERO
@@ -265,7 +262,8 @@ fun BillReturnFlowScreen(
     val refundCashAmount = totalReturnValue.subtract(udhariReductionAmount).max(BigDecimal.ZERO)
     val customerOutstandingAfter = customerCurrentOutstanding.subtract(udhariReductionAmount).max(BigDecimal.ZERO)
     val billTotalAfter = originalBillTotal.subtract(totalReturnValue).max(BigDecimal.ZERO)
-    val billDueAfter = billTotalAfter.subtract(originalBillPaid).max(BigDecimal.ZERO)
+    val billPaidAfter = originalBillPaid.subtract(refundCashAmount).max(BigDecimal.ZERO)
+    val billDueAfter = billTotalAfter.subtract(billPaidAfter).max(BigDecimal.ZERO)
 
     // Primary returned item for stock preview
     val firstSelectedSale = siblingItems.firstOrNull { selectedForReturn[it.id] == true } ?: primarySale
@@ -1133,19 +1131,23 @@ fun BillReturnFlowScreen(
                                     ReturnSettlementMode.SPLIT -> "Split (Udhari −${CurrencyUtils.formatInr(udhariReductionAmount)}, Refund ${CurrencyUtils.formatInr(refundCashAmount)})"
                                 }
                                 scope.launch {
+                                    var remainingCashRefund = refundCashAmount
                                     siblingItems.forEach { s ->
                                         if (selectedForReturn[s.id] == true) {
                                             val p = productMap[s.productId]
                                             val isBag = p != null && !p.isLooseOnly && p.kgPerBag > BigDecimal.ONE && s.quantityKg >= p.kgPerBag
                                             val units = returnUnitsMap[s.id] ?: BigDecimal.ONE
                                             val retKg = if (isBag && p != null) units.multiply(p.kgPerBag).min(s.quantityKg) else units.min(s.quantityKg)
+                                            val itemCashRefund = remainingCashRefund.min(s.paidAmount).max(BigDecimal.ZERO)
+                                            remainingCashRefund = remainingCashRefund.subtract(itemCashRefund).max(BigDecimal.ZERO)
                                             repository.returnSaleItems(
                                                 saleId = s.id,
                                                 returnKg = retKg,
                                                 reason = combinedReason,
                                                 performedBy = actor,
                                                 putBackInStock = putBackInStock,
-                                                settlementSummary = settlementLabel
+                                                settlementSummary = settlementLabel,
+                                                cashRefunded = itemCashRefund
                                             )
                                         }
                                     }

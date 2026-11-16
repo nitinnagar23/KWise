@@ -21,7 +21,7 @@ interface PurchaseInvoiceDao {
     @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) ORDER BY date ASC")
     suspend fun getInvoicesListForWholesaler(wholesalerName: String): List<PurchaseInvoice>
 
-    @Query("SELECT * FROM purchase_invoices WHERE isDeleted = 0 AND id = :id LIMIT 1")
+    @Query("SELECT * FROM purchase_invoices WHERE id = :id LIMIT 1")
     suspend fun getInvoiceById(id: String): PurchaseInvoice?
 
     @Query("SELECT * FROM purchase_invoices WHERE syncStatus != 'SYNCED'")

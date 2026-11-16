@@ -202,6 +202,21 @@ abstract class AppDatabase : RoomDatabase() {
 
             safeAddColumn(db, "payments", "paymentMode", "TEXT NOT NULL DEFAULT 'CASH'")
 
+            // Performance indexes on high-cardinality foreign keys and query filter columns
+            try {
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_sales_customerId` ON `sales` (`customerId`, `isDeleted`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_sales_date` ON `sales` (`date`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_sales_syncStatus` ON `sales` (`syncStatus`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_payments_customerId` ON `payments` (`customerId`, `isDeleted`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_payments_date` ON `payments` (`date`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_payments_syncStatus` ON `payments` (`syncStatus`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_purchases_productId` ON `purchases` (`productId`, `isDeleted`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_purchase_invoices_wholesaler` ON `purchase_invoices` (`wholesalerName`, `isDeleted`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `idx_supplier_payments_wholesaler` ON `supplier_payments` (`wholesalerName`, `isDeleted`)")
+            } catch (e: Throwable) {
+                Log.w(TAG, "ensureIndexes in migration: ${e.message}")
+            }
+
             try {
                 db.execSQL(
                     """

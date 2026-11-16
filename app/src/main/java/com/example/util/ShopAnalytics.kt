@@ -188,13 +188,15 @@ object ShopAnalytics {
                 ((startOfToday - promise) / (24L * 60L * 60L * 1000L)).toInt().coerceAtLeast(1)
             } else 0
 
+            val billCount = com.example.model.groupSalesIntoBills(custSales).size
+
             // Calculate Trust Score (0..100)
             var score = 75 // Base score for new customer
             if (totalPurchased > BigDecimal.ZERO) {
                 val repaymentRatio = totalPaid.divide(totalPurchased, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal("100")).toInt().coerceIn(0, 100)
                 score = 40 + (repaymentRatio * 50) / 100 // 40..90 based on repayment ratio
-                if (custSales.size >= 5 && repaymentRatio >= 85) {
+                if (billCount >= 5 && repaymentRatio >= 85) {
                     score += 10
                 }
             }
@@ -227,7 +229,7 @@ object ShopAnalytics {
                 overdueDays = overdueDays,
                 trustScore = finalScore,
                 trustBadge = badge,
-                orderCount = custSales.size
+                orderCount = billCount
             )
         }
     }

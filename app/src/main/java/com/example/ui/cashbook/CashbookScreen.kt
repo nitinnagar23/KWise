@@ -182,7 +182,7 @@ internal object CashbookManualPrefs {
         val existing = loadManualEntries(context).toMutableList()
         existing.add(0, entry)
         val arr = JSONArray()
-        existing.take(300).forEach { item ->
+        existing.forEach { item ->
             val obj = JSONObject()
             obj.put("id", item.id)
             obj.put("date", item.date)
@@ -247,9 +247,14 @@ fun CashbookScreen(
         // Manual Cash in / Cash out entries
         list.addAll(manualEntries)
 
-        // Auto Sale Cash Received (consolidated per bill)
+        // Auto Sale Cash Received (consolidated per bill, physical cash only)
         val groupedCashBills = com.example.model.groupSalesIntoBills(
-            sales.filter { !it.isDeleted && it.billStatus != "CANCELLED" },
+            sales.filter {
+                !it.isDeleted &&
+                    it.billStatus != "CANCELLED" &&
+                    !it.paymentMode.equals("UPI", ignoreCase = true) &&
+                    !it.paymentMode.equals("BANK", ignoreCase = true)
+            },
             descending = false
         )
         groupedCashBills.filter { it.paidAmount > BigDecimal.ZERO }.forEach { bill ->
@@ -270,8 +275,14 @@ fun CashbookScreen(
             )
         }
 
-        // Auto Customer Udhari Repayments
-        payments.filter { !it.isDeleted && it.amount > BigDecimal.ZERO }.forEach { p ->
+        // Auto Customer Udhari Repayments (physical cash only)
+        payments.filter {
+            !it.isDeleted &&
+                it.amount > BigDecimal.ZERO &&
+                !it.paymentMode.equals("UPI", ignoreCase = true) &&
+                !it.paymentMode.equals("BANK", ignoreCase = true) &&
+                !it.note.contains("UPI", ignoreCase = true)
+        }.forEach { p ->
             val customerName = customerMap[p.customerId] ?: "Customer"
             list.add(
                 CashbookEntry(
@@ -288,8 +299,8 @@ fun CashbookScreen(
             )
         }
 
-        // Purchase Invoice Cash Paid
-        invoices.filter { it.paidAmount > BigDecimal.ZERO }.forEach { inv ->
+        // Purchase Invoice Cash Paid (exclude deleted invoices)
+        invoices.filter { !it.isDeleted && it.paidAmount > BigDecimal.ZERO }.forEach { inv ->
             list.add(
                 CashbookEntry(
                     id = "inv_${inv.id}",
@@ -305,8 +316,13 @@ fun CashbookScreen(
             )
         }
 
-        // Direct Supplier Payments
-        supplierPayments.forEach { sp ->
+        // Direct Supplier Payments (physical cash only, exclude deleted)
+        supplierPayments.filter {
+            !it.isDeleted &&
+                it.amount > BigDecimal.ZERO &&
+                !it.paymentMode.contains("UPI", ignoreCase = true) &&
+                !it.paymentMode.contains("BANK", ignoreCase = true)
+        }.forEach { sp ->
             list.add(
                 CashbookEntry(
                     id = "sp_${sp.id}",
@@ -339,19 +355,30 @@ fun CashbookScreen(
         baseOpeningCash.add(dayCashIn).subtract(dayCashOut)
     }
 
-    val upiBankToday = remember(payments, supplierPayments, selectedDayStart, selectedDayEnd) {
-        val upiIn = payments.filter {
+    val upiBankToday = remember(sales, payments, supplierPayments, selectedDayStart, selectedDayEnd) {
+        val upiSalesIn = sales.filter {
+            !it.isDeleted &&
+                it.billStatus != "CANCELLED" &&
+                it.date in selectedDayStart..selectedDayEnd &&
+                (it.paymentMode.equals("UPI", ignoreCase = true) || it.paymentMode.equals("BANK", ignoreCase = true))
+        }.fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
+
+        val upiPaymentsIn = payments.filter {
             !it.isDeleted &&
                 it.date in selectedDayStart..selectedDayEnd &&
-                it.note.contains("UPI", ignoreCase = true)
+                (it.paymentMode.equals("UPI", ignoreCase = true) ||
+                    it.paymentMode.equals("BANK", ignoreCase = true) ||
+                    it.note.contains("UPI", ignoreCase = true))
         }.fold(BigDecimal.ZERO) { acc, p -> acc.add(p.amount) }
 
-        val upiSupp = supplierPayments.filter {
-            it.date in selectedDayStart..selectedDayEnd &&
-                it.paymentMode.contains("UPI", ignoreCase = true)
+        val upiSupplierOut = supplierPayments.filter {
+            !it.isDeleted &&
+                it.date in selectedDayStart..selectedDayEnd &&
+                (it.paymentMode.contains("UPI", ignoreCase = true) ||
+                    it.paymentMode.contains("BANK", ignoreCase = true))
         }.fold(BigDecimal.ZERO) { acc, sp -> acc.add(sp.amount) }
 
-        upiIn.add(upiSupp)
+        upiSalesIn.add(upiPaymentsIn).subtract(upiSupplierOut)
     }
 
     val filteredEntries = remember(dayEntries, selectedFilter) {

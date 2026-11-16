@@ -155,31 +155,21 @@ object SecurityUtils {
     }
 
     /**
-     * Verifies a PIN against a stored PBKDF2 salted hash (or legacy SHA-256 hex hash).
-     * An empty or blank storedHash is treated explicitly as "no PIN set" and returns false.
+     * Verifies a PIN against a stored PBKDF2 salted hash.
+     * An empty, blank, or non-PBKDF2 storedHash is rejected and returns false.
      */
     fun verifyPin(pin: String, storedHash: String): Boolean {
         if (storedHash.isBlank() || pin.isBlank()) return false
+        if (!storedHash.startsWith("PBKDF2$", ignoreCase = true)) return false
         return try {
-            if (storedHash.startsWith("PBKDF2$", ignoreCase = true)) {
-                val parts = storedHash.split("$")
-                if (parts.size != 4) return false
-                val iterations = parts[1].toIntOrNull()?.takeIf { it > 0 } ?: PBKDF2_ITERATIONS
-                val salt = b64Decode(parts[2])
-                val expectedHash = b64Decode(parts[3])
-                if (salt.isEmpty() || expectedHash.isEmpty()) return false
-                val actualHash = pbkdf2(pin.toCharArray(), salt, iterations, expectedHash.size * 8)
-                MessageDigest.isEqual(expectedHash, actualHash)
-            } else {
-                // Backwards compatibility for legacy SHA-256 hex hashes
-                val digest = MessageDigest.getInstance("SHA-256")
-                val actualHex = digest.digest(pin.toByteArray(StandardCharsets.UTF_8))
-                    .joinToString("") { "%02x".format(it) }
-                MessageDigest.isEqual(
-                    actualHex.toByteArray(StandardCharsets.UTF_8),
-                    storedHash.toByteArray(StandardCharsets.UTF_8)
-                )
-            }
+            val parts = storedHash.split("$")
+            if (parts.size != 4) return false
+            val iterations = parts[1].toIntOrNull()?.takeIf { it >= 10_000 } ?: return false
+            val salt = b64Decode(parts[2])
+            val expectedHash = b64Decode(parts[3])
+            if (salt.isEmpty() || expectedHash.isEmpty()) return false
+            val actualHash = pbkdf2(pin.toCharArray(), salt, iterations, expectedHash.size * 8)
+            MessageDigest.isEqual(expectedHash, actualHash)
         } catch (e: Exception) {
             false
         }
@@ -386,10 +376,6 @@ object SecurityUtils {
         } finally {
             spec.clearPassword()
         }
-    }
-
-    fun isLegacyPinHash(storedHash: String): Boolean {
-        return storedHash.isNotEmpty() && !storedHash.startsWith("PBKDF2$", ignoreCase = true)
     }
 }
 

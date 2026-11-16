@@ -451,6 +451,16 @@ fun SettingsScreen(
                     val msg = if (isHindi) "सुरक्षा सेटिंग्स सेव हो गईं" else "Security settings saved"
                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     currentSubScreen = SettingsSubScreen.MAIN
+                },
+                onChangePin = { newPin: String ->
+                    val uid = currentUser?.id
+                    if (!uid.isNullOrBlank()) {
+                        scope.launch {
+                            try {
+                                repository.updateUserPin(uid, newPin)
+                            } catch (_: Throwable) {}
+                        }
+                    }
                 }
             )
             return

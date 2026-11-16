@@ -259,7 +259,7 @@ class ExampleRobolectricTest {
         val pin = "1234"
         val hash = SecurityUtils.hashPin(pin)
         assertTrue(hash.startsWith("PBKDF2$"))
-        assertFalse(SecurityUtils.isLegacyPinHash(hash))
+        assertFalse(SecurityUtils.verifyPin(pin, "not-a-pbkdf2-hash"))
         assertTrue(SecurityUtils.verifyPin("1234", hash))
         assertFalse(SecurityUtils.verifyPin("9999", hash))
 

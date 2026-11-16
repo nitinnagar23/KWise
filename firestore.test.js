@@ -396,4 +396,55 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     })
   );
   await assertFails(unapprovedDb.collection("users").doc(ALICE_UID).get());
+
+  // SEC-1: Cashier (STAFF/CASHIER) cannot raise customer creditLimit or alter inventory selling/cost prices
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("customers").doc("cust_sec1").set({
+      name: "Kisan Bhai",
+      creditLimit: 5000,
+      totalUdhari: 1000,
+    })
+  );
+  // Bob (role: STAFF, approved) CAN update customer totalUdhari after a sale
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("customers").doc("cust_sec1").update({
+      totalUdhari: 1500,
+    })
+  );
+  // Bob CANNOT increase customer creditLimit
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("customers").doc("cust_sec1").update({
+      creditLimit: 50000,
+    })
+  );
+
+  // Alice creates an inventory item
+  await assertSucceeds(
+    aliceDb.collection("users").doc(ALICE_UID).collection("inventory").doc("prod_sec1").set({
+      name: "Kapila 50kg",
+      currentStockKg: 500,
+      sellingPricePerKg: 30,
+      averagePurchaseCostPerKg: 25,
+    })
+  );
+  // Bob CAN update stock after a sale
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("inventory").doc("prod_sec1").update({
+      currentStockKg: 450,
+    })
+  );
+  // Bob CANNOT lower sellingPricePerKg or change averagePurchaseCostPerKg
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("inventory").doc("prod_sec1").update({
+      sellingPricePerKg: 10,
+    })
+  );
+
+  // Bob CANNOT delete another staff member's document, but CAN delete his own staff document when unpairing his device
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(UNAPPROVED_UID).delete()
+  );
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).delete()
+  );
 });

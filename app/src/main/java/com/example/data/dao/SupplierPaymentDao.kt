@@ -21,6 +21,9 @@ interface SupplierPaymentDao {
     @Query("SELECT * FROM supplier_payments WHERE isDeleted = 0 AND LOWER(TRIM(wholesalerName)) = LOWER(TRIM(:wholesalerName)) ORDER BY date ASC")
     suspend fun getPaymentsListForWholesaler(wholesalerName: String): List<SupplierPayment>
 
+    @Query("SELECT * FROM supplier_payments WHERE id = :id LIMIT 1")
+    suspend fun getPaymentById(id: String): SupplierPayment?
+
     @Query("SELECT * FROM supplier_payments WHERE syncStatus != 'SYNCED'")
     suspend fun getUnsyncedPayments(): List<SupplierPayment>
 

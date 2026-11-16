@@ -279,8 +279,15 @@ class SettingsExtraPrefsStore(context: Context) {
         set(value) = prefs.edit().putBoolean("unlock_fingerprint", value).apply()
 
     var appLockPin: String
-        get() = prefs.getString("app_lock_pin", "1234") ?: "1234"
-        set(value) = prefs.edit().putString("app_lock_pin", value).apply()
+        get() = prefs.getString("app_lock_pin_hash", "") ?: ""
+        set(value) {
+            val hashed = when {
+                value.isBlank() -> ""
+                value.startsWith("PBKDF2$", ignoreCase = true) -> value
+                else -> com.example.util.SecurityUtils.hashPin(value)
+            }
+            prefs.edit().remove("app_lock_pin").putString("app_lock_pin_hash", hashed).apply()
+        }
 
     var autoLockAfter: String
         get() = prefs.getString("auto_lock_after", "1 minute") ?: "1 minute"
@@ -2830,7 +2837,8 @@ private fun LanguageOptionRow(
 fun AppLockAndSecuritySubScreen(
     extraPrefs: SettingsExtraPrefsStore,
     onBack: () -> Unit,
-    onSaveSecurity: () -> Unit
+    onSaveSecurity: () -> Unit,
+    onChangePin: ((String) -> Unit)? = null
 ) {
     BackHandler { onBack() }
     val context = LocalContext.current
@@ -3231,6 +3239,7 @@ fun AppLockAndSecuritySubScreen(
                     onClick = {
                         if (newPinInput.length == 4) {
                             extraPrefs.appLockPin = newPinInput
+                            onChangePin?.invoke(newPinInput)
                             Toast.makeText(context, pinUpdatedMsg, Toast.LENGTH_SHORT).show()
                             showChangePinDialog = false
                         }

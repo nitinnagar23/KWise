@@ -116,6 +116,7 @@ class CattleFeedRepository(private val context: Context) {
         val supplierMap = mutableMapOf<String, SupplierKhataSummary>()
 
         for (inv in invoices) {
+            if (inv.isDeleted) continue
             val name = inv.wholesalerName.trim()
             if (name.isBlank()) continue
             val key = name.lowercase(Locale.ROOT)
@@ -137,6 +138,7 @@ class CattleFeedRepository(private val context: Context) {
         }
 
         for (pay in payments) {
+            if (pay.isDeleted) continue
             val name = pay.wholesalerName.trim()
             if (name.isBlank()) continue
             val key = name.lowercase(Locale.ROOT)
@@ -150,7 +152,7 @@ class CattleFeedRepository(private val context: Context) {
         }
 
         supplierMap.values.map { summary ->
-            val balance = summary.totalPurchases.subtract(summary.totalPaid).max(BigDecimal.ZERO)
+            val balance = summary.totalPurchases.subtract(summary.totalPaid)
             summary.copy(balancePayable = balance)
         }.sortedByDescending { it.balancePayable }
     }
@@ -1349,6 +1351,19 @@ class CattleFeedRepository(private val context: Context) {
         triggerAutoSync()
     }
 
+    suspend fun updateUserPin(userId: String, newPin: String) = withContext(Dispatchers.IO) {
+        if (newPin.length != 4 || !newPin.all { it.isDigit() }) return@withContext
+        val user = userDao.getUserById(userId) ?: return@withContext
+        val updated = user.copy(
+            pinHash = SecurityUtils.hashPin(newPin),
+            updatedAt = System.currentTimeMillis(),
+            syncStatus = SyncStatus.PENDING
+        )
+        userDao.updateUser(updated)
+        SecurityUtils.resetLockout(userId)
+        triggerAutoSync()
+    }
+
     /**
      * Edits an existing Sale Bill:
      * - Rejects cancelled or deleted bills
@@ -1375,70 +1390,75 @@ class CattleFeedRepository(private val context: Context) {
             throw IllegalArgumentException("Paid amount cannot be negative")
         }
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
-        val existing = saleDao.getSaleById(saleId) ?: return@withContext null
-        if (existing.isDeleted || existing.billStatus == "CANCELLED") {
-            throw IllegalStateException("Cannot edit a cancelled or deleted bill")
-        }
-
-        val product = productDao.getProductById(existing.productId)
-        val customer = customerDao.getCustomerById(existing.customerId)
-
-        val normQty = newQuantityKg.setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-        val normPrice = newPricePerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val normTotal = normQty.multiply(normPrice).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val normPaid = newPaidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val normUdhari = normTotal.subtract(normPaid).max(BigDecimal.ZERO).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-
-        val status = when {
-            normPaid >= normTotal -> PaymentStatus.PAID
-            normPaid > BigDecimal.ZERO -> PaymentStatus.PARTIAL
-            else -> PaymentStatus.UNPAID
-        }
-
-        // Adjust stock: stock difference = oldActiveQty - newQty
-        if (product != null) {
-            val stockDelta = existing.quantityKg.subtract(normQty)
-            val updatedStock = product.currentStockKg.add(stockDelta).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-            if (updatedStock < BigDecimal.ZERO) {
-                throw IllegalArgumentException(
-                    "Insufficient stock for ${product.feedName}: available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
-                )
+        val updatedSale = db.withTransaction {
+            val existing = saleDao.getSaleById(saleId) ?: return@withTransaction null
+            if (existing.isDeleted || existing.billStatus == "CANCELLED") {
+                throw IllegalStateException("Cannot edit a cancelled or deleted bill")
             }
-            productDao.updateProductStock(product.id, updatedStock.toPlainString())
-        }
 
-        val prevSummary = "${CurrencyUtils.formatWeight(existing.quantityKg)} kg @ ₹${existing.pricePerKgAtSale.stripTrailingZeros().toPlainString()}/kg • Total ${CurrencyUtils.formatInr(existing.totalSalePrice)} (Paid ${CurrencyUtils.formatInr(existing.paidAmount)})"
-        val newSummary = "${CurrencyUtils.formatWeight(normQty)} kg @ ₹${normPrice.stripTrailingZeros().toPlainString()}/kg • Total ${CurrencyUtils.formatInr(normTotal)} (Paid ${CurrencyUtils.formatInr(normPaid)})"
+            val product = productDao.getProductById(existing.productId)
+            val customer = customerDao.getCustomerById(existing.customerId)
 
-        val updatedSale = existing.copy(
-            quantityKg = normQty,
-            pricePerKgAtSale = normPrice,
-            totalSalePrice = normTotal,
-            paidAmount = normPaid,
-            udhariAmount = normUdhari,
-            paymentStatus = status,
-            billStatus = "EDITED",
-            updatedAt = System.currentTimeMillis(),
-            syncStatus = SyncStatus.PENDING
-        )
-        saleDao.insertSale(updatedSale)
-        recalculateCustomerUdhariInternal(existing.customerId)
+            val normQty = newQuantityKg.setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            val normPrice = newPricePerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val normTotal = normQty.multiply(normPrice).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val normPaid = newPaidAmount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val normUdhari = normTotal.subtract(normPaid).max(BigDecimal.ZERO).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
-        billAuditLogDao.insertAuditLog(
-            BillAuditLog(
-                saleId = existing.id,
-                customerId = existing.customerId,
-                customerName = customer?.name ?: "Customer",
-                productName = product?.feedName ?: "Feed Item",
-                actionType = "EDIT",
-                previousSummary = prevSummary,
-                newSummary = newSummary,
-                reason = reason.trim().ifBlank { "Bill modified" },
-                performedByUserId = performedBy.id,
-                performedByUserName = performedBy.name
+            val status = when {
+                normPaid >= normTotal -> PaymentStatus.PAID
+                normPaid > BigDecimal.ZERO -> PaymentStatus.PARTIAL
+                else -> PaymentStatus.UNPAID
+            }
+
+            // Adjust stock: stock difference = oldActiveQty - newQty
+            if (product != null) {
+                val stockDelta = existing.quantityKg.subtract(normQty)
+                val updatedStock = product.currentStockKg.add(stockDelta).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                if (updatedStock < BigDecimal.ZERO) {
+                    throw IllegalArgumentException(
+                        "Insufficient stock for ${product.feedName}: available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
+                    )
+                }
+                productDao.updateProductStock(product.id, updatedStock.toPlainString())
+            }
+
+            val prevSummary = "${CurrencyUtils.formatWeight(existing.quantityKg)} kg @ ₹${existing.pricePerKgAtSale.stripTrailingZeros().toPlainString()}/kg • Total ${CurrencyUtils.formatInr(existing.totalSalePrice)} (Paid ${CurrencyUtils.formatInr(existing.paidAmount)})"
+            val newSummary = "${CurrencyUtils.formatWeight(normQty)} kg @ ₹${normPrice.stripTrailingZeros().toPlainString()}/kg • Total ${CurrencyUtils.formatInr(normTotal)} (Paid ${CurrencyUtils.formatInr(normPaid)})"
+
+            val edited = existing.copy(
+                quantityKg = normQty,
+                pricePerKgAtSale = normPrice,
+                totalSalePrice = normTotal,
+                paidAmount = normPaid,
+                udhariAmount = normUdhari,
+                paymentStatus = status,
+                billStatus = "EDITED",
+                updatedAt = System.currentTimeMillis(),
+                syncStatus = SyncStatus.PENDING
             )
-        )
-        triggerAutoSync()
+            saleDao.insertSale(edited)
+            recalculateCustomerUdhariInternal(existing.customerId)
+
+            billAuditLogDao.insertAuditLog(
+                BillAuditLog(
+                    saleId = existing.id,
+                    customerId = existing.customerId,
+                    customerName = customer?.name ?: "Customer",
+                    productName = product?.feedName ?: "Feed Item",
+                    actionType = "EDIT",
+                    previousSummary = prevSummary,
+                    newSummary = newSummary,
+                    reason = reason.trim().ifBlank { "Bill modified" },
+                    performedByUserId = performedBy.id,
+                    performedByUserName = performedBy.name
+                )
+            )
+            edited
+        }
+        if (updatedSale != null) {
+            triggerAutoSync()
+        }
         updatedSale
     }
 
@@ -1456,81 +1476,92 @@ class CattleFeedRepository(private val context: Context) {
         reason: String,
         performedBy: User,
         putBackInStock: Boolean = true,
-        settlementSummary: String = ""
+        settlementSummary: String = "",
+        cashRefunded: BigDecimal = BigDecimal.ZERO
     ): SaleEntry? = withContext(Dispatchers.IO) {
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
-        val existing = saleDao.getSaleById(saleId) ?: return@withContext null
-        if (existing.isDeleted || existing.billStatus == "CANCELLED") {
-            throw IllegalStateException("Cannot return items on a cancelled or deleted bill")
-        }
-        val validReturnKg = returnKg.min(existing.quantityKg).max(BigDecimal.ZERO)
-            .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-        if (validReturnKg <= BigDecimal.ZERO) return@withContext existing
-
-        val product = productDao.getProductById(existing.productId)
-        val customer = customerDao.getCustomerById(existing.customerId)
-
-        val remainingKg = existing.quantityKg.subtract(validReturnKg).max(BigDecimal.ZERO)
-            .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-        val newTotal = if (existing.quantityKg > BigDecimal.ZERO && remainingKg > BigDecimal.ZERO) {
-            existing.totalSalePrice.multiply(remainingKg)
-                .divide(existing.quantityKg, CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        } else {
-            BigDecimal.ZERO.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        }
-        val newPaid = existing.paidAmount
-        val newUdhari = newTotal.subtract(newPaid).max(BigDecimal.ZERO)
-            .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-
-        val paymentStatus = when {
-            newPaid >= newTotal -> PaymentStatus.PAID
-            newPaid > BigDecimal.ZERO -> PaymentStatus.PARTIAL
-            else -> PaymentStatus.UNPAID
-        }
-
-        if (product != null && putBackInStock) {
-            val restoredStock = product.currentStockKg.add(validReturnKg)
+        var didModify = false
+        val updatedSale = db.withTransaction {
+            val existing = saleDao.getSaleById(saleId) ?: return@withTransaction null
+            if (existing.isDeleted || existing.billStatus == "CANCELLED") {
+                throw IllegalStateException("Cannot return items on a cancelled or deleted bill")
+            }
+            val validReturnKg = returnKg.min(existing.quantityKg).max(BigDecimal.ZERO)
                 .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-            productDao.updateProductStock(product.id, restoredStock.toPlainString())
-        }
+            if (validReturnKg <= BigDecimal.ZERO) return@withTransaction existing
 
-        val totalReturnedSoFar = existing.returnedKg.add(validReturnKg)
-        val prevSummary = "${CurrencyUtils.formatWeight(existing.quantityKg)} kg • Total ${CurrencyUtils.formatInr(existing.totalSalePrice)}"
-        val newSummary = if (settlementSummary.isNotBlank()) {
-            "Returned ${CurrencyUtils.formatWeight(validReturnKg)} kg • $settlementSummary"
-        } else {
-            "Returned ${CurrencyUtils.formatWeight(validReturnKg)} kg • Net ${CurrencyUtils.formatWeight(remainingKg)} kg (${CurrencyUtils.formatInr(newTotal)})"
-        }
+            val product = productDao.getProductById(existing.productId)
+            val customer = customerDao.getCustomerById(existing.customerId)
 
-        val updatedSale = existing.copy(
-            quantityKg = remainingKg,
-            totalSalePrice = newTotal,
-            paidAmount = newPaid,
-            udhariAmount = newUdhari,
-            paymentStatus = paymentStatus,
-            returnedKg = totalReturnedSoFar,
-            billStatus = "RETURNED",
-            updatedAt = System.currentTimeMillis(),
-            syncStatus = SyncStatus.PENDING
-        )
-        saleDao.insertSale(updatedSale)
-        recalculateCustomerUdhariInternal(existing.customerId)
+            val remainingKg = existing.quantityKg.subtract(validReturnKg).max(BigDecimal.ZERO)
+                .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            val newTotal = if (existing.quantityKg > BigDecimal.ZERO && remainingKg > BigDecimal.ZERO) {
+                existing.totalSalePrice.multiply(remainingKg)
+                    .divide(existing.quantityKg, CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            } else {
+                BigDecimal.ZERO.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            }
+            val validCashRefund = cashRefunded.max(BigDecimal.ZERO).min(existing.paidAmount)
+                .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val newPaid = existing.paidAmount.subtract(validCashRefund).max(BigDecimal.ZERO)
+                .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val newUdhari = newTotal.subtract(newPaid).max(BigDecimal.ZERO)
+                .setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
-        billAuditLogDao.insertAuditLog(
-            BillAuditLog(
-                saleId = existing.id,
-                customerId = existing.customerId,
-                customerName = customer?.name ?: "Customer",
-                productName = product?.feedName ?: "Feed Item",
-                actionType = "RETURN",
-                previousSummary = prevSummary,
-                newSummary = newSummary,
-                reason = reason.trim().ifBlank { "Customer returned stock" },
-                performedByUserId = performedBy.id,
-                performedByUserName = performedBy.name
+            val paymentStatus = when {
+                newPaid >= newTotal -> PaymentStatus.PAID
+                newPaid > BigDecimal.ZERO -> PaymentStatus.PARTIAL
+                else -> PaymentStatus.UNPAID
+            }
+
+            if (product != null && putBackInStock) {
+                val restoredStock = product.currentStockKg.add(validReturnKg)
+                    .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                productDao.updateProductStock(product.id, restoredStock.toPlainString())
+            }
+
+            val totalReturnedSoFar = existing.returnedKg.add(validReturnKg)
+            val prevSummary = "${CurrencyUtils.formatWeight(existing.quantityKg)} kg • Total ${CurrencyUtils.formatInr(existing.totalSalePrice)}"
+            val newSummary = if (settlementSummary.isNotBlank()) {
+                "Returned ${CurrencyUtils.formatWeight(validReturnKg)} kg • $settlementSummary"
+            } else {
+                "Returned ${CurrencyUtils.formatWeight(validReturnKg)} kg • Net ${CurrencyUtils.formatWeight(remainingKg)} kg (${CurrencyUtils.formatInr(newTotal)})"
+            }
+
+            val returned = existing.copy(
+                quantityKg = remainingKg,
+                totalSalePrice = newTotal,
+                paidAmount = newPaid,
+                udhariAmount = newUdhari,
+                paymentStatus = paymentStatus,
+                returnedKg = totalReturnedSoFar,
+                billStatus = "RETURNED",
+                updatedAt = System.currentTimeMillis(),
+                syncStatus = SyncStatus.PENDING
             )
-        )
-        triggerAutoSync()
+            saleDao.insertSale(returned)
+            recalculateCustomerUdhariInternal(existing.customerId)
+
+            billAuditLogDao.insertAuditLog(
+                BillAuditLog(
+                    saleId = existing.id,
+                    customerId = existing.customerId,
+                    customerName = customer?.name ?: "Customer",
+                    productName = product?.feedName ?: "Feed Item",
+                    actionType = "RETURN",
+                    previousSummary = prevSummary,
+                    newSummary = newSummary,
+                    reason = reason.trim().ifBlank { "Customer returned stock" },
+                    performedByUserId = performedBy.id,
+                    performedByUserName = performedBy.name
+                )
+            )
+            didModify = true
+            returned
+        }
+        if (didModify) {
+            triggerAutoSync()
+        }
         updatedSale
     }
 
@@ -1556,58 +1587,63 @@ class CattleFeedRepository(private val context: Context) {
             throw IllegalArgumentException("Price per kg cannot be negative")
         }
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
-        val product = productDao.getProductById(productId) ?: return@withContext null
-        val customer = customerDao.getCustomerById(anchorSale.customerId)
+        val newSale = db.withTransaction {
+            val product = productDao.getProductById(productId) ?: return@withTransaction null
+            val customer = customerDao.getCustomerById(anchorSale.customerId)
 
-        val normQty = quantityKg.setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-        val normPrice = pricePerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
-        val normTotal = normQty.multiply(normPrice).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val normQty = quantityKg.setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            val normPrice = pricePerKg.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val normTotal = normQty.multiply(normPrice).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
 
-        if (normQty > product.currentStockKg) {
-            throw IllegalArgumentException(
-                "Insufficient stock for ${product.feedName}: requested ${CurrencyUtils.formatWeightKg(normQty)}, available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
-            )
-        }
+            if (normQty > product.currentStockKg) {
+                throw IllegalArgumentException(
+                    "Insufficient stock for ${product.feedName}: requested ${CurrencyUtils.formatWeightKg(normQty)}, available ${CurrencyUtils.formatWeightKg(product.currentStockKg)}"
+                )
+            }
 
-        val updatedStock = product.currentStockKg.subtract(normQty).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-        productDao.updateProductStock(product.id, updatedStock.toPlainString())
+            val updatedStock = product.currentStockKg.subtract(normQty).setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+            productDao.updateProductStock(product.id, updatedStock.toPlainString())
 
-        val newSale = SaleEntry(
-            id = UUID.randomUUID().toString(),
-            date = anchorSale.date,
-            customerId = anchorSale.customerId,
-            productId = product.id,
-            quantityKg = normQty,
-            pricePerKgAtSale = normPrice,
-            costPerKgAtSale = product.averagePurchaseCostPerKg,
-            totalSalePrice = normTotal,
-            paidAmount = BigDecimal.ZERO,
-            udhariAmount = normTotal,
-            paymentStatus = PaymentStatus.UNPAID,
-            soldByUserId = anchorSale.soldByUserId,
-            billStatus = "EDITED",
-            billNumber = anchorSale.billNumber,
-            paymentMode = anchorSale.paymentMode,
-            syncStatus = SyncStatus.PENDING
-        )
-        saleDao.insertSale(newSale)
-        recalculateCustomerUdhariInternal(anchorSale.customerId)
-
-        billAuditLogDao.insertAuditLog(
-            BillAuditLog(
-                saleId = anchorSale.id,
+            val created = SaleEntry(
+                id = UUID.randomUUID().toString(),
+                date = anchorSale.date,
                 customerId = anchorSale.customerId,
-                customerName = customer?.name ?: "Customer",
-                productName = product.feedName,
-                actionType = "EDIT",
-                previousSummary = "0 kg",
-                newSummary = "${CurrencyUtils.formatWeight(normQty)} kg (${CurrencyUtils.formatInr(normTotal)})",
-                reason = reason.trim().ifBlank { "Added item to bill" },
-                performedByUserId = performedBy.id,
-                performedByUserName = performedBy.name
+                productId = product.id,
+                quantityKg = normQty,
+                pricePerKgAtSale = normPrice,
+                costPerKgAtSale = product.averagePurchaseCostPerKg,
+                totalSalePrice = normTotal,
+                paidAmount = BigDecimal.ZERO,
+                udhariAmount = normTotal,
+                paymentStatus = PaymentStatus.UNPAID,
+                soldByUserId = anchorSale.soldByUserId,
+                billStatus = "EDITED",
+                billNumber = anchorSale.billNumber,
+                paymentMode = anchorSale.paymentMode,
+                syncStatus = SyncStatus.PENDING
             )
-        )
-        triggerAutoSync()
+            saleDao.insertSale(created)
+            recalculateCustomerUdhariInternal(anchorSale.customerId)
+
+            billAuditLogDao.insertAuditLog(
+                BillAuditLog(
+                    saleId = anchorSale.id,
+                    customerId = anchorSale.customerId,
+                    customerName = customer?.name ?: "Customer",
+                    productName = product.feedName,
+                    actionType = "EDIT",
+                    previousSummary = "0 kg",
+                    newSummary = "${CurrencyUtils.formatWeight(normQty)} kg (${CurrencyUtils.formatInr(normTotal)})",
+                    reason = reason.trim().ifBlank { "Added item to bill" },
+                    performedByUserId = performedBy.id,
+                    performedByUserName = performedBy.name
+                )
+            )
+            created
+        }
+        if (newSale != null) {
+            triggerAutoSync()
+        }
         newSale
     }
 
@@ -1624,59 +1660,66 @@ class CattleFeedRepository(private val context: Context) {
         performedBy: User
     ): SaleEntry? = withContext(Dispatchers.IO) {
         requirePermission(performedBy.role, Permission.EDIT_DELETE_BILL)
-        val existing = saleDao.getSaleById(saleId) ?: return@withContext null
-        if (existing.billStatus == "CANCELLED") return@withContext existing
+        var didModify = false
+        val primaryUpdated = db.withTransaction {
+            val existing = saleDao.getSaleById(saleId) ?: return@withTransaction null
+            if (existing.billStatus == "CANCELLED") return@withTransaction existing
 
-        val customer = customerDao.getCustomerById(existing.customerId)
-        val allCustomerSales = saleDao.getSalesListByCustomer(existing.customerId)
-        val siblingSales = allCustomerSales.filter {
-            !it.isDeleted && it.billStatus != "CANCELLED" && (
-                (existing.billNumber.isNotBlank() && it.billNumber == existing.billNumber) ||
-                    (existing.billNumber.isBlank() && it.billNumber.isBlank() && kotlin.math.abs(it.date - existing.date) <= 2500L)
+            val customer = customerDao.getCustomerById(existing.customerId)
+            val allCustomerSales = saleDao.getSalesListByCustomer(existing.customerId)
+            val siblingSales = allCustomerSales.filter {
+                !it.isDeleted && it.billStatus != "CANCELLED" && (
+                    (existing.billNumber.isNotBlank() && it.billNumber == existing.billNumber) ||
+                        (existing.billNumber.isBlank() && it.billNumber.isBlank() && kotlin.math.abs(it.date - existing.date) <= 2500L)
+                    )
+            }.ifEmpty { listOf(existing) }
+
+            var updatedPrimary: SaleEntry? = null
+            for (itemSale in siblingSales) {
+                val product = productDao.getProductById(itemSale.productId)
+                if (product != null && itemSale.quantityKg > BigDecimal.ZERO) {
+                    val restoredStock = product.currentStockKg.add(itemSale.quantityKg)
+                        .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
+                    productDao.updateProductStock(product.id, restoredStock.toPlainString())
+                }
+
+                val prevSummary = "${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg • Total ${CurrencyUtils.formatInr(itemSale.totalSalePrice)} (Udhari ${CurrencyUtils.formatInr(itemSale.udhariAmount)})"
+                val newSummary = "CANCELLED • Stock Restored (+${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg)"
+
+                val updatedSale = itemSale.copy(
+                    udhariAmount = BigDecimal.ZERO,
+                    billStatus = "CANCELLED",
+                    updatedAt = System.currentTimeMillis(),
+                    syncStatus = SyncStatus.PENDING
                 )
-        }.ifEmpty { listOf(existing) }
+                saleDao.insertSale(updatedSale)
+                if (itemSale.id == existing.id || updatedPrimary == null) {
+                    updatedPrimary = updatedSale
+                }
 
-        var primaryUpdated: SaleEntry? = null
-        for (itemSale in siblingSales) {
-            val product = productDao.getProductById(itemSale.productId)
-            if (product != null && itemSale.quantityKg > BigDecimal.ZERO) {
-                val restoredStock = product.currentStockKg.add(itemSale.quantityKg)
-                    .setScale(CurrencyUtils.WEIGHT_SCALE, CurrencyUtils.ROUNDING)
-                productDao.updateProductStock(product.id, restoredStock.toPlainString())
+                billAuditLogDao.insertAuditLog(
+                    BillAuditLog(
+                        saleId = itemSale.id,
+                        customerId = itemSale.customerId,
+                        customerName = customer?.name ?: "Customer",
+                        productName = product?.feedName ?: "Feed Item",
+                        actionType = "CANCEL",
+                        previousSummary = prevSummary,
+                        newSummary = newSummary,
+                        reason = reason.trim().ifBlank { "Bill cancelled" },
+                        performedByUserId = performedBy.id,
+                        performedByUserName = performedBy.name
+                    )
+                )
             }
 
-            val prevSummary = "${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg • Total ${CurrencyUtils.formatInr(itemSale.totalSalePrice)} (Udhari ${CurrencyUtils.formatInr(itemSale.udhariAmount)})"
-            val newSummary = "CANCELLED • Stock Restored (+${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg)"
-
-            val updatedSale = itemSale.copy(
-                udhariAmount = BigDecimal.ZERO,
-                billStatus = "CANCELLED",
-                updatedAt = System.currentTimeMillis(),
-                syncStatus = SyncStatus.PENDING
-            )
-            saleDao.insertSale(updatedSale)
-            if (itemSale.id == existing.id || primaryUpdated == null) {
-                primaryUpdated = updatedSale
-            }
-
-            billAuditLogDao.insertAuditLog(
-                BillAuditLog(
-                    saleId = itemSale.id,
-                    customerId = itemSale.customerId,
-                    customerName = customer?.name ?: "Customer",
-                    productName = product?.feedName ?: "Feed Item",
-                    actionType = "CANCEL",
-                    previousSummary = prevSummary,
-                    newSummary = newSummary,
-                    reason = reason.trim().ifBlank { "Bill cancelled" },
-                    performedByUserId = performedBy.id,
-                    performedByUserName = performedBy.name
-                )
-            )
+            recalculateCustomerUdhariInternal(existing.customerId)
+            didModify = true
+            updatedPrimary
         }
-
-        recalculateCustomerUdhariInternal(existing.customerId)
-        triggerAutoSync()
+        if (didModify) {
+            triggerAutoSync()
+        }
         primaryUpdated
     }
 }

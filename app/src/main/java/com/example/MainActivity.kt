@@ -45,7 +45,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.ui.auth.SetupScreen
+import com.example.ui.auth.LoginScreen
 import com.example.ui.billing.NewBillScreen
 import com.example.ui.bills.BillsScreen
 import com.example.ui.cashbook.CashbookScreen
@@ -129,9 +129,9 @@ class MainActivity : FragmentActivity() {
                         BackHandler(enabled = showSetupManually) {
                             showSetupManually = false
                         }
-                        SetupScreen(
+                        LoginScreen(
                             repository = repository,
-                            onSetupComplete = {
+                            onLoginSuccess = {
                                 showSetupManually = false
                                 val currentShop = settings?.shopName.orEmpty()
                                 val isDefaultShop = currentShop.isBlank() ||

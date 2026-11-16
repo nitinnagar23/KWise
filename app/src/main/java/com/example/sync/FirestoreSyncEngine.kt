@@ -237,7 +237,8 @@ class FirestoreSyncEngine(
                     if (error != null || snapshots == null || snapshots.isEmpty) return@addSnapshotListener
                     scope.launch {
                         try {
-                            for (doc in snapshots.documents) {
+                            for (change in snapshots.documentChanges) {
+                                val doc = change.document
                                 try {
                                     val name = doc.safeString("name")
                                     if (name.isBlank()) continue
@@ -311,7 +312,8 @@ class FirestoreSyncEngine(
                     if (error != null || snapshots == null || snapshots.isEmpty) return@addSnapshotListener
                     scope.launch {
                         try {
-                            for (doc in snapshots.documents) {
+                            for (change in snapshots.documentChanges) {
+                                val doc = change.document
                                 try {
                                     val feedName = doc.safeString("name").ifBlank { doc.safeString("feedName") }
                                     if (feedName.isBlank()) continue
@@ -385,7 +387,9 @@ class FirestoreSyncEngine(
                     if (error != null || snapshots == null || snapshots.isEmpty) return@addSnapshotListener
                     scope.launch {
                         try {
-                            for (doc in snapshots.documents) {
+                            val affectedCustomerIds = mutableSetOf<String>()
+                            for (change in snapshots.documentChanges) {
+                                val doc = change.document
                                 try {
                                     val id = doc.id
                                     val type = doc.safeString("type")
@@ -414,6 +418,8 @@ class FirestoreSyncEngine(
                                         val soldByUserId = doc.safeString("soldByUserId")
                                         val returnedKg = BigDecimal.valueOf(doc.safeDouble("returnedKg", 0.0))
                                         val billStatus = doc.safeString("billStatus", "ACTIVE").ifBlank { "ACTIVE" }
+                                        val billNumber = doc.safeString("billNumber")
+                                        val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
 
                                         val existing = localDb.saleDao().getSaleById(id)
                                         if (existing == null) {
@@ -433,12 +439,15 @@ class FirestoreSyncEngine(
                                                     soldByUserId = soldByUserId,
                                                     returnedKg = returnedKg,
                                                     billStatus = billStatus,
+                                                    billNumber = billNumber,
+                                                    paymentMode = paymentMode,
                                                     createdAt = createdAt,
                                                     updatedAt = updatedAt,
                                                     isDeleted = isDeleted,
                                                     syncStatus = SyncStatus.SYNCED
                                                 )
                                             )
+                                            if (customerId.isNotBlank()) affectedCustomerIds.add(customerId)
                                         } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
                                             localDb.saleDao().insertSale(
                                                 existing.copy(
@@ -455,17 +464,21 @@ class FirestoreSyncEngine(
                                                     soldByUserId = soldByUserId,
                                                     returnedKg = returnedKg,
                                                     billStatus = billStatus,
+                                                    billNumber = billNumber.ifBlank { existing.billNumber },
+                                                    paymentMode = paymentMode,
                                                     updatedAt = updatedAt,
                                                     isDeleted = isDeleted,
                                                     syncStatus = SyncStatus.SYNCED
                                                 )
                                             )
+                                            if (customerId.isNotBlank()) affectedCustomerIds.add(customerId)
                                         }
                                     } else if (type == "PAYMENT_RECEIVED") {
                                         val amount = BigDecimal.valueOf(doc.safeDouble("amount", 0.0))
                                         val linkedSaleId = doc.safeNullableString("linkedSaleId")
                                         val note = doc.safeString("note").ifBlank { doc.safeString("description") }
                                         val collectedByUserId = doc.safeString("collectedByUserId")
+                                        val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
 
                                         val existing = localDb.paymentDao().getPaymentById(id)
                                         if (existing == null) {
@@ -478,12 +491,14 @@ class FirestoreSyncEngine(
                                                     linkedSaleId = linkedSaleId,
                                                     note = note,
                                                     collectedByUserId = collectedByUserId,
+                                                    paymentMode = paymentMode,
                                                     createdAt = createdAt,
                                                     updatedAt = updatedAt,
                                                     isDeleted = isDeleted,
                                                     syncStatus = SyncStatus.SYNCED
                                                 )
                                             )
+                                            if (customerId.isNotBlank()) affectedCustomerIds.add(customerId)
                                         } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
                                             localDb.paymentDao().insertPayment(
                                                 existing.copy(
@@ -493,20 +508,23 @@ class FirestoreSyncEngine(
                                                     linkedSaleId = linkedSaleId,
                                                     note = note,
                                                     collectedByUserId = collectedByUserId,
+                                                    paymentMode = paymentMode,
                                                     updatedAt = updatedAt,
                                                     isDeleted = isDeleted,
                                                     syncStatus = SyncStatus.SYNCED
                                                 )
                                             )
+                                            if (customerId.isNotBlank()) affectedCustomerIds.add(customerId)
                                         }
-                                    }
-
-                                    if (customerId.isNotBlank()) {
-                                        PashuAaharApp.instance.repository.recalculateCustomerUdhari(customerId, markPending = false)
                                     }
                                 } catch (docErr: Throwable) {
                                     Log.w(TAG, "Skipping malformed transaction doc ${doc.id}: ${docErr.message}")
                                 }
+                            }
+                            for (cid in affectedCustomerIds) {
+                                try {
+                                    PashuAaharApp.instance.repository.recalculateCustomerUdhari(cid, markPending = false)
+                                } catch (_: Throwable) {}
                             }
                         } catch (e: Throwable) {
                             Log.w(TAG, "Transaction listener error", e)
@@ -531,20 +549,26 @@ class FirestoreSyncEngine(
                                 activeUserId != pairedStoreAdminUid &&
                                 activeUser?.role != Role.ADMINISTRATOR
 
-                            if (isStaffDevice) {
+                            if (isStaffDevice && !snapshots.metadata.isFromCache) {
                                 val activeStaffDoc = snapshots.documents.firstOrNull {
                                     (it.safeString("staffUid") == activeUserId || it.id == activeUserId)
                                 }
-                                if (activeStaffDoc != null && !activeStaffDoc.safeBoolean("isActive", true)) {
-                                    Log.w(TAG, "Active staff $activeUserId was revoked by Admin. Signing out.")
+                                val isApprovedAndActive = activeStaffDoc != null &&
+                                    activeStaffDoc.safeBoolean("isActive", true) &&
+                                    (activeStaffDoc.safeBoolean("isApproved", false) ||
+                                        activeStaffDoc.safeString("status", "PENDING") == "APPROVED")
+                                if (!isApprovedAndActive) {
+                                    Log.w(TAG, "Active staff $activeUserId was revoked or removed by Admin. Signing out.")
                                     PashuAaharApp.instance.repository.clearAllLocalDataAndSignOut()
                                     return@launch
                                 }
                             }
 
+                            val remoteStaffIds = mutableSetOf<String>()
                             for (doc in snapshots.documents) {
                                 try {
                                     val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
+                                    remoteStaffIds.add(staffUid)
                                     val isOwnerDoc = staffUid == storeAdminUid
                                     val existing = localDb.userDao().getUserById(staffUid)
                                     val isApproved = isOwnerDoc ||
@@ -607,6 +631,21 @@ class FirestoreSyncEngine(
                                     }
                                 } catch (docErr: Throwable) {
                                     Log.w(TAG, "Skipping malformed staff doc ${doc.id}: ${docErr.message}")
+                                }
+                            }
+                            if (!snapshots.metadata.isFromCache) {
+                                val localUsers = localDb.userDao().getActiveUsers()
+                                for (localUser in localUsers) {
+                                    if (localUser.id != storeAdminUid &&
+                                        localUser.id != "admin" &&
+                                        localUser.role != Role.ADMINISTRATOR &&
+                                        localUser.syncStatus == SyncStatus.SYNCED &&
+                                        localUser.id !in remoteStaffIds
+                                    ) {
+                                        localDb.userDao().updateUser(
+                                            localUser.copy(isActive = false, isDeleted = true, syncStatus = SyncStatus.SYNCED)
+                                        )
+                                    }
                                 }
                             }
                         } catch (e: Throwable) {
@@ -724,6 +763,26 @@ class FirestoreSyncEngine(
             // Pull Staff (only approved staff documents)
             try {
                 val staffDocs = firestore.collection("users").document(storeUid).collection("staff").get().await()
+                val currentSettings = localDb.settingsDao().getSettings()
+                val activeUserId = currentSettings?.activeUserId.orEmpty()
+                val activeUser = if (activeUserId.isNotBlank()) localDb.userDao().getUserById(activeUserId) else null
+                val isStaffDevice = activeUserId.isNotBlank() &&
+                    activeUserId != storeUid &&
+                    activeUserId != "admin" &&
+                    activeUser?.role != Role.ADMINISTRATOR
+                if (isStaffDevice && !staffDocs.metadata.isFromCache) {
+                    val activeStaffDoc = staffDocs.documents.firstOrNull {
+                        (it.safeString("staffUid") == activeUserId || it.id == activeUserId)
+                    }
+                    val isApprovedAndActive = activeStaffDoc != null &&
+                        activeStaffDoc.safeBoolean("isActive", true) &&
+                        (activeStaffDoc.safeBoolean("isApproved", false) ||
+                            activeStaffDoc.safeString("status", "PENDING") == "APPROVED")
+                    if (!isApprovedAndActive) {
+                        PashuAaharApp.instance.repository.clearAllLocalDataAndSignOut()
+                        return@withContext FirestoreSyncState.Unauthenticated
+                    }
+                }
                 for (doc in staffDocs.documents) {
                     try {
                         val staffUid = doc.safeString("staffUid").ifBlank { doc.id }
@@ -975,6 +1034,8 @@ class FirestoreSyncEngine(
                             val soldByUserId = doc.safeString("soldByUserId")
                             val returnedKg = BigDecimal.valueOf(doc.safeDouble("returnedKg", 0.0))
                             val billStatus = doc.safeString("billStatus", "ACTIVE").ifBlank { "ACTIVE" }
+                            val billNumber = doc.safeString("billNumber")
+                            val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
 
                             val existing = localDb.saleDao().getSaleById(id)
                             if (existing == null) {
@@ -994,6 +1055,8 @@ class FirestoreSyncEngine(
                                         soldByUserId = soldByUserId,
                                         returnedKg = returnedKg,
                                         billStatus = billStatus,
+                                        billNumber = billNumber,
+                                        paymentMode = paymentMode,
                                         createdAt = createdAt,
                                         updatedAt = updatedAt,
                                         isDeleted = isDeleted,
@@ -1018,6 +1081,8 @@ class FirestoreSyncEngine(
                                         soldByUserId = soldByUserId,
                                         returnedKg = returnedKg,
                                         billStatus = billStatus,
+                                        billNumber = billNumber.ifBlank { existing.billNumber },
+                                        paymentMode = paymentMode,
                                         updatedAt = updatedAt,
                                         isDeleted = isDeleted,
                                         syncStatus = SyncStatus.SYNCED
@@ -1031,6 +1096,7 @@ class FirestoreSyncEngine(
                             val linkedSaleId = doc.safeNullableString("linkedSaleId")
                             val note = doc.safeString("note").ifBlank { doc.safeString("description") }
                             val collectedByUserId = doc.safeString("collectedByUserId")
+                            val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
 
                             val existing = localDb.paymentDao().getPaymentById(id)
                             if (existing == null) {
@@ -1043,6 +1109,7 @@ class FirestoreSyncEngine(
                                         linkedSaleId = linkedSaleId,
                                         note = note,
                                         collectedByUserId = collectedByUserId,
+                                        paymentMode = paymentMode,
                                         createdAt = createdAt,
                                         updatedAt = updatedAt,
                                         isDeleted = isDeleted,
@@ -1060,6 +1127,7 @@ class FirestoreSyncEngine(
                                         linkedSaleId = linkedSaleId,
                                         note = note,
                                         collectedByUserId = collectedByUserId,
+                                        paymentMode = paymentMode,
                                         updatedAt = updatedAt,
                                         isDeleted = isDeleted,
                                         syncStatus = SyncStatus.SYNCED
@@ -1080,6 +1148,140 @@ class FirestoreSyncEngine(
                 }
             } catch (e: Throwable) {
                 Log.w(TAG, "Error pulling remote transactions", e)
+            }
+
+            // 1f. Pull Remote Supplier Invoices & Payments (Admin/Manager only)
+            try {
+                val remoteSuppliers = firestore.collection("users").document(storeUid).collection("suppliers").get().await()
+                for (doc in remoteSuppliers.documents) {
+                    try {
+                        val type = doc.safeString("type")
+                        val recordId = doc.safeString("recordId").ifBlank { doc.id.removePrefix("inv_").removePrefix("sp_") }
+                        val wholesalerName = doc.safeString("wholesalerName").ifBlank { doc.safeString("name") }
+                        if (wholesalerName.isBlank()) continue
+                        val date = doc.safeLong("date") ?: System.currentTimeMillis()
+                        val isDeleted = doc.safeBoolean("isDeleted", false)
+                        val createdAt = doc.safeLong("createdAt") ?: date
+                        val updatedAt = doc.safeLong("updatedAt") ?: date
+
+                        if (type == "PURCHASE_INVOICE") {
+                            val invoiceNumber = doc.safeString("invoiceNumber")
+                            val wholesalerPhone = doc.safeString("wholesalerPhone")
+                            val itemsJson = doc.safeString("itemsJson", "[]").ifBlank { "[]" }
+                            val ladhan = BigDecimal.valueOf(doc.safeDouble("ladhan", 0.0))
+                            val utaar = BigDecimal.valueOf(doc.safeDouble("utaar", 0.0))
+                            val gaadiKiraya = BigDecimal.valueOf(doc.safeDouble("gaadiKiraya", 0.0))
+                            val goodsSubtotal = BigDecimal.valueOf(doc.safeDouble("goodsSubtotal", 0.0))
+                            val totalInvoiceCost = BigDecimal.valueOf(doc.safeDouble("totalInvoiceCost", 0.0))
+                            val paidAmount = BigDecimal.valueOf(doc.safeDouble("paidAmount", 0.0))
+                            val balanceAmount = BigDecimal.valueOf(doc.safeDouble("balanceAmount", 0.0))
+                            val paymentStatus = try {
+                                PaymentStatus.valueOf(doc.safeString("paymentStatus", "PAID"))
+                            } catch (_: Throwable) {
+                                PaymentStatus.PAID
+                            }
+                            val notes = doc.safeString("notes")
+                            val recordedByUserId = doc.safeString("recordedByUserId")
+
+                            val existing = localDb.purchaseInvoiceDao().getInvoiceById(recordId)
+                            if (existing == null) {
+                                localDb.purchaseInvoiceDao().insertInvoice(
+                                    com.example.model.PurchaseInvoice(
+                                        id = recordId,
+                                        invoiceNumber = invoiceNumber,
+                                        date = date,
+                                        wholesalerName = wholesalerName,
+                                        wholesalerPhone = wholesalerPhone,
+                                        itemsJson = itemsJson,
+                                        ladhan = ladhan,
+                                        utaar = utaar,
+                                        gaadiKiraya = gaadiKiraya,
+                                        goodsSubtotal = goodsSubtotal,
+                                        totalInvoiceCost = totalInvoiceCost,
+                                        paidAmount = paidAmount,
+                                        balanceAmount = balanceAmount,
+                                        paymentStatus = paymentStatus,
+                                        notes = notes,
+                                        recordedByUserId = recordedByUserId,
+                                        createdAt = createdAt,
+                                        updatedAt = updatedAt,
+                                        isDeleted = isDeleted,
+                                        syncStatus = SyncStatus.SYNCED
+                                    )
+                                )
+                                syncedCount++
+                            } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
+                                localDb.purchaseInvoiceDao().insertInvoice(
+                                    existing.copy(
+                                        invoiceNumber = invoiceNumber,
+                                        date = date,
+                                        wholesalerName = wholesalerName,
+                                        wholesalerPhone = wholesalerPhone,
+                                        itemsJson = itemsJson,
+                                        ladhan = ladhan,
+                                        utaar = utaar,
+                                        gaadiKiraya = gaadiKiraya,
+                                        goodsSubtotal = goodsSubtotal,
+                                        totalInvoiceCost = totalInvoiceCost,
+                                        paidAmount = paidAmount,
+                                        balanceAmount = balanceAmount,
+                                        paymentStatus = paymentStatus,
+                                        notes = notes,
+                                        recordedByUserId = recordedByUserId,
+                                        updatedAt = updatedAt,
+                                        isDeleted = isDeleted,
+                                        syncStatus = SyncStatus.SYNCED
+                                    )
+                                )
+                                syncedCount++
+                            }
+                        } else if (type == "SUPPLIER_PAYMENT") {
+                            val amount = BigDecimal.valueOf(doc.safeDouble("amount", 0.0))
+                            val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
+                            val note = doc.safeString("note")
+                            val recordedByUserId = doc.safeString("recordedByUserId")
+
+                            val existing = localDb.supplierPaymentDao().getPaymentById(recordId)
+                            if (existing == null) {
+                                localDb.supplierPaymentDao().insertPayment(
+                                    com.example.model.SupplierPayment(
+                                        id = recordId,
+                                        date = date,
+                                        wholesalerName = wholesalerName,
+                                        amount = amount,
+                                        paymentMode = paymentMode,
+                                        note = note,
+                                        recordedByUserId = recordedByUserId,
+                                        createdAt = createdAt,
+                                        updatedAt = updatedAt,
+                                        isDeleted = isDeleted,
+                                        syncStatus = SyncStatus.SYNCED
+                                    )
+                                )
+                                syncedCount++
+                            } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
+                                localDb.supplierPaymentDao().insertPayment(
+                                    existing.copy(
+                                        date = date,
+                                        wholesalerName = wholesalerName,
+                                        amount = amount,
+                                        paymentMode = paymentMode,
+                                        note = note,
+                                        recordedByUserId = recordedByUserId,
+                                        updatedAt = updatedAt,
+                                        isDeleted = isDeleted,
+                                        syncStatus = SyncStatus.SYNCED
+                                    )
+                                )
+                                syncedCount++
+                            }
+                        }
+                    } catch (docErr: Throwable) {
+                        Log.w(TAG, "Skipping supplier doc ${doc.id}: ${docErr.message}")
+                    }
+                }
+            } catch (e: Throwable) {
+                Log.w(TAG, "Skipping or error pulling remote suppliers: ${e.message}")
             }
 
             // -------------------------------------------------------------
@@ -1162,6 +1364,8 @@ class FirestoreSyncEngine(
                         "soldByUserId" to s.soldByUserId,
                         "returnedKg" to s.returnedKg.toDouble(),
                         "billStatus" to s.billStatus,
+                        "billNumber" to s.billNumber,
+                        "paymentMode" to s.paymentMode,
                         "date" to s.date,
                         "timestamp" to s.date,
                         "createdAt" to s.createdAt,
@@ -1193,6 +1397,7 @@ class FirestoreSyncEngine(
                         "linkedSaleId" to (p.linkedSaleId ?: ""),
                         "note" to p.note,
                         "collectedByUserId" to p.collectedByUserId,
+                        "paymentMode" to p.paymentMode,
                         "date" to p.date,
                         "timestamp" to p.date,
                         "createdAt" to p.createdAt,
@@ -1209,6 +1414,75 @@ class FirestoreSyncEngine(
                 } catch (e: Throwable) {
                     Log.w(TAG, "Error pushing payment ${p.id}", e)
                     lastPushError = e.localizedMessage
+                }
+            }
+
+            // 4b. Sync Unsynced Purchase Invoices & Supplier Payments
+            val unsyncedInvoices = localDb.purchaseInvoiceDao().getUnsyncedInvoices()
+            for (inv in unsyncedInvoices) {
+                try {
+                    val safeName = inv.wholesalerName.trim().ifBlank { "Supplier" }.take(100)
+                    val invDoc = hashMapOf<String, Any>(
+                        "recordId" to inv.id,
+                        "type" to "PURCHASE_INVOICE",
+                        "name" to safeName,
+                        "wholesalerName" to safeName,
+                        "wholesalerPhone" to inv.wholesalerPhone,
+                        "invoiceNumber" to inv.invoiceNumber,
+                        "date" to inv.date,
+                        "itemsJson" to inv.itemsJson,
+                        "ladhan" to inv.ladhan.toDouble(),
+                        "utaar" to inv.utaar.toDouble(),
+                        "gaadiKiraya" to inv.gaadiKiraya.toDouble(),
+                        "goodsSubtotal" to inv.goodsSubtotal.toDouble(),
+                        "totalInvoiceCost" to inv.totalInvoiceCost.toDouble(),
+                        "paidAmount" to inv.paidAmount.toDouble(),
+                        "balanceAmount" to inv.balanceAmount.toDouble(),
+                        "balance" to inv.balanceAmount.toDouble(),
+                        "paymentStatus" to inv.paymentStatus.name,
+                        "notes" to inv.notes,
+                        "recordedByUserId" to inv.recordedByUserId,
+                        "createdAt" to inv.createdAt,
+                        "updatedAt" to inv.updatedAt,
+                        "isDeleted" to inv.isDeleted
+                    )
+                    firestore.collection("users").document(storeUid).collection("suppliers")
+                        .document("inv_${inv.id}")
+                        .set(invDoc, SetOptions.merge())
+                        .await()
+                    localDb.purchaseInvoiceDao().insertInvoice(inv.copy(syncStatus = SyncStatus.SYNCED))
+                    syncedCount++
+                } catch (e: Throwable) {
+                    Log.w(TAG, "Skipping/error pushing purchase invoice ${inv.id}: ${e.message}")
+                }
+            }
+
+            val unsyncedSupplierPayments = localDb.supplierPaymentDao().getUnsyncedPayments()
+            for (sp in unsyncedSupplierPayments) {
+                try {
+                    val safeName = sp.wholesalerName.trim().ifBlank { "Supplier" }.take(100)
+                    val spDoc = hashMapOf<String, Any>(
+                        "recordId" to sp.id,
+                        "type" to "SUPPLIER_PAYMENT",
+                        "name" to safeName,
+                        "wholesalerName" to safeName,
+                        "date" to sp.date,
+                        "amount" to sp.amount.toDouble(),
+                        "paymentMode" to sp.paymentMode,
+                        "note" to sp.note,
+                        "recordedByUserId" to sp.recordedByUserId,
+                        "createdAt" to sp.createdAt,
+                        "updatedAt" to sp.updatedAt,
+                        "isDeleted" to sp.isDeleted
+                    )
+                    firestore.collection("users").document(storeUid).collection("suppliers")
+                        .document("sp_${sp.id}")
+                        .set(spDoc, SetOptions.merge())
+                        .await()
+                    localDb.supplierPaymentDao().insertPayment(sp.copy(syncStatus = SyncStatus.SYNCED))
+                    syncedCount++
+                } catch (e: Throwable) {
+                    Log.w(TAG, "Skipping/error pushing supplier payment ${sp.id}: ${e.message}")
                 }
             }
 

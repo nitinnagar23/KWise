@@ -58,16 +58,16 @@ service cloud.firestore {
 
     function isValidCustomer(data) {
       return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
-             (!('phone' in data) || data.phone is string) &&
-             (!('village' in data) || data.village is string) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+             (!('village' in data) || (data.village is string && data.village.size() <= 100)) &&
              (!('creditLimit' in data) || data.creditLimit is number) &&
              (!('currentBalance' in data) || data.currentBalance is number) &&
              (!('totalUdhari' in data) || data.totalUdhari is number);
     }
 
     function isValidTransaction(data) {
-      return data.customerId is string && data.customerId.size() > 0 &&
-             data.type is string &&
+      return data.customerId is string && data.customerId.size() > 0 && data.customerId.size() <= 128 &&
+             data.type is string && data.type.size() <= 50 &&
              data.amount is number && data.amount >= 0 &&
              (!('totalSalePrice' in data) || data.totalSalePrice is number) &&
              (!('paidAmount' in data) || data.paidAmount is number) &&
@@ -75,15 +75,15 @@ service cloud.firestore {
     }
 
     function isValidInventory(data) {
-      return (('name' in data && data.name is string && data.name.size() > 0) ||
-              ('feedName' in data && data.feedName is string && data.feedName.size() > 0)) &&
+      return (('name' in data && data.name is string && data.name.size() > 0 && data.name.size() <= 150) ||
+              ('feedName' in data && data.feedName is string && data.feedName.size() > 0 && data.feedName.size() <= 150)) &&
              (!('stockBags' in data) || data.stockBags is number) &&
              (!('stockLooseKg' in data) || data.stockLooseKg is number) &&
              (!('currentStockKg' in data) || data.currentStockKg is number);
     }
 
     function isValidBill(data) {
-      return data.customerId is string && data.customerId.size() > 0 &&
+      return data.customerId is string && data.customerId.size() > 0 && data.customerId.size() <= 128 &&
              data.totalAmount is number && data.totalAmount >= 0;
     }
 
@@ -137,8 +137,13 @@ service cloud.firestore {
 
       match /customers/{customerId} {
         allow read: if isStaffMember(userId);
-        allow create: if isStaffMember(userId) && isValidCustomer(request.resource.data);
-        allow update: if isStaffMember(userId) && isValidCustomer(request.resource.data);
+        allow create: if isStaffMember(userId) &&
+                         isValidCustomer(request.resource.data) &&
+                         (isAdmin(userId) || request.resource.data.get('creditLimit', 0) <= 10000);
+        allow update: if isStaffMember(userId) &&
+                         isValidCustomer(request.resource.data) &&
+                         (isAdmin(userId) ||
+                          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['creditLimit', 'isDeleted']));
         allow delete: if isAdminOrManager(userId);
       }
 
@@ -151,7 +156,14 @@ service cloud.firestore {
 
       match /inventory/{itemId} {
         allow read: if isStaffMember(userId);
-        allow create, update: if isStaffMember(userId) && isValidInventory(request.resource.data);
+        allow create: if isAdminOrManager(userId) && isValidInventory(request.resource.data);
+        allow update: if isStaffMember(userId) &&
+                         isValidInventory(request.resource.data) &&
+                         (isAdminOrManager(userId) ||
+                          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                            'sellingPricePerKg', 'salePricePerKg', 'looseSellingPricePerKg',
+                            'averagePurchaseCostPerKg', 'name', 'feedName', 'kgPerBag', 'isDeleted'
+                          ]));
         allow delete: if isAdminOrManager(userId);
       }
 
@@ -183,7 +195,7 @@ service cloud.firestore {
             )
           )
         );
-        allow delete: if isAdmin(userId);
+        allow delete: if isAdmin(userId) || (isAuthenticated() && request.auth.uid == staffId);
       }
     }
 

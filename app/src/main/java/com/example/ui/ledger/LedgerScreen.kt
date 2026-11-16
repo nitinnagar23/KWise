@@ -719,15 +719,18 @@ fun CustomerCardItem(
         if (customer.totalUdhari <= BigDecimal.ZERO) {
             Triple("Clear", LedgerMintBg, LedgerBrandGreen)
         } else {
-            val now = System.currentTimeMillis()
+            val todayStart = com.example.util.ShopAnalytics.getStartOfTodayMillis(System.currentTimeMillis())
             val promiseDate = customer.promiseDate
             if (promiseDate != null) {
-                val diffDays = ((now - promiseDate) / (24L * 60L * 60L * 1000L)).toInt()
-                if (diffDays > 0) {
-                    Triple("Overdue $diffDays days", LedgerCrimson, Color.White)
-                } else {
-                    val dueIn = (-diffDays).coerceAtLeast(1)
-                    Triple("Due $dueIn days", LedgerCrimsonSoftBg, LedgerCrimson)
+                val promiseDayStart = com.example.util.ShopAnalytics.getStartOfTodayMillis(promiseDate)
+                val diffDays = ((todayStart - promiseDayStart) / (24L * 60L * 60L * 1000L)).toInt()
+                when {
+                    diffDays > 0 -> Triple("Overdue $diffDays ${if (diffDays == 1) "day" else "days"}", LedgerCrimson, Color.White)
+                    diffDays == 0 -> Triple("Due today", LedgerCrimsonSoftBg, LedgerCrimson)
+                    else -> {
+                        val dueIn = -diffDays
+                        Triple("Due $dueIn ${if (dueIn == 1) "day" else "days"}", LedgerCrimsonSoftBg, LedgerCrimson)
+                    }
                 }
             } else if (statusChip == CustomerStatusChip.OVER_LIMIT || customer.totalUdhari >= criticalThreshold) {
                 Triple(

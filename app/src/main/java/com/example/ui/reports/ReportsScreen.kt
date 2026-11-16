@@ -269,27 +269,36 @@ fun ReportsScreen(
         ShopAnalytics.computeVillageSummaries(customerInsights)
     }
 
-    var totalRevenue = BigDecimal.ZERO
-    var totalCogs = BigDecimal.ZERO
-    var totalGrossProfit = BigDecimal.ZERO
-    var totalQuantityKg = BigDecimal.ZERO
-    var totalUdhariExtended = BigDecimal.ZERO
-    var totalPaidAtSale = BigDecimal.ZERO
+    val salesTotals = remember(filteredSales) {
+        var rev = BigDecimal.ZERO
+        var cogsSum = BigDecimal.ZERO
+        var grossProfit = BigDecimal.ZERO
+        var qtyKg = BigDecimal.ZERO
+        var udhariExt = BigDecimal.ZERO
+        var paidAtSale = BigDecimal.ZERO
 
-    filteredSales.forEach { sale ->
-        // sale.quantityKg and sale.totalSalePrice are already net of any returned items
-        val netKg = sale.quantityKg.max(BigDecimal.ZERO)
-        val revenue = sale.totalSalePrice.max(BigDecimal.ZERO)
-        val cogs = sale.costPerKgAtSale.multiply(netKg).setScale(CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
-        val profitForSale = revenue.subtract(cogs)
+        for (sale in filteredSales) {
+            // sale.quantityKg and sale.totalSalePrice are already net of any returned items
+            val netKg = sale.quantityKg.max(BigDecimal.ZERO)
+            val revenue = sale.totalSalePrice.max(BigDecimal.ZERO)
+            val cogs = sale.costPerKgAtSale.multiply(netKg).setScale(CurrencyUtils.MONEY_SCALE, RoundingMode.HALF_UP)
+            val profitForSale = revenue.subtract(cogs)
 
-        totalRevenue = totalRevenue.add(revenue)
-        totalCogs = totalCogs.add(cogs)
-        totalGrossProfit = totalGrossProfit.add(profitForSale)
-        totalQuantityKg = totalQuantityKg.add(netKg)
-        totalUdhariExtended = totalUdhariExtended.add(sale.udhariAmount)
-        totalPaidAtSale = totalPaidAtSale.add(sale.paidAmount)
+            rev = rev.add(revenue)
+            cogsSum = cogsSum.add(cogs)
+            grossProfit = grossProfit.add(profitForSale)
+            qtyKg = qtyKg.add(netKg)
+            udhariExt = udhariExt.add(sale.udhariAmount)
+            paidAtSale = paidAtSale.add(sale.paidAmount)
+        }
+        arrayOf(rev, cogsSum, grossProfit, qtyKg, udhariExt, paidAtSale)
     }
+    val totalRevenue = salesTotals[0]
+    val totalCogs = salesTotals[1]
+    val totalGrossProfit = salesTotals[2]
+    val totalQuantityKg = salesTotals[3]
+    val totalUdhariExtended = salesTotals[4]
+    val totalPaidAtSale = salesTotals[5]
 
     // Purchase invoice freight (ladhan, utaar, gaadiKiraya) is already capitalized into landed COGS.
     // Deduct only real operational expenses recorded in Cashbook so freight is never double-counted
@@ -318,13 +327,27 @@ fun ReportsScreen(
         totalGrossProfit.subtract(totalAllExpenses)
     }
 
-    val cashPaidAtSale = remember(filteredSales) {
-        filteredSales.filter { !it.paymentMode.equals("UPI", ignoreCase = true) }
-            .fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
+    val cashPaidAtSale = remember(filteredSales, filteredPayments) {
+        val saleCash = filteredSales.filter {
+            !it.paymentMode.equals("UPI", ignoreCase = true) && !it.paymentMode.equals("BANK", ignoreCase = true)
+        }.fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
+        val repaymentCash = filteredPayments.filter {
+            !it.paymentMode.equals("UPI", ignoreCase = true) &&
+                !it.paymentMode.equals("BANK", ignoreCase = true) &&
+                !it.note.contains("UPI", ignoreCase = true)
+        }.fold(BigDecimal.ZERO) { acc, p -> acc.add(p.amount) }
+        saleCash.add(repaymentCash)
     }
-    val upiPaidAtSale = remember(filteredSales) {
-        filteredSales.filter { it.paymentMode.equals("UPI", ignoreCase = true) }
-            .fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
+    val upiPaidAtSale = remember(filteredSales, filteredPayments) {
+        val saleUpi = filteredSales.filter {
+            it.paymentMode.equals("UPI", ignoreCase = true) || it.paymentMode.equals("BANK", ignoreCase = true)
+        }.fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
+        val repaymentUpi = filteredPayments.filter {
+            it.paymentMode.equals("UPI", ignoreCase = true) ||
+                it.paymentMode.equals("BANK", ignoreCase = true) ||
+                it.note.contains("UPI", ignoreCase = true)
+        }.fold(BigDecimal.ZERO) { acc, p -> acc.add(p.amount) }
+        saleUpi.add(repaymentUpi)
     }
 
     val totalCollectedRepayments = remember(filteredPayments) {

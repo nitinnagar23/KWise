@@ -171,19 +171,11 @@ class PairingRepository(private val context: Context) {
         }
     }
 
-    private suspend fun ensureAuthenticated() {
+    private fun ensureAuthenticated() {
         val auth = runCatching { FirebaseAuth.getInstance() }.getOrNull()
             ?: throw IllegalStateException("Firebase Authentication is not available.")
-        if (auth.currentUser != null) return
-        try {
-            auth.signInAnonymously().await()
-        } catch (e: Throwable) {
-            throw IllegalStateException(
-                "Please sign in with your Google account before verifying a pairing code.",
-                e
-            )
-        }
-        if (auth.currentUser == null) {
+        val user = auth.currentUser
+        if (user == null || user.isAnonymous) {
             throw IllegalStateException("Please sign in with your Google account before verifying a pairing code.")
         }
     }

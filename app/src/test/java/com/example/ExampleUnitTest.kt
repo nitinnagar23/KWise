@@ -352,4 +352,57 @@ class ExampleUnitTest {
         com.example.util.SecurityUtils.resetLockout(userAKey)
         com.example.util.SecurityUtils.resetLockout(userBKey)
     }
+
+    @Test
+    fun shopAnalyticsCountsConsolidatedBillsInsteadOfLineItems() {
+        val customer = com.example.model.Customer(
+            id = "c_multi_item",
+            name = "Multi Item Buyer",
+            totalUdhari = java.math.BigDecimal("100.00")
+        )
+        // One bill (#1010) containing 5 different line items
+        val lineItemsOnSameBill = (1..5).map { idx ->
+            com.example.model.SaleEntry(
+                id = "sale_item_$idx",
+                billNumber = "1010",
+                customerId = "c_multi_item",
+                productId = "p_$idx",
+                quantityKg = java.math.BigDecimal("10"),
+                pricePerKgAtSale = java.math.BigDecimal("20"),
+                costPerKgAtSale = java.math.BigDecimal("15"),
+                totalSalePrice = java.math.BigDecimal("200"),
+                paidAmount = if (idx == 1) java.math.BigDecimal("900") else java.math.BigDecimal.ZERO,
+                udhariAmount = if (idx == 1) java.math.BigDecimal("100") else java.math.BigDecimal.ZERO,
+                paymentStatus = com.example.model.PaymentStatus.PARTIAL,
+                soldByUserId = "u1",
+                date = 50_000L
+            )
+        }
+        val insights = com.example.util.ShopAnalytics.computeCustomerInsights(
+            customers = listOf(customer),
+            sales = lineItemsOnSameBill,
+            payments = emptyList(),
+            nowMillis = 100_000L
+        )
+        val insight = insights.first()
+        // 5 line items on the same bill #1010 must count as 1 consolidated order, not 5 orders
+        assertEquals(1, insight.orderCount)
+        assertEquals(0, insight.totalPurchased.compareTo(java.math.BigDecimal("1000")))
+        assertEquals(0, insight.totalPaid.compareTo(java.math.BigDecimal("900")))
+    }
+
+    @Test
+    fun verifyPinRejectsLegacySha256AndRequiresPbkdf2() {
+        val pin = "4829"
+        val pbkdf2Hash = com.example.util.SecurityUtils.hashPin(pin)
+        assertTrue(pbkdf2Hash.startsWith("PBKDF2$"))
+        assertTrue(com.example.util.SecurityUtils.verifyPin(pin, pbkdf2Hash))
+        assertFalse(com.example.util.SecurityUtils.verifyPin("0000", pbkdf2Hash))
+
+        // Unsalted SHA-256 hex of "4829" must be rejected now that legacy SHA-256 support is removed
+        val sha256Hex = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(pin.toByteArray(java.nio.charset.StandardCharsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+        assertFalse("Legacy unsalted SHA-256 hex hash must be rejected", com.example.util.SecurityUtils.verifyPin(pin, sha256Hex))
+    }
 }
