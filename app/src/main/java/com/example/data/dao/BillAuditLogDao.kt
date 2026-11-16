@@ -15,6 +15,9 @@ interface BillAuditLogDao {
     @Query("SELECT * FROM bill_audit_logs WHERE saleId = :saleId ORDER BY timestamp DESC")
     fun getAuditLogsForSale(saleId: String): Flow<List<BillAuditLog>>
 
+    @Query("SELECT * FROM bill_audit_logs ORDER BY timestamp DESC LIMIT 250")
+    suspend fun getRecentAuditLogsList(): List<BillAuditLog>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAuditLog(log: BillAuditLog)
 }

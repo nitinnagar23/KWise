@@ -30,6 +30,9 @@ interface SaleDao {
     @Query("SELECT * FROM sales WHERE id = :saleId AND isDeleted = 0 LIMIT 1")
     suspend fun getSaleById(saleId: String): SaleEntry?
 
+    @Query("SELECT * FROM sales WHERE id = :saleId LIMIT 1")
+    suspend fun getSaleByIdIncludingDeleted(saleId: String): SaleEntry?
+
     @Query("SELECT * FROM sales WHERE syncStatus != 'SYNCED'")
     suspend fun getUnsyncedSales(): List<SaleEntry>
 

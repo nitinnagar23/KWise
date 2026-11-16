@@ -75,29 +75,38 @@ data class Customer(
     }
 
     fun getAutoBlockAtLimit(): Boolean {
-        return parseMetaObject()?.optBoolean("autoBlockAtLimit", true) ?: true
+        return runCatching { parseMetaObject()?.optBoolean("autoBlockAtLimit", true) }.getOrNull() ?: true
     }
 
     fun getBlockUdhariNow(): Boolean {
-        return parseMetaObject()?.optBoolean("blockUdhariNow", false) ?: false
+        return runCatching { parseMetaObject()?.optBoolean("blockUdhariNow", false) }.getOrNull() ?: false
     }
 
     fun getReminderChannel(): String {
-        return parseMetaObject()?.optString("reminderChannel", "WhatsApp")?.ifBlank { "WhatsApp" } ?: "WhatsApp"
+        return runCatching { parseMetaObject()?.optString("reminderChannel", "WhatsApp")?.ifBlank { "WhatsApp" } }.getOrNull() ?: "WhatsApp"
     }
 
     fun getNotes(): String {
-        return parseMetaObject()?.optString("notes", "") ?: ""
+        val fromJson = runCatching { parseMetaObject()?.optString("notes", "") }.getOrNull()
+        if (!fromJson.isNullOrEmpty()) return fromJson
+        val match = Regex(""""notes"\s*:\s*"((?:\\.|[^"\\])*)"""").find(phonesJson)
+        return match?.groupValues?.get(1)?.replace("\\\"", "\"") ?: ""
     }
 
     fun getPromisedAmount(): BigDecimal? {
-        val raw = parseMetaObject()?.optString("promisedAmount", "")?.trim().orEmpty()
+        val raw = runCatching { parseMetaObject()?.optString("promisedAmount", "")?.trim() }.getOrNull()
+            ?.takeIf { it.isNotEmpty() }
+            ?: Regex(""""promisedAmount"\s*:\s*"([^"]*)"""").find(phonesJson)?.groupValues?.get(1)?.trim()
+            ?: ""
         return raw.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO }
     }
 
     fun getOpeningUdhari(): BigDecimal {
-        val raw = parseMetaObject()?.optString("openingUdhari", "")?.trim().orEmpty()
-        return raw.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO } ?: BigDecimal.ZERO
+        val raw = runCatching { parseMetaObject()?.optString("openingUdhari", "")?.trim() }.getOrNull()
+            ?.takeIf { it.isNotEmpty() }
+            ?: Regex(""""openingUdhari"\s*:\s*"([^"]*)"""").find(phonesJson)?.groupValues?.get(1)?.trim()
+            ?: ""
+        return raw.toBigDecimalOrNull()?.takeIf { it.compareTo(BigDecimal.ZERO) != 0 } ?: BigDecimal.ZERO
     }
 
     fun getInitials(): String {
@@ -113,14 +122,20 @@ data class Customer(
         fun serializeTaggedPhones(phones: List<TaggedMobileNumber>): String {
             val valid = phones.filter { it.number.isNotBlank() }
             if (valid.isEmpty()) return ""
-            val arr = JSONArray()
-            for (item in valid) {
-                val obj = JSONObject()
-                obj.put("number", item.number.trim())
-                obj.put("tag", item.tag.ifBlank { "Self" })
-                arr.put(obj)
+            return try {
+                val arr = JSONArray()
+                for (item in valid) {
+                    val obj = JSONObject()
+                    obj.put("number", item.number.trim())
+                    obj.put("tag", item.tag.ifBlank { "Self" })
+                    arr.put(obj)
+                }
+                arr.toString()
+            } catch (_: Throwable) {
+                valid.joinToString(prefix = "[", postfix = "]") {
+                    """{"number":"${it.number.trim()}","tag":"${it.tag.ifBlank { "Self" }}"}"""
+                }
             }
-            return arr.toString()
         }
 
         fun serializeCustomerMeta(
@@ -132,28 +147,45 @@ data class Customer(
             promisedAmount: BigDecimal? = null,
             openingUdhari: BigDecimal = BigDecimal.ZERO
         ): String {
-            val root = JSONObject()
-            val arr = JSONArray()
-            for (item in phones.filter { it.number.isNotBlank() }) {
-                val obj = JSONObject()
-                obj.put("number", item.number.trim())
-                obj.put("tag", item.tag.ifBlank { "Self" })
-                arr.put(obj)
+            return try {
+                val root = JSONObject()
+                val arr = JSONArray()
+                for (item in phones.filter { it.number.isNotBlank() }) {
+                    val obj = JSONObject()
+                    obj.put("number", item.number.trim())
+                    obj.put("tag", item.tag.ifBlank { "Self" })
+                    arr.put(obj)
+                }
+                root.put("phones", arr)
+                root.put("autoBlockAtLimit", autoBlockAtLimit)
+                root.put("blockUdhariNow", blockUdhariNow)
+                root.put("reminderChannel", reminderChannel.ifBlank { "WhatsApp" })
+                if (notes.isNotBlank()) {
+                    root.put("notes", notes.trim())
+                }
+                if (promisedAmount != null && promisedAmount > BigDecimal.ZERO) {
+                    root.put("promisedAmount", promisedAmount.stripTrailingZeros().toPlainString())
+                }
+                if (openingUdhari.compareTo(BigDecimal.ZERO) != 0) {
+                    root.put("openingUdhari", openingUdhari.stripTrailingZeros().toPlainString())
+                }
+                root.toString()
+            } catch (_: Throwable) {
+                val parts = mutableListOf<String>()
+                parts.add(""""autoBlockAtLimit":$autoBlockAtLimit""")
+                parts.add(""""blockUdhariNow":$blockUdhariNow""")
+                parts.add(""""reminderChannel":"${reminderChannel.ifBlank { "WhatsApp" }}"""")
+                if (notes.isNotBlank()) {
+                    parts.add(""""notes":"${notes.trim().replace("\"", "\\\"")}"""")
+                }
+                if (promisedAmount != null && promisedAmount > BigDecimal.ZERO) {
+                    parts.add(""""promisedAmount":"${promisedAmount.stripTrailingZeros().toPlainString()}"""")
+                }
+                if (openingUdhari.compareTo(BigDecimal.ZERO) != 0) {
+                    parts.add(""""openingUdhari":"${openingUdhari.stripTrailingZeros().toPlainString()}"""")
+                }
+                "{${parts.joinToString(",")}}"
             }
-            root.put("phones", arr)
-            root.put("autoBlockAtLimit", autoBlockAtLimit)
-            root.put("blockUdhariNow", blockUdhariNow)
-            root.put("reminderChannel", reminderChannel.ifBlank { "WhatsApp" })
-            if (notes.isNotBlank()) {
-                root.put("notes", notes.trim())
-            }
-            if (promisedAmount != null && promisedAmount > BigDecimal.ZERO) {
-                root.put("promisedAmount", promisedAmount.stripTrailingZeros().toPlainString())
-            }
-            if (openingUdhari > BigDecimal.ZERO) {
-                root.put("openingUdhari", openingUdhari.stripTrailingZeros().toPlainString())
-            }
-            return root.toString()
         }
     }
 }

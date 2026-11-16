@@ -81,7 +81,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _nowMillis
     ) { prodList, saleList, now ->
         try {
-            ShopAnalytics.computeReorderSuggestions(prodList, saleList, now)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                ShopAnalytics.computeReorderSuggestions(prodList, saleList, now)
+            }
         } catch (_: Throwable) {
             emptyList()
         }
@@ -95,7 +97,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _nowMillis
     ) { custList, saleList, payList, now ->
         try {
-            ShopAnalytics.computeCustomerInsights(custList, saleList, payList, now)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                ShopAnalytics.computeCustomerInsights(custList, saleList, payList, now)
+            }
         } catch (_: Throwable) {
             emptyList()
         }
@@ -112,8 +116,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         viewModelScope.launch {
             while (true) {
-                delay(60_000L) // Refresh every minute so midnight rollover is never stale
-                _nowMillis.value = System.currentTimeMillis()
+                delay(60_000L) // P-5: Check every minute, but only emit when the calendar day actually rolls over
+                val now = System.currentTimeMillis()
+                if (ShopAnalytics.getStartOfTodayMillis(now) != ShopAnalytics.getStartOfTodayMillis(_nowMillis.value)) {
+                    _nowMillis.value = now
+                }
             }
         }
     }

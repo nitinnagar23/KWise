@@ -48,9 +48,26 @@ class KhataWiseApp : Application(), Application.ActivityLifecycleCallbacks {
         instance = this
         try {
             com.google.firebase.FirebaseApp.initializeApp(this)
+            // S-5: Initialize Firebase App Check (PlayIntegrity in release, Debug provider in debug) when available
+            val appCheckClass = Class.forName("com.google.firebase.appcheck.FirebaseAppCheck")
+            val appCheckInstance = appCheckClass.getMethod("getInstance").invoke(null)
+            val factoryClassName = if (com.example.BuildConfig.DEBUG) {
+                "com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory"
+            } else {
+                "com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory"
+            }
+            val factoryClass = Class.forName(factoryClassName)
+            val factoryInstance = factoryClass.getMethod("getInstance").invoke(null)
+            val providerFactoryInterface = Class.forName("com.google.firebase.appcheck.AppCheckProviderFactory")
+            appCheckClass.getMethod("installAppCheckProviderFactory", providerFactoryInterface)
+                .invoke(appCheckInstance, factoryInstance)
         } catch (_: Throwable) {}
         AppDatabase.getInstance(this)
         repository = CattleFeedRepository(this)
+        try {
+            // S-8: Purge any stale cached PDF/CSV/JSON exports older than 1 hour on app launch
+            com.example.util.BackupExportUtil.purgeStaleExports(this)
+        } catch (_: Throwable) {}
         try {
             // Initialize FirestoreSyncEngine so AuthStateListener and realtime listeners attach immediately
             firestoreSyncEngine

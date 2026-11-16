@@ -258,8 +258,22 @@ class CattleFeedRepository(private val context: Context) {
         userDao.getUserById(userId)
     }
 
+    private suspend fun resolveEffectiveRoleOrFailClosed(
+        explicitRole: Role? = null,
+        explicitUser: User? = null,
+        lookupUserId: String? = null
+    ): Role? {
+        if (explicitRole != null) return explicitRole
+        if (explicitUser != null) return explicitUser.role
+        if (!lookupUserId.isNullOrBlank()) {
+            userDao.getUserById(lookupUserId)?.let { return it.role }
+        }
+        getActiveUser()?.let { return it.role }
+        return if (userDao.getActiveUsers().isEmpty()) Role.ADMINISTRATOR else null
+    }
+
     private suspend fun resolveActorRole(explicitRole: Role? = null, explicitUser: User? = null): Role? {
-        return explicitRole ?: explicitUser?.role ?: getActiveUser()?.role
+        return resolveEffectiveRoleOrFailClosed(explicitRole = explicitRole, explicitUser = explicitUser)
     }
 
     private suspend fun enforceActiveUserPermission(
@@ -267,7 +281,7 @@ class CattleFeedRepository(private val context: Context) {
         explicitUser: User? = null,
         explicitRole: Role? = null
     ) {
-        val role = explicitRole ?: explicitUser?.role ?: getActiveUser()?.role ?: return
+        val role = resolveEffectiveRoleOrFailClosed(explicitRole = explicitRole, explicitUser = explicitUser)
         requirePermission(role, permission)
     }
 
@@ -1667,14 +1681,19 @@ class CattleFeedRepository(private val context: Context) {
 
             val customer = customerDao.getCustomerById(existing.customerId)
             val allCustomerSales = saleDao.getSalesListByCustomer(existing.customerId)
+            // C-3: Match sibling sales by billNumber + soldByUserId + checkout window so cross-device bill numbers never collide
             val siblingSales = allCustomerSales.filter {
                 !it.isDeleted && it.billStatus != "CANCELLED" && (
-                    (existing.billNumber.isNotBlank() && it.billNumber == existing.billNumber) ||
+                    (existing.billNumber.isNotBlank() &&
+                        it.billNumber == existing.billNumber &&
+                        it.soldByUserId == existing.soldByUserId &&
+                        kotlin.math.abs(it.date - existing.date) <= 60_000L) ||
                         (existing.billNumber.isBlank() && it.billNumber.isBlank() && kotlin.math.abs(it.date - existing.date) <= 2500L)
                     )
             }.ifEmpty { listOf(existing) }
 
             var updatedPrimary: SaleEntry? = null
+            var totalPaidOnCancelledBill = BigDecimal.ZERO
             for (itemSale in siblingSales) {
                 val product = productDao.getProductById(itemSale.productId)
                 if (product != null && itemSale.quantityKg > BigDecimal.ZERO) {
@@ -1683,10 +1702,13 @@ class CattleFeedRepository(private val context: Context) {
                     productDao.updateProductStock(product.id, restoredStock.toPlainString())
                 }
 
-                val prevSummary = "${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg • Total ${CurrencyUtils.formatInr(itemSale.totalSalePrice)} (Udhari ${CurrencyUtils.formatInr(itemSale.udhariAmount)})"
+                totalPaidOnCancelledBill = totalPaidOnCancelledBill.add(itemSale.paidAmount)
+
+                val prevSummary = "${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg • Total ${CurrencyUtils.formatInr(itemSale.totalSalePrice)} (Paid ${CurrencyUtils.formatInr(itemSale.paidAmount)}, Udhari ${CurrencyUtils.formatInr(itemSale.udhariAmount)})"
                 val newSummary = "CANCELLED • Stock Restored (+${CurrencyUtils.formatWeight(itemSale.quantityKg)} kg)"
 
                 val updatedSale = itemSale.copy(
+                    paidAmount = BigDecimal.ZERO,
                     udhariAmount = BigDecimal.ZERO,
                     billStatus = "CANCELLED",
                     updatedAt = System.currentTimeMillis(),
@@ -1709,6 +1731,24 @@ class CattleFeedRepository(private val context: Context) {
                         reason = reason.trim().ifBlank { "Bill cancelled" },
                         performedByUserId = performedBy.id,
                         performedByUserName = performedBy.name
+                    )
+                )
+            }
+
+            // C-2: Preserve any amount the customer already paid on the cancelled bill as ledger advance credit
+            if (totalPaidOnCancelledBill > BigDecimal.ZERO) {
+                val billLabel = existing.billNumber.ifBlank { existing.id.take(6) }
+                paymentDao.insertPayment(
+                    PaymentEntry(
+                        id = UUID.randomUUID().toString(),
+                        date = System.currentTimeMillis(),
+                        customerId = existing.customerId,
+                        amount = totalPaidOnCancelledBill.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING),
+                        linkedSaleId = existing.id,
+                        note = "Credit from cancelled Bill #$billLabel",
+                        collectedByUserId = performedBy.id,
+                        paymentMode = existing.paymentMode.ifBlank { "CASH" },
+                        syncStatus = SyncStatus.PENDING
                     )
                 )
             }

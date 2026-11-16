@@ -67,11 +67,20 @@ class PromiseReminderReceiver : BroadcastReceiver() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
 
+                val publicNotification = NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle("KhataWise Payment Reminder")
+                    .setContentText("Unlock device to view promised payment details")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .build()
+
                 val builder = NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setContentTitle("Payment Due Today: $customerName")
                     .setContentText("Promised payment for cattle feed. Outstanding: ₹$udhariAmount")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                    .setPublicVersion(publicNotification)
                     .setAutoCancel(true)
                     .setContentIntent(openPendingIntent)
 
@@ -107,6 +116,7 @@ class PromiseReminderReceiver : BroadcastReceiver() {
             ).apply {
                 description = "Reminders for customer promise-to-pay dates"
                 enableVibration(true)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PRIVATE
             }
             manager.createNotificationChannel(channel)
         }

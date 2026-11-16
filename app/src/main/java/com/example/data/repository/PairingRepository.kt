@@ -251,7 +251,8 @@ class PairingRepository(private val context: Context) {
             recordLookupOutcome(false, context)
             throw IllegalStateException("This pairing code expired after 10 minutes. Please request a new code.")
         }
-        recordLookupOutcome(true, context)
+        // S-4: Do not reset failedLookupAttempts during read-only getPairingToken preview so an attacker
+        // cannot interleave a known-valid code to reset the rate-limit counter; only reset upon actual claim.
         DevicePairingToken(
             code = cleanCode,
             adminUid = snapshot.safeString("adminUid"),

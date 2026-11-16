@@ -137,11 +137,19 @@ fun StaffManagementScreen(
     val dateFormatter = remember { SimpleDateFormat("d MMM, h:mm a", Locale.getDefault()) }
     val shortDateFormatter = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
 
-    // Listen to real pending staff approval documents under users/{adminUid}/staff in Firestore
-    LaunchedEffect(googleUser?.uid, currentUser?.id) {
-        val adminUid = googleUser?.uid ?: currentUser?.id ?: return@LaunchedEffect
-        try {
-            val db = FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
+    // Listen to real pending staff approval documents under users/{adminUid}/staff in Firestore (F-7: remove listener onDispose)
+    androidx.compose.runtime.DisposableEffect(googleUser?.uid, currentUser?.id) {
+        val adminUid = googleUser?.uid ?: currentUser?.id?.takeIf { it != "admin" && it.isNotBlank() }
+        if (adminUid.isNullOrBlank()) {
+            return@DisposableEffect onDispose {}
+        }
+        val registration = try {
+            val dbId = context.getString(com.example.R.string.firestore_database_id).trim()
+            val db = if (dbId.isBlank() || dbId == "(default)") {
+                FirebaseFirestore.getInstance()
+            } else {
+                FirebaseFirestore.getInstance(dbId)
+            }
             db.collection("users").document(adminUid).collection("staff")
                 .addSnapshotListener { snapshot, error ->
                     if (error != null || snapshot == null) return@addSnapshotListener
@@ -174,7 +182,14 @@ fun StaffManagementScreen(
                     }
                     pendingRequests = pendingList
                 }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+            null
+        }
+        onDispose {
+            try {
+                registration?.remove()
+            } catch (_: Throwable) {}
+        }
     }
 
     // Build real Team list strictly from Room allUsers (and currentUser if not yet persisted)
@@ -282,13 +297,39 @@ fun StaffManagementScreen(
     }
     var pairingRemainingSeconds by remember { mutableLongStateOf(600L) }
 
+    fun resolveAuthenticatedAdminUid(): String? {
+        val gUid = googleUser?.uid?.takeIf { it.isNotBlank() }
+        if (gUid != null) return gUid
+        val cUid = currentUser?.id?.takeIf { it.isNotBlank() && it != "admin" }
+        return cUid ?: settings?.storeAdminUid?.takeIf { it.isNotBlank() && it != "admin" }
+    }
+
+    fun getConfiguredFirestore(): FirebaseFirestore {
+        val dbId = context.getString(com.example.R.string.firestore_database_id).trim()
+        return if (dbId.isBlank() || dbId == "(default)") {
+            FirebaseFirestore.getInstance()
+        } else {
+            FirebaseFirestore.getInstance(dbId)
+        }
+    }
+
     fun generateFreshPairingCode(showToast: Boolean) {
         val randomPin = PairingRepository.generateSecurePairingCode()
         generatedLocalCode = randomPin
         pairingRemainingSeconds = 600L
         scope.launch {
+            val adminUid = resolveAuthenticatedAdminUid()
+            if (adminUid == null) {
+                if (showToast) {
+                    Toast.makeText(
+                        context,
+                        "Please sign in with Google to generate a cloud pairing code.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                return@launch
+            }
             try {
-                val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
                 activePairingToken = pairingRepo.generatePairingCode(
                     adminUid = adminUid,
                     storeName = shopName,
@@ -296,9 +337,17 @@ fun StaffManagementScreen(
                     storePhone = shopPhone,
                     assignedRole = pairingAssignedRole
                 )
-            } catch (_: Exception) {}
-            if (showToast) {
-                Toast.makeText(context, "New 10-minute pairing code generated", Toast.LENGTH_SHORT).show()
+                if (showToast) {
+                    Toast.makeText(context, "New 10-minute pairing code generated", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                if (showToast) {
+                    Toast.makeText(
+                        context,
+                        "Could not register pairing code in cloud: ${e.localizedMessage ?: "Check connection"}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
@@ -350,6 +399,10 @@ fun StaffManagementScreen(
 
     val approvedToastMsg = tr("Staff details saved!", "स्टाफ विवरण सेव किया गया!")
     val rejectedToastMsg = tr("Staff removed", "स्टाफ हटाया गया")
+    val offlineRemovalQueuedMsg = tr(
+        "Removed locally; cloud revocation queued for when online.",
+        "स्थानीय रूप से हटाया गया; ऑनलाइन होने पर क्लाउड से हटाया जाएगा।"
+    )
 
     // Full-screen Staff details & approval view
     val detailTarget = selectedStaffForDetails
@@ -371,6 +424,31 @@ fun StaffManagementScreen(
                         registeredNamesMap = registeredNamesMap + (userId to detailTarget.registeredName)
                     }
 
+                    var syncedToCloud = false
+                    val adminUid = resolveAuthenticatedAdminUid()
+                    if (adminUid != null) {
+                        try {
+                            val updates = hashMapOf<String, Any>(
+                                "staffUid" to userId,
+                                "name" to customName,
+                                "registeredName" to detailTarget.registeredName,
+                                "email" to (existingDbUser?.email?.ifBlank { detailTarget.email } ?: detailTarget.email),
+                                "deviceInfo" to (existingDbUser?.deviceInfo?.ifBlank { detailTarget.deviceModel } ?: detailTarget.deviceModel),
+                                "role" to newRole.name,
+                                "status" to "APPROVED",
+                                "isApproved" to true,
+                                "isActive" to isActiveFlag,
+                                "updatedAt" to System.currentTimeMillis()
+                            )
+                            getConfiguredFirestore()
+                                .collection("users").document(adminUid).collection("staff")
+                                .document(userId)
+                                .set(updates, com.google.firebase.firestore.SetOptions.merge())
+                                .await()
+                            syncedToCloud = true
+                        } catch (_: Exception) {}
+                    }
+
                     val userEntity = User(
                         id = userId,
                         name = customName,
@@ -383,34 +461,13 @@ fun StaffManagementScreen(
                         createdAt = existingDbUser?.createdAt ?: System.currentTimeMillis(),
                         updatedAt = System.currentTimeMillis(),
                         isDeleted = false,
-                        syncStatus = SyncStatus.SYNCED
+                        syncStatus = if (syncedToCloud) SyncStatus.SYNCED else SyncStatus.PENDING
                     )
                     repository.insertUser(userEntity)
 
                     if (detailTarget.isPendingApproval) {
                         pendingRequests = pendingRequests.filterNot { it.id == detailTarget.id }
                     }
-
-                    try {
-                        val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
-                        val updates = hashMapOf<String, Any>(
-                            "staffUid" to userId,
-                            "name" to customName,
-                            "registeredName" to detailTarget.registeredName,
-                            "email" to userEntity.email,
-                            "deviceInfo" to userEntity.deviceInfo,
-                            "role" to newRole.name,
-                            "status" to "APPROVED",
-                            "isApproved" to true,
-                            "isActive" to isActiveFlag,
-                            "updatedAt" to System.currentTimeMillis()
-                        )
-                        FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
-                            .collection("users").document(adminUid).collection("staff")
-                            .document(userId)
-                            .set(updates, com.google.firebase.firestore.SetOptions.merge())
-                            .await()
-                    } catch (_: Exception) {}
 
                     Toast.makeText(context, approvedToastMsg, Toast.LENGTH_SHORT).show()
                     selectedStaffForDetails = null
@@ -419,16 +476,24 @@ fun StaffManagementScreen(
             onRejectOrRemove = {
                 if (detailTarget.isPendingApproval) {
                     scope.launch {
+                        val adminUid = resolveAuthenticatedAdminUid()
+                        var deletedInCloud = false
+                        if (adminUid != null) {
+                            try {
+                                getConfiguredFirestore()
+                                    .collection("users").document(adminUid).collection("staff")
+                                    .document(detailTarget.id)
+                                    .delete()
+                                    .await()
+                                deletedInCloud = true
+                            } catch (_: Exception) {}
+                        }
                         pendingRequests = pendingRequests.filterNot { it.id == detailTarget.id }
-                        try {
-                            val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
-                            FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
-                                .collection("users").document(adminUid).collection("staff")
-                                .document(detailTarget.id)
-                                .delete()
-                                .await()
-                        } catch (_: Exception) {}
-                        Toast.makeText(context, rejectedToastMsg, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            if (deletedInCloud) rejectedToastMsg else offlineRemovalQueuedMsg,
+                            Toast.LENGTH_SHORT
+                        ).show()
                         selectedStaffForDetails = null
                     }
                 } else if (!detailTarget.isCurrentUser) {
@@ -453,15 +518,23 @@ fun StaffManagementScreen(
                         if (!targetStaff.isCurrentUser) {
                             repository.deleteUser(targetStaff.id)
                         }
-                        try {
-                            val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
-                            FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
-                                .collection("users").document(adminUid).collection("staff")
-                                .document(targetStaff.id)
-                                .delete()
-                                .await()
-                        } catch (_: Exception) {}
-                        Toast.makeText(context, rejectedToastMsg, Toast.LENGTH_SHORT).show()
+                        var deletedInCloud = false
+                        val adminUid = resolveAuthenticatedAdminUid()
+                        if (adminUid != null) {
+                            try {
+                                getConfiguredFirestore()
+                                    .collection("users").document(adminUid).collection("staff")
+                                    .document(targetStaff.id)
+                                    .delete()
+                                    .await()
+                                deletedInCloud = true
+                            } catch (_: Exception) {}
+                        }
+                        Toast.makeText(
+                            context,
+                            if (deletedInCloud) rejectedToastMsg else offlineRemovalQueuedMsg,
+                            Toast.LENGTH_SHORT
+                        ).show()
                         selectedStaffForDetails = null
                     }
                 }
@@ -480,17 +553,21 @@ fun StaffManagementScreen(
                 deviceToUnpair = null
                 scope.launch {
                     repository.deleteUser(dev.id)
-                    try {
-                        val adminUid = googleUser?.uid ?: currentUser?.id ?: "admin"
-                        FirebaseFirestore.getInstance(context.getString(com.example.R.string.firestore_database_id))
-                            .collection("users").document(adminUid).collection("staff")
-                            .document(dev.id)
-                            .delete()
-                            .await()
-                    } catch (_: Exception) {}
+                    var deletedInCloud = false
+                    val adminUid = resolveAuthenticatedAdminUid()
+                    if (adminUid != null) {
+                        try {
+                            getConfiguredFirestore()
+                                .collection("users").document(adminUid).collection("staff")
+                                .document(dev.id)
+                                .delete()
+                                .await()
+                            deletedInCloud = true
+                        } catch (_: Exception) {}
+                    }
                     Toast.makeText(
                         context,
-                        "${dev.title} unpaired",
+                        if (deletedInCloud) "${dev.title} unpaired" else offlineRemovalQueuedMsg,
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -699,8 +776,26 @@ fun StaffManagementScreen(
                                     ) {
                                         Surface(
                                             onClick = {
-                                                pendingRequests = pendingRequests.filterNot { it.id == pending.id }
-                                                Toast.makeText(context, rejectedToastMsg, Toast.LENGTH_SHORT).show()
+                                                scope.launch {
+                                                    val adminUid = resolveAuthenticatedAdminUid()
+                                                    var deletedInCloud = false
+                                                    if (adminUid != null) {
+                                                        try {
+                                                            getConfiguredFirestore()
+                                                                .collection("users").document(adminUid).collection("staff")
+                                                                .document(pending.id)
+                                                                .delete()
+                                                                .await()
+                                                            deletedInCloud = true
+                                                        } catch (_: Exception) {}
+                                                    }
+                                                    pendingRequests = pendingRequests.filterNot { it.id == pending.id }
+                                                    Toast.makeText(
+                                                        context,
+                                                        if (deletedInCloud) rejectedToastMsg else offlineRemovalQueuedMsg,
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
                                             },
                                             modifier = Modifier
                                                 .weight(1f)

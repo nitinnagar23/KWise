@@ -24,14 +24,53 @@ import java.util.Locale
 
 object BackupExportUtil {
 
+    private const val STALE_EXPORT_MAX_AGE_MS = 60L * 60L * 1000L // 1 hour
+
+    /**
+     * Purges exported CSV/PDF/JSON/statement files older than [maxAgeMs] from cache directories (S-8).
+     */
+    fun purgeStaleExports(context: Context, maxAgeMs: Long = STALE_EXPORT_MAX_AGE_MS) {
+        val cutoff = System.currentTimeMillis() - maxAgeMs
+        listOf("bills", "statements", "templates").forEach { sub ->
+            val dir = File(context.cacheDir, sub)
+            if (dir.exists() && dir.isDirectory) {
+                dir.listFiles()?.forEach { f ->
+                    if (f.isFile && f.lastModified() < cutoff) {
+                        runCatching { f.delete() }
+                    }
+                }
+            }
+        }
+    }
+
     private fun ensureExportDir(context: Context): File {
+        purgeStaleExports(context)
         val dir = File(context.cacheDir, "bills")
         if (!dir.exists()) dir.mkdirs()
         return dir
     }
 
     /**
+     * Sanitizes a cell value against CSV/Excel formula injection (S-7) and escapes double quotes.
+     */
+    internal fun sanitizeCsvCell(raw: String): String {
+        val trimmedStart = raw.trimStart()
+        val neutralized = if (trimmedStart.isNotEmpty() &&
+            (trimmedStart[0] == '=' || trimmedStart[0] == '+' || trimmedStart[0] == '-' ||
+                trimmedStart[0] == '@' || trimmedStart[0] == '\t' || trimmedStart[0] == '\r')
+        ) {
+            "'$raw"
+        } else {
+            raw
+        }
+        return neutralized.replace("\"", "\"\"")
+    }
+
+    /**
      * Generates and shares a GST-Ready Accountant CSV (Excel-compatible) report.
+     * Note: [SaleEntry.quantityKg] and [SaleEntry.totalSalePrice] are already net of any returns
+     * (see [com.example.data.repository.CattleFeedRepository.returnSaleItems]), so we use them
+     * directly without subtracting [SaleEntry.returnedKg] a second time (C-1, C-5).
      */
     fun exportGstReadyCsv(
         context: Context,
@@ -53,21 +92,17 @@ object BackupExportUtil {
 
         val sb = StringBuilder()
         sb.appendLine("KHATAWISE - GST & ACCOUNTANT MONTHLY REPORT")
-        sb.appendLine("Shop Name,\"${shopName.replace("\"", "\"\"")}\"")
-        sb.appendLine("Report Period,\"$periodLabel\"")
+        sb.appendLine("Shop Name,\"${sanitizeCsvCell(shopName)}\"")
+        sb.appendLine("Report Period,\"${sanitizeCsvCell(periodLabel)}\"")
         sb.appendLine("Generated On,\"${dateFormat.format(Date())}\"")
         sb.appendLine()
 
-        sb.appendLine("Date,Bill ID,Customer Name,Village,Product,HSN/Category,Net Weight (kg),Selling Rate/kg (INR),Cost Rate/kg (INR),Taxable Sale Value (INR),COGS (INR),Gross Profit (INR),Paid Amount (INR),Udhari Due (INR),Bill Status")
+        sb.appendLine("Date,Bill ID,Customer Name,Village,Product,HSN/Category,Net Weight (kg),Returned Weight (kg),Selling Rate/kg (INR),Cost Rate/kg (INR),Taxable Sale Value (INR),COGS (INR),Gross Profit (INR),Paid Amount (INR),Udhari Due (INR),Bill Status")
 
         activeSales.sortedByDescending { it.date }.forEach { sale ->
-            val netKg = sale.quantityKg.subtract(sale.returnedKg).max(BigDecimal.ZERO)
-            val revenue = if (sale.quantityKg > BigDecimal.ZERO && sale.returnedKg > BigDecimal.ZERO) {
-                sale.pricePerKgAtSale.multiply(netKg)
-            } else {
-                sale.totalSalePrice
-            }
-            val cogs = sale.costPerKgAtSale.multiply(netKg)
+            val netKg = sale.quantityKg.max(BigDecimal.ZERO)
+            val revenue = sale.totalSalePrice.max(BigDecimal.ZERO)
+            val cogs = sale.costPerKgAtSale.multiply(netKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
             val margin = revenue.subtract(cogs)
 
             totalRevenue = totalRevenue.add(revenue)
@@ -76,18 +111,21 @@ object BackupExportUtil {
 
             val cust = customers[sale.customerId]
             val prod = products[sale.productId]
-            val custName = (cust?.name ?: "Walk-in").replace("\"", "\"\"")
-            val village = (cust?.village ?: "").replace("\"", "\"\"")
-            val prodName = (prod?.feedName ?: "Cattle Feed").replace("\"", "\"\"")
+            val custName = sanitizeCsvCell(cust?.name ?: "Walk-in")
+            val village = sanitizeCsvCell(cust?.village ?: "")
+            val prodName = sanitizeCsvCell(prod?.feedName ?: "Cattle Feed")
+            val billIdLabel = sanitizeCsvCell(sale.billNumber.ifBlank { sale.id.take(8).uppercase() })
+            val statusLabel = sanitizeCsvCell(sale.billStatus)
 
             sb.appendLine(
                 "\"${dateFormat.format(Date(sale.date))}\"," +
-                    "\"${sale.id.take(8).uppercase()}\"," +
+                    "\"$billIdLabel\"," +
                     "\"$custName\"," +
                     "\"$village\"," +
                     "\"$prodName\"," +
                     "\"2309 (Cattle Feed)\"," +
                     "${netKg.toPlainString()}," +
+                    "${sale.returnedKg.toPlainString()}," +
                     "${sale.pricePerKgAtSale.toPlainString()}," +
                     "${sale.costPerKgAtSale.toPlainString()}," +
                     "${revenue.toPlainString()}," +
@@ -95,7 +133,7 @@ object BackupExportUtil {
                     "${margin.toPlainString()}," +
                     "${sale.paidAmount.toPlainString()}," +
                     "${sale.udhariAmount.toPlainString()}," +
-                    "\"${sale.billStatus}\""
+                    "\"$statusLabel\""
             )
         }
 
@@ -117,7 +155,7 @@ object BackupExportUtil {
     }
 
     /**
-     * Generates and shares a formatted GST-Ready PDF Report for accountants.
+     * Generates and shares a multi-page GST-Ready PDF Report for accountants.
      */
     fun exportGstReadyPdf(
         context: Context,
@@ -137,13 +175,9 @@ object BackupExportUtil {
         var totalGrossMargin = BigDecimal.ZERO
 
         activeSales.forEach { sale ->
-            val netKg = sale.quantityKg.subtract(sale.returnedKg).max(BigDecimal.ZERO)
-            val revenue = if (sale.quantityKg > BigDecimal.ZERO && sale.returnedKg > BigDecimal.ZERO) {
-                sale.pricePerKgAtSale.multiply(netKg)
-            } else {
-                sale.totalSalePrice
-            }
-            val cogs = sale.costPerKgAtSale.multiply(netKg)
+            val netKg = sale.quantityKg.max(BigDecimal.ZERO)
+            val revenue = sale.totalSalePrice.max(BigDecimal.ZERO)
+            val cogs = sale.costPerKgAtSale.multiply(netKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
             totalRevenue = totalRevenue.add(revenue)
             totalCogs = totalCogs.add(cogs)
             totalGrossMargin = totalGrossMargin.add(revenue.subtract(cogs))
@@ -155,10 +189,6 @@ object BackupExportUtil {
         val netProfit = totalGrossMargin.subtract(totalHandlingExpenses)
 
         val pdfDocument = PdfDocument()
-        val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create()
-        val page = pdfDocument.startPage(pageInfo)
-        val canvas: Canvas = page.canvas
-
         val titlePaint = Paint().apply {
             color = Color.rgb(16, 185, 129)
             textSize = 18f
@@ -176,6 +206,23 @@ object BackupExportUtil {
         val linePaint = Paint().apply {
             color = Color.LTGRAY
             strokeWidth = 1f
+        }
+
+        var pageNumber = 1
+        var currentPage = pdfDocument.startPage(PdfDocument.PageInfo.Builder(595, 842, pageNumber).create())
+        var canvas: Canvas = currentPage.canvas
+
+        fun drawTableHeader(targetCanvas: Canvas, startY: Float): Float {
+            var hy = startY
+            targetCanvas.drawText("Date", 32f, hy, headerPaint)
+            targetCanvas.drawText("Customer", 110f, hy, headerPaint)
+            targetCanvas.drawText("Product", 230f, hy, headerPaint)
+            targetCanvas.drawText("Qty(kg)", 360f, hy, headerPaint)
+            targetCanvas.drawText("Sale", 425f, hy, headerPaint)
+            targetCanvas.drawText("Margin", 500f, hy, headerPaint)
+            hy += 8f
+            targetCanvas.drawLine(32f, hy, 563f, hy, linePaint)
+            return hy + 14f
         }
 
         var y = 40f
@@ -200,24 +247,24 @@ object BackupExportUtil {
         canvas.drawLine(32f, y, 563f, y, linePaint)
         y += 22f
 
-        canvas.drawText("2. RECENT SALES REGISTER (${activeSales.size} Bills)", 32f, y, headerPaint)
+        canvas.drawText("2. SALES REGISTER (${activeSales.size} Entries)", 32f, y, headerPaint)
         y += 18f
-        canvas.drawText("Date", 32f, y, headerPaint)
-        canvas.drawText("Customer", 110f, y, headerPaint)
-        canvas.drawText("Product", 230f, y, headerPaint)
-        canvas.drawText("Qty(kg)", 360f, y, headerPaint)
-        canvas.drawText("Sale", 425f, y, headerPaint)
-        canvas.drawText("Margin", 500f, y, headerPaint)
-        y += 8f
-        canvas.drawLine(32f, y, 563f, y, linePaint)
-        y += 14f
+        y = drawTableHeader(canvas, y)
 
         val shortDate = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-        activeSales.sortedByDescending { it.date }.take(28).forEach { sale ->
-            if (y > 790f) return@forEach
-            val netKg = sale.quantityKg.subtract(sale.returnedKg).max(BigDecimal.ZERO)
-            val rev = sale.pricePerKgAtSale.multiply(netKg)
-            val margin = rev.subtract(sale.costPerKgAtSale.multiply(netKg))
+        activeSales.sortedByDescending { it.date }.forEach { sale ->
+            if (y > 790f) {
+                pdfDocument.finishPage(currentPage)
+                pageNumber++
+                currentPage = pdfDocument.startPage(PdfDocument.PageInfo.Builder(595, 842, pageNumber).create())
+                canvas = currentPage.canvas
+                canvas.drawText("$shopName — Sales Register (Page $pageNumber)", 32f, 36f, headerPaint)
+                y = drawTableHeader(canvas, 58f)
+            }
+            val netKg = sale.quantityKg.max(BigDecimal.ZERO)
+            val rev = sale.totalSalePrice.max(BigDecimal.ZERO)
+            val cogs = sale.costPerKgAtSale.multiply(netKg).setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING)
+            val margin = rev.subtract(cogs)
             val custName = (customers[sale.customerId]?.name ?: "Walk-in").take(16)
             val prodName = (products[sale.productId]?.feedName ?: "Feed").take(18)
 
@@ -230,7 +277,7 @@ object BackupExportUtil {
             y += 15f
         }
 
-        pdfDocument.finishPage(page)
+        pdfDocument.finishPage(currentPage)
         FileOutputStream(file).use { out ->
             pdfDocument.writeTo(out)
         }
@@ -240,7 +287,8 @@ object BackupExportUtil {
     }
 
     /**
-     * Creates a full JSON backup of shop data and opens the share chooser (Google Drive, WhatsApp, etc.).
+     * Creates a complete JSON backup of shop data (customers, products, sales, and payments)
+     * and opens the share chooser (Google Drive, WhatsApp, etc.).
      */
     fun exportFullBackupJson(
         context: Context,
@@ -255,6 +303,7 @@ object BackupExportUtil {
 
         val root = JSONObject().apply {
             put("app", "KhataWise")
+            put("version", 2)
             put("shopName", shopName)
             put("exportedAt", System.currentTimeMillis())
             put("customersCount", customers.size)
@@ -268,10 +317,16 @@ object BackupExportUtil {
                     JSONObject().apply {
                         put("id", c.id)
                         put("name", c.name)
+                        put("fatherName", c.fatherName)
                         put("phone", c.phone)
+                        put("phonesJson", c.phonesJson)
                         put("village", c.village)
                         put("totalUdhari", c.totalUdhari.toPlainString())
                         put("creditLimit", c.creditLimit.toPlainString())
+                        put("promiseDate", c.promiseDate ?: 0L)
+                        put("createdAt", c.createdAt)
+                        put("updatedAt", c.updatedAt)
+                        put("isDeleted", c.isDeleted)
                     }
                 )
             }
@@ -283,13 +338,68 @@ object BackupExportUtil {
                     JSONObject().apply {
                         put("id", p.id)
                         put("feedName", p.feedName)
+                        put("baseUnit", p.baseUnit)
+                        put("kgPerBag", p.kgPerBag.toPlainString())
                         put("stockKg", p.currentStockKg.toPlainString())
                         put("sellingPricePerKg", p.sellingPricePerKg.toPlainString())
+                        put("looseSellingPricePerKg", p.looseSellingPricePerKg.toPlainString())
                         put("costPerKg", p.averagePurchaseCostPerKg.toPlainString())
+                        put("isLooseOnly", p.isLooseOnly)
+                        put("createdAt", p.createdAt)
+                        put("updatedAt", p.updatedAt)
+                        put("isDeleted", p.isDeleted)
                     }
                 )
             }
             put("products", prodArr)
+
+            val salesArr = JSONArray()
+            sales.forEach { s ->
+                salesArr.put(
+                    JSONObject().apply {
+                        put("id", s.id)
+                        put("billNumber", s.billNumber)
+                        put("date", s.date)
+                        put("customerId", s.customerId)
+                        put("productId", s.productId)
+                        put("quantityKg", s.quantityKg.toPlainString())
+                        put("returnedKg", s.returnedKg.toPlainString())
+                        put("pricePerKgAtSale", s.pricePerKgAtSale.toPlainString())
+                        put("costPerKgAtSale", s.costPerKgAtSale.toPlainString())
+                        put("totalSalePrice", s.totalSalePrice.toPlainString())
+                        put("paidAmount", s.paidAmount.toPlainString())
+                        put("udhariAmount", s.udhariAmount.toPlainString())
+                        put("paymentStatus", s.paymentStatus.name)
+                        put("paymentMode", s.paymentMode)
+                        put("billStatus", s.billStatus)
+                        put("soldByUserId", s.soldByUserId)
+                        put("createdAt", s.createdAt)
+                        put("updatedAt", s.updatedAt)
+                        put("isDeleted", s.isDeleted)
+                    }
+                )
+            }
+            put("sales", salesArr)
+
+            val paymentsArr = JSONArray()
+            payments.forEach { p ->
+                paymentsArr.put(
+                    JSONObject().apply {
+                        put("id", p.id)
+                        put("date", p.date)
+                        put("customerId", p.customerId)
+                        put("amount", p.amount.toPlainString())
+                        put("linkedSaleId", p.linkedSaleId ?: "")
+                        put("note", p.note)
+                        put("paymentMode", p.paymentMode)
+                        put("collectedByUserId", p.collectedByUserId)
+                        put("createdAt", p.createdAt)
+                        put("updatedAt", p.updatedAt)
+                        put("isDeleted", p.isDeleted)
+                    }
+                )
+            }
+            put("payments", paymentsArr)
         }
 
         file.writeText(root.toString(2))

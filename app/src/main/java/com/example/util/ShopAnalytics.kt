@@ -179,8 +179,8 @@ object ShopAnalytics {
 
             val totalPaid = paidAtSale.add(standalonePaid)
             val currentUdhari = customer.totalUdhari.max(BigDecimal.ZERO)
-            val limit = if (customer.creditLimit > BigDecimal.ZERO) customer.creditLimit else BigDecimal("10000")
-            val isOverLimit = currentUdhari > limit
+            val limit = customer.creditLimit.max(BigDecimal.ZERO)
+            val isOverLimit = limit > BigDecimal.ZERO && currentUdhari > limit
 
             val promise = customer.promiseDate
             val isOverdue = currentUdhari > BigDecimal.ZERO && promise != null && promise < startOfToday

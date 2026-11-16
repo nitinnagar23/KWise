@@ -19,11 +19,13 @@ object SecurityUtils {
 
     const val MAX_PIN_ATTEMPTS = 5
     const val LOCKOUT_DURATION_MS = 5 * 60 * 1000L // 5 minutes lockout after 5 wrong tries
+    const val ATTEMPT_DECAY_WINDOW_MS = 15 * 60 * 1000L // 15 minutes decay for sub-lockout wrong tries (S-3)
 
     private const val LOCKOUT_PREFS_NAME = "khatawise_pin_lockout_prefs"
 
     private data class UserLockoutState(
         val failedAttempts: Int = 0,
+        val lastFailedAtEpochMs: Long = 0L,
         val lockoutUntilEpochMs: Long = 0L,
         val lockoutStartedAtEpochMs: Long = 0L,
         val lockoutUntilElapsedMs: Long = 0L,
@@ -75,6 +77,7 @@ object SecurityUtils {
         val prefs = resolveLockoutPrefs(context)
         if (prefs != null) {
             val attemptsKey = "attempts_$key"
+            val lastFailedKey = "last_failed_$key"
             val lockoutKey = "lockout_until_$key"
             val startedKey = "lockout_started_$key"
             val elapsedKey = "lockout_elapsed_$key"
@@ -98,6 +101,7 @@ object SecurityUtils {
                 }
                 val persisted = UserLockoutState(
                     failedAttempts = prefs.getInt(attemptsKey, 0),
+                    lastFailedAtEpochMs = prefs.getLong(lastFailedKey, 0L),
                     lockoutUntilEpochMs = prefs.getLong(lockoutKey, 0L),
                     lockoutStartedAtEpochMs = prefs.getLong(startedKey, 0L),
                     lockoutUntilElapsedMs = resolvedElapsed,
@@ -116,6 +120,7 @@ object SecurityUtils {
         val prefs = resolveLockoutPrefs(context) ?: return
         prefs.edit()
             .putInt("attempts_$key", state.failedAttempts)
+            .putLong("last_failed_$key", state.lastFailedAtEpochMs)
             .putLong("lockout_until_$key", state.lockoutUntilEpochMs)
             .putLong("lockout_started_$key", state.lockoutStartedAtEpochMs)
             .putLong("lockout_elapsed_$key", state.lockoutUntilElapsedMs)
@@ -177,8 +182,8 @@ object SecurityUtils {
 
     /**
      * Records a single failed PIN attempt for [userId] and returns the updated [PinVerifyResult].
-     * Used when checking a PIN against a list of candidate users so one wrong PIN entry counts
-     * as exactly one failed attempt rather than once per candidate (N11).
+     * Decays sub-lockout failed attempts after [ATTEMPT_DECAY_WINDOW_MS] (15 minutes) so occasional
+     * typos across hours or days do not accumulate into an unexpected lockout (S-3).
      */
     @Synchronized
     fun recordFailedPinAttempt(
@@ -194,7 +199,16 @@ object SecurityUtils {
             )
         }
         val current = loadUserState(key, context, elapsedRealtimeMs)
-        val nextAttempts = current.failedAttempts + 1
+        val effectiveBaseAttempts = if (
+            current.lastFailedAtEpochMs > 0L &&
+            nowMs > current.lastFailedAtEpochMs &&
+            (nowMs - current.lastFailedAtEpochMs) >= ATTEMPT_DECAY_WINDOW_MS
+        ) {
+            0
+        } else {
+            current.failedAttempts
+        }
+        val nextAttempts = effectiveBaseAttempts + 1
         return if (nextAttempts >= MAX_PIN_ATTEMPTS) {
             val untilEpoch = nowMs + LOCKOUT_DURATION_MS
             val untilElapsed = if (elapsedRealtimeMs > 0L) elapsedRealtimeMs + LOCKOUT_DURATION_MS else 0L
@@ -203,6 +217,7 @@ object SecurityUtils {
                 key,
                 UserLockoutState(
                     failedAttempts = nextAttempts,
+                    lastFailedAtEpochMs = nowMs,
                     lockoutUntilEpochMs = untilEpoch,
                     lockoutStartedAtEpochMs = nowMs,
                     lockoutUntilElapsedMs = untilElapsed,
@@ -218,6 +233,7 @@ object SecurityUtils {
                 key,
                 UserLockoutState(
                     failedAttempts = nextAttempts,
+                    lastFailedAtEpochMs = nowMs,
                     lockoutUntilEpochMs = 0L,
                     lockoutStartedAtEpochMs = 0L,
                     lockoutUntilElapsedMs = 0L,

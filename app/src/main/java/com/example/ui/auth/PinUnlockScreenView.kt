@@ -141,24 +141,13 @@ internal fun PinUnlockFullScreen(
                 return@launch
             }
 
-            var matchedUser: User? = null
-
-            val candidates = if (primaryTarget != null) {
-                listOf(primaryTarget) + activeUsers.filter { it.id != primaryTarget.id }
-            } else {
-                activeUsers
-            }
-
-            for (candidate in candidates) {
-                if (candidate.pinHash.isBlank()) {
-                    continue
-                }
-                if (SecurityUtils.verifyPin(enteredPin, candidate.pinHash)) {
-                    matchedUser = candidate
-                    if (!candidate.pinHash.startsWith("PBKDF2$")) {
-                        repository.updateStaffMember(candidate.id, candidate.role, enteredPin)
-                    }
-                    break
+            // P-4 & S-3: Offload 120,000-iteration PBKDF2 to Dispatchers.Default and verify against the selected user
+            val matchedUser: User? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                val target = primaryTarget
+                if (target != null && target.pinHash.isNotBlank() && SecurityUtils.verifyPin(enteredPin, target.pinHash)) {
+                    target
+                } else {
+                    null
                 }
             }
 
@@ -319,6 +308,38 @@ internal fun PinUnlockFullScreen(
                     color = LoginSubtleText,
                     fontWeight = FontWeight.SemiBold
                 )
+            }
+
+            val selectableUsers = remember(users) { users.filter { !it.isDeleted } }
+            if (selectableUsers.size > 1) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    selectableUsers.take(4).forEach { candidate ->
+                        val isChosen = candidate.id == selectedUser?.id
+                        Surface(
+                            onClick = {
+                                selectedUser = candidate
+                                pinInput = ""
+                                pinError = null
+                            },
+                            shape = RoundedCornerShape(50),
+                            color = if (isChosen) LoginBrandGreen else KwSurface,
+                            border = BorderStroke(1.dp, if (isChosen) LoginBrandGreen else LoginCardBorder)
+                        ) {
+                            Text(
+                                text = candidate.name.ifBlank { "User" },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isChosen) Color.White else LoginNavyText,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(26.dp))

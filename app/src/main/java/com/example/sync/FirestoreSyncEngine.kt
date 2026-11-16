@@ -158,9 +158,36 @@ class FirestoreSyncEngine(
     private var staffListener: ListenerRegistration? = null
     private val syncMutex = kotlinx.coroutines.sync.Mutex()
     private var activeListenerUserId: String? = null
+    @Volatile
+    private var pendingSyncRequested: Boolean = false
+    @Volatile
+    private var lastFullPullStoreUid: String? = null
+    @Volatile
+    private var lastFullPullEpochMs: Long = 0L
+    @Volatile
+    private var isReconnectingListeners: Boolean = false
 
     companion object {
         private const val TAG = "KhataWiseFirestoreSync"
+        private const val INCREMENTAL_PULL_WINDOW_MS = 5 * 60 * 1000L
+        private const val RECENT_TX_WINDOW_MS = 90L * 24L * 60L * 60L * 1000L // 90 days window for realtime listener (P-6)
+    }
+
+    private fun scheduleListenerReconnect(userId: String) {
+        if (userId.isBlank() || isReconnectingListeners) return
+        isReconnectingListeners = true
+        scope.launch {
+            try {
+                kotlinx.coroutines.delay(5_000L)
+                if (auth?.currentUser != null) {
+                    activeListenerUserId = null
+                    startRealtimeListeners(userId)
+                }
+            } catch (_: Throwable) {
+            } finally {
+                isReconnectingListeners = false
+            }
+        }
     }
 
     init {
@@ -201,7 +228,12 @@ class FirestoreSyncEngine(
             // 1. Realtime listener for Store Profile
             profileListener = firestore.collection("users").document(userId)
                 .addSnapshotListener { snapshot, error ->
-                    if (error != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+                    if (error != null) {
+                        Log.w(TAG, "Profile listener error: ${error.message}")
+                        scheduleListenerReconnect(userId)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot == null || !snapshot.exists()) return@addSnapshotListener
                     scope.launch {
                         try {
                             val shopName = snapshot.safeString("shopName").ifBlank { snapshot.safeString("storeName") }
@@ -234,15 +266,30 @@ class FirestoreSyncEngine(
             // 2. Realtime listener for Remote Customers
             customerListener = firestore.collection("users").document(userId).collection("customers")
                 .addSnapshotListener { snapshots, error ->
-                    if (error != null || snapshots == null || snapshots.isEmpty) return@addSnapshotListener
+                    if (error != null) {
+                        Log.w(TAG, "Customer listener error: ${error.message}")
+                        scheduleListenerReconnect(userId)
+                        return@addSnapshotListener
+                    }
+                    if (snapshots == null || snapshots.isEmpty) return@addSnapshotListener
                     scope.launch {
                         try {
                             for (change in snapshots.documentChanges) {
                                 val doc = change.document
                                 try {
+                                    val id = doc.id
+                                    // F-5: Handle hard-deleted remote documents when local record is SYNCED
+                                    if (change.type == com.google.firebase.firestore.DocumentChange.Type.REMOVED) {
+                                        val existing = localDb.customerDao().getCustomerById(id)
+                                        if (existing != null && existing.syncStatus == SyncStatus.SYNCED) {
+                                            localDb.customerDao().updateCustomer(
+                                                existing.copy(isDeleted = true, syncStatus = SyncStatus.SYNCED)
+                                            )
+                                        }
+                                        continue
+                                    }
                                     val name = doc.safeString("name")
                                     if (name.isBlank()) continue
-                                    val id = doc.id
                                     val fatherName = doc.safeString("fatherName")
                                     val phone = doc.safeString("phone")
                                     val phonesJson = doc.safeString("phonesJson")
@@ -252,7 +299,8 @@ class FirestoreSyncEngine(
                                     } else {
                                         doc.safeDouble("currentBalance", 0.0)
                                     }
-                                    val creditLimitNum = doc.safeDouble("creditLimit", 10000.0)
+                                    // C-8: Default missing creditLimit to 0.0 ("no limit") instead of 10000.0
+                                    val creditLimitNum = doc.safeDouble("creditLimit", 0.0)
                                     val promiseDate = doc.safeLong("promiseDate")
                                     val createdBy = doc.safeString("createdByUserId")
                                     val createdAt = doc.safeLong("createdAt") ?: System.currentTimeMillis()
@@ -309,15 +357,30 @@ class FirestoreSyncEngine(
             // 3. Realtime listener for Remote Inventory / Products
             productListener = firestore.collection("users").document(userId).collection("inventory")
                 .addSnapshotListener { snapshots, error ->
-                    if (error != null || snapshots == null || snapshots.isEmpty) return@addSnapshotListener
+                    if (error != null) {
+                        Log.w(TAG, "Product listener error: ${error.message}")
+                        scheduleListenerReconnect(userId)
+                        return@addSnapshotListener
+                    }
+                    if (snapshots == null || snapshots.isEmpty) return@addSnapshotListener
                     scope.launch {
                         try {
                             for (change in snapshots.documentChanges) {
                                 val doc = change.document
                                 try {
+                                    val id = doc.id
+                                    // F-5: Handle hard-deleted remote documents when local record is SYNCED
+                                    if (change.type == com.google.firebase.firestore.DocumentChange.Type.REMOVED) {
+                                        val existing = localDb.productDao().getProductById(id)
+                                        if (existing != null && existing.syncStatus == SyncStatus.SYNCED) {
+                                            localDb.productDao().updateProduct(
+                                                existing.copy(isDeleted = true, syncStatus = SyncStatus.SYNCED)
+                                            )
+                                        }
+                                        continue
+                                    }
                                     val feedName = doc.safeString("name").ifBlank { doc.safeString("feedName") }
                                     if (feedName.isBlank()) continue
-                                    val id = doc.id
                                     val baseUnit = doc.safeString("baseUnit", "kg").ifBlank { "kg" }
                                     val kgPerBagNum = doc.safeDouble("kgPerBag", 50.0)
                                     val currentStockKgNum = if (doc.contains("currentStockKg")) {
@@ -381,10 +444,17 @@ class FirestoreSyncEngine(
                     }
                 }
 
-            // 4. Realtime listener for Remote Transactions (Sales and Payments)
+            // 4. Realtime listener for Remote Transactions (Sales and Payments, windowed to recent 90 days for P-6)
+            val txCutoffMs = System.currentTimeMillis() - RECENT_TX_WINDOW_MS
             transactionListener = firestore.collection("users").document(userId).collection("transactions")
+                .whereGreaterThanOrEqualTo("date", txCutoffMs)
                 .addSnapshotListener { snapshots, error ->
-                    if (error != null || snapshots == null || snapshots.isEmpty) return@addSnapshotListener
+                    if (error != null) {
+                        Log.w(TAG, "Transaction listener error: ${error.message}")
+                        scheduleListenerReconnect(userId)
+                        return@addSnapshotListener
+                    }
+                    if (snapshots == null || snapshots.isEmpty) return@addSnapshotListener
                     scope.launch {
                         try {
                             val affectedCustomerIds = mutableSetOf<String>()
@@ -394,6 +464,27 @@ class FirestoreSyncEngine(
                                     val id = doc.id
                                     val type = doc.safeString("type")
                                     val customerId = doc.safeString("customerId")
+                                    // F-5: Handle hard-deleted remote transactions when local record is SYNCED
+                                    if (change.type == com.google.firebase.firestore.DocumentChange.Type.REMOVED) {
+                                        if (type == "SALE_CREDIT") {
+                                            val existingSale = localDb.saleDao().getSaleByIdIncludingDeleted(id)
+                                            if (existingSale != null && existingSale.syncStatus == SyncStatus.SYNCED && !existingSale.isDeleted) {
+                                                localDb.saleDao().insertSale(
+                                                    existingSale.copy(isDeleted = true, syncStatus = SyncStatus.SYNCED)
+                                                )
+                                                if (customerId.isNotBlank()) affectedCustomerIds.add(customerId)
+                                            }
+                                        } else if (type == "PAYMENT_RECEIVED") {
+                                            val existingPay = localDb.paymentDao().getPaymentById(id)
+                                            if (existingPay != null && existingPay.syncStatus == SyncStatus.SYNCED && !existingPay.isDeleted) {
+                                                localDb.paymentDao().insertPayment(
+                                                    existingPay.copy(isDeleted = true, syncStatus = SyncStatus.SYNCED)
+                                                )
+                                                if (customerId.isNotBlank()) affectedCustomerIds.add(customerId)
+                                            }
+                                        }
+                                        continue
+                                    }
                                     val date = doc.safeLong("date") ?: (doc.safeLong("timestamp") ?: System.currentTimeMillis())
                                     val isDeleted = doc.safeBoolean("isDeleted", false)
                                     val createdAt = doc.safeLong("createdAt") ?: date
@@ -421,7 +512,8 @@ class FirestoreSyncEngine(
                                         val billNumber = doc.safeString("billNumber")
                                         val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
 
-                                        val existing = localDb.saleDao().getSaleById(id)
+                                        // F-2: Check including soft-deleted sales so locally deleted sales are never resurrected
+                                        val existing = localDb.saleDao().getSaleByIdIncludingDeleted(id)
                                         if (existing == null) {
                                             localDb.saleDao().insertSale(
                                                 SaleEntry(
@@ -535,7 +627,12 @@ class FirestoreSyncEngine(
             // 5. Realtime listener for Remote Staff Roster & Roles
             staffListener = firestore.collection("users").document(userId).collection("staff")
                 .addSnapshotListener { snapshots, error ->
-                    if (error != null || snapshots == null) return@addSnapshotListener
+                    if (error != null) {
+                        Log.w(TAG, "Staff listener error: ${error.message}")
+                        scheduleListenerReconnect(userId)
+                        return@addSnapshotListener
+                    }
+                    if (snapshots == null) return@addSnapshotListener
                     scope.launch {
                         try {
                             val currentSettings = localDb.settingsDao().getSettings()
@@ -553,13 +650,25 @@ class FirestoreSyncEngine(
                                 val activeStaffDoc = snapshots.documents.firstOrNull {
                                     (it.safeString("staffUid") == activeUserId || it.id == activeUserId)
                                 }
+                                val isStillWaitingInitialApproval = activeStaffDoc != null &&
+                                    activeStaffDoc.safeBoolean("isActive", true) &&
+                                    !activeStaffDoc.safeBoolean("isApproved", false) &&
+                                    activeStaffDoc.safeString("status", "PENDING") == "PENDING"
                                 val isApprovedAndActive = activeStaffDoc != null &&
                                     activeStaffDoc.safeBoolean("isActive", true) &&
                                     (activeStaffDoc.safeBoolean("isApproved", false) ||
                                         activeStaffDoc.safeString("status", "PENDING") == "APPROVED")
-                                if (!isApprovedAndActive) {
-                                    Log.w(TAG, "Active staff $activeUserId was revoked or removed by Admin. Signing out.")
-                                    PashuAaharApp.instance.repository.clearAllLocalDataAndSignOut()
+                                // F-8: Do not wipe unsynced local data or sign out while waiting for initial approval
+                                if (!isApprovedAndActive && !isStillWaitingInitialApproval) {
+                                    val hasUnsyncedWork = localDb.saleDao().getUnsyncedSales().isNotEmpty() ||
+                                        localDb.paymentDao().getUnsyncedPayments().isNotEmpty()
+                                    if (hasUnsyncedWork) {
+                                        Log.w(TAG, "Active staff $activeUserId was revoked, locking session while preserving unsynced local records.")
+                                        localDb.settingsDao().updateActiveUserId(null)
+                                    } else {
+                                        Log.w(TAG, "Active staff $activeUserId was revoked or removed by Admin. Signing out.")
+                                        PashuAaharApp.instance.repository.clearAllLocalDataAndSignOut()
+                                    }
                                     return@launch
                                 }
                             }
@@ -686,9 +795,12 @@ class FirestoreSyncEngine(
      * Comprehensive synchronization:
      * 1. First downloads remote store profile, staff, customers, inventory, and transactions so local DB is never overwritten with blanks.
      * 2. Then uploads local unsynced records to Firestore with SetOptions.merge().
+     * 3. Re-runs the push phase if [pendingSyncRequested] was set while sync was in flight (P-2).
      */
     suspend fun syncNow(): FirestoreSyncState = withContext(Dispatchers.IO) {
         if (!syncMutex.tryLock()) {
+            // P-2: Queue follow-up push so local writes during an active sync are never dropped
+            pendingSyncRequested = true
             return@withContext _syncState.value
         }
         try {
@@ -720,11 +832,28 @@ class FirestoreSyncEngine(
             var syncedCount = 0
             var lastPushError: String? = null
 
+            val activeUserId = currentSettings?.activeUserId.orEmpty()
+            val activeUser = if (activeUserId.isNotBlank()) localDb.userDao().getUserById(activeUserId) else null
+            val canAccessSuppliers = isStoreOwner ||
+                activeUser?.role == Role.ADMINISTRATOR ||
+                activeUser?.role == Role.MANAGER
+
+            // P-1: Only perform a full collection re-download when first syncing this store or after 5 minutes;
+            // otherwise pull incrementally using updatedAt >= incrementalSinceMs since realtime listeners are already active.
+            val nowBeforePull = System.currentTimeMillis()
+            val useIncrementalPull = lastFullPullStoreUid == storeUid &&
+                lastFullPullEpochMs > 0L &&
+                activeListenerUserId == storeUid &&
+                (nowBeforePull - lastFullPullEpochMs) < INCREMENTAL_PULL_WINDOW_MS
+            val incrementalSinceMs = (lastFullPullEpochMs - 60_000L).coerceAtLeast(0L)
+
             // -------------------------------------------------------------
             // PHASE 1: Pull Remote Data First (Crucial for Fresh Login & Cross-Device Sync)
             // -------------------------------------------------------------
             val userDoc = try {
-                firestore.collection("users").document(storeUid).get().await()
+                if (!useIncrementalPull) {
+                    firestore.collection("users").document(storeUid).get().await()
+                } else null
             } catch (e: Throwable) {
                 Log.w(TAG, "Error pulling user profile doc", e)
                 null
@@ -763,9 +892,6 @@ class FirestoreSyncEngine(
             // Pull Staff (only approved staff documents)
             try {
                 val staffDocs = firestore.collection("users").document(storeUid).collection("staff").get().await()
-                val currentSettings = localDb.settingsDao().getSettings()
-                val activeUserId = currentSettings?.activeUserId.orEmpty()
-                val activeUser = if (activeUserId.isNotBlank()) localDb.userDao().getUserById(activeUserId) else null
                 val isStaffDevice = activeUserId.isNotBlank() &&
                     activeUserId != storeUid &&
                     activeUserId != "admin" &&
@@ -774,12 +900,23 @@ class FirestoreSyncEngine(
                     val activeStaffDoc = staffDocs.documents.firstOrNull {
                         (it.safeString("staffUid") == activeUserId || it.id == activeUserId)
                     }
+                    val isStillWaitingInitialApproval = activeStaffDoc != null &&
+                        activeStaffDoc.safeBoolean("isActive", true) &&
+                        !activeStaffDoc.safeBoolean("isApproved", false) &&
+                        activeStaffDoc.safeString("status", "PENDING") == "PENDING"
                     val isApprovedAndActive = activeStaffDoc != null &&
                         activeStaffDoc.safeBoolean("isActive", true) &&
                         (activeStaffDoc.safeBoolean("isApproved", false) ||
                             activeStaffDoc.safeString("status", "PENDING") == "APPROVED")
-                    if (!isApprovedAndActive) {
-                        PashuAaharApp.instance.repository.clearAllLocalDataAndSignOut()
+                    // F-8: Preserve unsynced local data and do not wipe while waiting for initial approval
+                    if (!isApprovedAndActive && !isStillWaitingInitialApproval) {
+                        val hasUnsyncedWork = localDb.saleDao().getUnsyncedSales().isNotEmpty() ||
+                            localDb.paymentDao().getUnsyncedPayments().isNotEmpty()
+                        if (hasUnsyncedWork) {
+                            localDb.settingsDao().updateActiveUserId(null)
+                        } else {
+                            PashuAaharApp.instance.repository.clearAllLocalDataAndSignOut()
+                        }
                         return@withContext FirestoreSyncState.Unauthenticated
                     }
                 }
@@ -857,7 +994,12 @@ class FirestoreSyncEngine(
 
             // Pull Customers
             try {
-                val customerDocs = firestore.collection("users").document(storeUid).collection("customers").get().await()
+                val custCol = firestore.collection("users").document(storeUid).collection("customers")
+                val customerDocs = if (useIncrementalPull) {
+                    custCol.whereGreaterThanOrEqualTo("updatedAt", incrementalSinceMs).get().await()
+                } else {
+                    custCol.get().await()
+                }
                 for (doc in customerDocs.documents) {
                     try {
                         val name = doc.safeString("name")
@@ -872,7 +1014,8 @@ class FirestoreSyncEngine(
                         } else {
                             doc.safeDouble("currentBalance", 0.0)
                         }
-                        val creditLimitNum = doc.safeDouble("creditLimit", 10000.0)
+                        // C-8: Default missing creditLimit to 0.0 ("no limit") instead of 10000.0
+                        val creditLimitNum = doc.safeDouble("creditLimit", 0.0)
                         val promiseDate = doc.safeLong("promiseDate")
                         val createdBy = doc.safeString("createdByUserId")
                         val createdAt = doc.safeLong("createdAt") ?: System.currentTimeMillis()
@@ -930,7 +1073,12 @@ class FirestoreSyncEngine(
 
             // Pull Inventory / Products
             try {
-                val productDocs = firestore.collection("users").document(storeUid).collection("inventory").get().await()
+                val invCol = firestore.collection("users").document(storeUid).collection("inventory")
+                val productDocs = if (useIncrementalPull) {
+                    invCol.whereGreaterThanOrEqualTo("updatedAt", incrementalSinceMs).get().await()
+                } else {
+                    invCol.get().await()
+                }
                 for (doc in productDocs.documents) {
                     try {
                         val feedName = doc.safeString("name").ifBlank { doc.safeString("feedName") }
@@ -1003,7 +1151,12 @@ class FirestoreSyncEngine(
 
             // Pull Transactions (Sales & Payments)
             try {
-                val txDocs = firestore.collection("users").document(storeUid).collection("transactions").get().await()
+                val txCol = firestore.collection("users").document(storeUid).collection("transactions")
+                val txDocs = if (useIncrementalPull) {
+                    txCol.whereGreaterThanOrEqualTo("updatedAt", incrementalSinceMs).get().await()
+                } else {
+                    txCol.get().await()
+                }
                 val affectedCustomerIds = mutableSetOf<String>()
                 for (doc in txDocs.documents) {
                     try {
@@ -1037,7 +1190,8 @@ class FirestoreSyncEngine(
                             val billNumber = doc.safeString("billNumber")
                             val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
 
-                            val existing = localDb.saleDao().getSaleById(id)
+                            // F-2: Query including soft-deleted sales so locally deleted sales are never resurrected
+                            val existing = localDb.saleDao().getSaleByIdIncludingDeleted(id)
                             if (existing == null) {
                                 localDb.saleDao().insertSale(
                                     SaleEntry(
@@ -1150,425 +1304,510 @@ class FirestoreSyncEngine(
                 Log.w(TAG, "Error pulling remote transactions", e)
             }
 
-            // 1f. Pull Remote Supplier Invoices & Payments (Admin/Manager only)
+            // 1f. Pull Remote Supplier Invoices & Payments (F-13: Admin/Manager only)
+            if (canAccessSuppliers) {
+                try {
+                    val supCol = firestore.collection("users").document(storeUid).collection("suppliers")
+                    val remoteSuppliers = if (useIncrementalPull) {
+                        supCol.whereGreaterThanOrEqualTo("updatedAt", incrementalSinceMs).get().await()
+                    } else {
+                        supCol.get().await()
+                    }
+                    for (doc in remoteSuppliers.documents) {
+                        try {
+                            val type = doc.safeString("type")
+                            val recordId = doc.safeString("recordId").ifBlank { doc.id.removePrefix("inv_").removePrefix("sp_") }
+                            val wholesalerName = doc.safeString("wholesalerName").ifBlank { doc.safeString("name") }
+                            if (wholesalerName.isBlank()) continue
+                            val date = doc.safeLong("date") ?: System.currentTimeMillis()
+                            val isDeleted = doc.safeBoolean("isDeleted", false)
+                            val createdAt = doc.safeLong("createdAt") ?: date
+                            val updatedAt = doc.safeLong("updatedAt") ?: date
+
+                            if (type == "PURCHASE_INVOICE") {
+                                val invoiceNumber = doc.safeString("invoiceNumber")
+                                val wholesalerPhone = doc.safeString("wholesalerPhone")
+                                val itemsJson = doc.safeString("itemsJson", "[]").ifBlank { "[]" }
+                                val ladhan = BigDecimal.valueOf(doc.safeDouble("ladhan", 0.0))
+                                val utaar = BigDecimal.valueOf(doc.safeDouble("utaar", 0.0))
+                                val gaadiKiraya = BigDecimal.valueOf(doc.safeDouble("gaadiKiraya", 0.0))
+                                val goodsSubtotal = BigDecimal.valueOf(doc.safeDouble("goodsSubtotal", 0.0))
+                                val totalInvoiceCost = BigDecimal.valueOf(doc.safeDouble("totalInvoiceCost", 0.0))
+                                val paidAmount = BigDecimal.valueOf(doc.safeDouble("paidAmount", 0.0))
+                                val balanceAmount = BigDecimal.valueOf(doc.safeDouble("balanceAmount", 0.0))
+                                val paymentStatus = try {
+                                    PaymentStatus.valueOf(doc.safeString("paymentStatus", "PAID"))
+                                } catch (_: Throwable) {
+                                    PaymentStatus.PAID
+                                }
+                                val notes = doc.safeString("notes")
+                                val recordedByUserId = doc.safeString("recordedByUserId")
+
+                                val existing = localDb.purchaseInvoiceDao().getInvoiceById(recordId)
+                                if (existing == null) {
+                                    localDb.purchaseInvoiceDao().insertInvoice(
+                                        com.example.model.PurchaseInvoice(
+                                            id = recordId,
+                                            invoiceNumber = invoiceNumber,
+                                            date = date,
+                                            wholesalerName = wholesalerName,
+                                            wholesalerPhone = wholesalerPhone,
+                                            itemsJson = itemsJson,
+                                            ladhan = ladhan,
+                                            utaar = utaar,
+                                            gaadiKiraya = gaadiKiraya,
+                                            goodsSubtotal = goodsSubtotal,
+                                            totalInvoiceCost = totalInvoiceCost,
+                                            paidAmount = paidAmount,
+                                            balanceAmount = balanceAmount,
+                                            paymentStatus = paymentStatus,
+                                            notes = notes,
+                                            recordedByUserId = recordedByUserId,
+                                            createdAt = createdAt,
+                                            updatedAt = updatedAt,
+                                            isDeleted = isDeleted,
+                                            syncStatus = SyncStatus.SYNCED
+                                        )
+                                    )
+                                    syncedCount++
+                                } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
+                                    localDb.purchaseInvoiceDao().insertInvoice(
+                                        existing.copy(
+                                            invoiceNumber = invoiceNumber,
+                                            date = date,
+                                            wholesalerName = wholesalerName,
+                                            wholesalerPhone = wholesalerPhone,
+                                            itemsJson = itemsJson,
+                                            ladhan = ladhan,
+                                            utaar = utaar,
+                                            gaadiKiraya = gaadiKiraya,
+                                            goodsSubtotal = goodsSubtotal,
+                                            totalInvoiceCost = totalInvoiceCost,
+                                            paidAmount = paidAmount,
+                                            balanceAmount = balanceAmount,
+                                            paymentStatus = paymentStatus,
+                                            notes = notes,
+                                            recordedByUserId = recordedByUserId,
+                                            updatedAt = updatedAt,
+                                            isDeleted = isDeleted,
+                                            syncStatus = SyncStatus.SYNCED
+                                        )
+                                    )
+                                    syncedCount++
+                                }
+                            } else if (type == "SUPPLIER_PAYMENT") {
+                                val amount = BigDecimal.valueOf(doc.safeDouble("amount", 0.0))
+                                val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
+                                val note = doc.safeString("note")
+                                val recordedByUserId = doc.safeString("recordedByUserId")
+
+                                val existing = localDb.supplierPaymentDao().getPaymentById(recordId)
+                                if (existing == null) {
+                                    localDb.supplierPaymentDao().insertPayment(
+                                        com.example.model.SupplierPayment(
+                                            id = recordId,
+                                            date = date,
+                                            wholesalerName = wholesalerName,
+                                            amount = amount,
+                                            paymentMode = paymentMode,
+                                            note = note,
+                                            recordedByUserId = recordedByUserId,
+                                            createdAt = createdAt,
+                                            updatedAt = updatedAt,
+                                            isDeleted = isDeleted,
+                                            syncStatus = SyncStatus.SYNCED
+                                        )
+                                    )
+                                    syncedCount++
+                                } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
+                                    localDb.supplierPaymentDao().insertPayment(
+                                        existing.copy(
+                                            date = date,
+                                            wholesalerName = wholesalerName,
+                                            amount = amount,
+                                            paymentMode = paymentMode,
+                                            note = note,
+                                            recordedByUserId = recordedByUserId,
+                                            updatedAt = updatedAt,
+                                            isDeleted = isDeleted,
+                                            syncStatus = SyncStatus.SYNCED
+                                        )
+                                    )
+                                    syncedCount++
+                                }
+                            }
+                        } catch (docErr: Throwable) {
+                            Log.w(TAG, "Skipping supplier doc ${doc.id}: ${docErr.message}")
+                        }
+                    }
+                } catch (e: Throwable) {
+                    Log.w(TAG, "Skipping or error pulling remote suppliers: ${e.message}")
+                }
+            }
+
+            // 1g. Pull Remote Audit Logs (F-10)
             try {
-                val remoteSuppliers = firestore.collection("users").document(storeUid).collection("suppliers").get().await()
-                for (doc in remoteSuppliers.documents) {
+                val auditCol = firestore.collection("users").document(storeUid).collection("audit_logs")
+                val remoteLogs = if (useIncrementalPull) {
+                    auditCol.whereGreaterThanOrEqualTo("timestamp", incrementalSinceMs).get().await()
+                } else {
+                    auditCol.get().await()
+                }
+                for (doc in remoteLogs.documents) {
                     try {
-                        val type = doc.safeString("type")
-                        val recordId = doc.safeString("recordId").ifBlank { doc.id.removePrefix("inv_").removePrefix("sp_") }
-                        val wholesalerName = doc.safeString("wholesalerName").ifBlank { doc.safeString("name") }
-                        if (wholesalerName.isBlank()) continue
-                        val date = doc.safeLong("date") ?: System.currentTimeMillis()
-                        val isDeleted = doc.safeBoolean("isDeleted", false)
-                        val createdAt = doc.safeLong("createdAt") ?: date
-                        val updatedAt = doc.safeLong("updatedAt") ?: date
-
-                        if (type == "PURCHASE_INVOICE") {
-                            val invoiceNumber = doc.safeString("invoiceNumber")
-                            val wholesalerPhone = doc.safeString("wholesalerPhone")
-                            val itemsJson = doc.safeString("itemsJson", "[]").ifBlank { "[]" }
-                            val ladhan = BigDecimal.valueOf(doc.safeDouble("ladhan", 0.0))
-                            val utaar = BigDecimal.valueOf(doc.safeDouble("utaar", 0.0))
-                            val gaadiKiraya = BigDecimal.valueOf(doc.safeDouble("gaadiKiraya", 0.0))
-                            val goodsSubtotal = BigDecimal.valueOf(doc.safeDouble("goodsSubtotal", 0.0))
-                            val totalInvoiceCost = BigDecimal.valueOf(doc.safeDouble("totalInvoiceCost", 0.0))
-                            val paidAmount = BigDecimal.valueOf(doc.safeDouble("paidAmount", 0.0))
-                            val balanceAmount = BigDecimal.valueOf(doc.safeDouble("balanceAmount", 0.0))
-                            val paymentStatus = try {
-                                PaymentStatus.valueOf(doc.safeString("paymentStatus", "PAID"))
-                            } catch (_: Throwable) {
-                                PaymentStatus.PAID
-                            }
-                            val notes = doc.safeString("notes")
-                            val recordedByUserId = doc.safeString("recordedByUserId")
-
-                            val existing = localDb.purchaseInvoiceDao().getInvoiceById(recordId)
-                            if (existing == null) {
-                                localDb.purchaseInvoiceDao().insertInvoice(
-                                    com.example.model.PurchaseInvoice(
-                                        id = recordId,
-                                        invoiceNumber = invoiceNumber,
-                                        date = date,
-                                        wholesalerName = wholesalerName,
-                                        wholesalerPhone = wholesalerPhone,
-                                        itemsJson = itemsJson,
-                                        ladhan = ladhan,
-                                        utaar = utaar,
-                                        gaadiKiraya = gaadiKiraya,
-                                        goodsSubtotal = goodsSubtotal,
-                                        totalInvoiceCost = totalInvoiceCost,
-                                        paidAmount = paidAmount,
-                                        balanceAmount = balanceAmount,
-                                        paymentStatus = paymentStatus,
-                                        notes = notes,
-                                        recordedByUserId = recordedByUserId,
-                                        createdAt = createdAt,
-                                        updatedAt = updatedAt,
-                                        isDeleted = isDeleted,
-                                        syncStatus = SyncStatus.SYNCED
-                                    )
-                                )
-                                syncedCount++
-                            } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
-                                localDb.purchaseInvoiceDao().insertInvoice(
-                                    existing.copy(
-                                        invoiceNumber = invoiceNumber,
-                                        date = date,
-                                        wholesalerName = wholesalerName,
-                                        wholesalerPhone = wholesalerPhone,
-                                        itemsJson = itemsJson,
-                                        ladhan = ladhan,
-                                        utaar = utaar,
-                                        gaadiKiraya = gaadiKiraya,
-                                        goodsSubtotal = goodsSubtotal,
-                                        totalInvoiceCost = totalInvoiceCost,
-                                        paidAmount = paidAmount,
-                                        balanceAmount = balanceAmount,
-                                        paymentStatus = paymentStatus,
-                                        notes = notes,
-                                        recordedByUserId = recordedByUserId,
-                                        updatedAt = updatedAt,
-                                        isDeleted = isDeleted,
-                                        syncStatus = SyncStatus.SYNCED
-                                    )
-                                )
-                                syncedCount++
-                            }
-                        } else if (type == "SUPPLIER_PAYMENT") {
-                            val amount = BigDecimal.valueOf(doc.safeDouble("amount", 0.0))
-                            val paymentMode = doc.safeString("paymentMode", "CASH").ifBlank { "CASH" }
-                            val note = doc.safeString("note")
-                            val recordedByUserId = doc.safeString("recordedByUserId")
-
-                            val existing = localDb.supplierPaymentDao().getPaymentById(recordId)
-                            if (existing == null) {
-                                localDb.supplierPaymentDao().insertPayment(
-                                    com.example.model.SupplierPayment(
-                                        id = recordId,
-                                        date = date,
-                                        wholesalerName = wholesalerName,
-                                        amount = amount,
-                                        paymentMode = paymentMode,
-                                        note = note,
-                                        recordedByUserId = recordedByUserId,
-                                        createdAt = createdAt,
-                                        updatedAt = updatedAt,
-                                        isDeleted = isDeleted,
-                                        syncStatus = SyncStatus.SYNCED
-                                    )
-                                )
-                                syncedCount++
-                            } else if (updatedAt > existing.updatedAt && existing.syncStatus == SyncStatus.SYNCED) {
-                                localDb.supplierPaymentDao().insertPayment(
-                                    existing.copy(
-                                        date = date,
-                                        wholesalerName = wholesalerName,
-                                        amount = amount,
-                                        paymentMode = paymentMode,
-                                        note = note,
-                                        recordedByUserId = recordedByUserId,
-                                        updatedAt = updatedAt,
-                                        isDeleted = isDeleted,
-                                        syncStatus = SyncStatus.SYNCED
-                                    )
-                                )
-                                syncedCount++
-                            }
-                        }
-                    } catch (docErr: Throwable) {
-                        Log.w(TAG, "Skipping supplier doc ${doc.id}: ${docErr.message}")
-                    }
-                }
-            } catch (e: Throwable) {
-                Log.w(TAG, "Skipping or error pulling remote suppliers: ${e.message}")
-            }
-
-            // -------------------------------------------------------------
-            // PHASE 2: Push Local Unsynced Records to Cloud
-            // -------------------------------------------------------------
-            // 1. Sync User / Store profile (Owner only)
-            if (isStoreOwner) {
-                try {
-                    val refreshedSettings = localDb.settingsDao().getSettings()
-                    val storeData = hashMapOf<String, Any>(
-                        "storeName" to (refreshedSettings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"),
-                        "shopName" to (refreshedSettings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"),
-                        "shopAddress" to (refreshedSettings?.shopAddress ?: ""),
-                        "shopPhone" to (refreshedSettings?.shopPhone ?: ""),
-                        "shopGstin" to (refreshedSettings?.shopGstin ?: ""),
-                        "shopUpiId" to (refreshedSettings?.shopUpiId ?: ""),
-                        "watchThreshold" to (refreshedSettings?.watchThreshold?.toDouble() ?: 2000.0),
-                        "criticalThreshold" to (refreshedSettings?.criticalThreshold?.toDouble() ?: 5000.0),
-                        "ownerName" to (user.displayName ?: "Store Owner"),
-                        "phone" to (user.phoneNumber ?: (refreshedSettings?.shopPhone ?: "")),
-                        "updatedAt" to System.currentTimeMillis(),
-                        "lastSyncedAt" to FieldValue.serverTimestamp()
-                    )
-                    firestore.collection("users").document(storeUid).set(storeData, SetOptions.merge()).await()
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Error pushing store profile", e)
-                    lastPushError = e.localizedMessage
-                }
-            }
-
-            // 2. Sync Unsynced Customers
-            val unsyncedCustomers = localDb.customerDao().getUnsyncedCustomers()
-            for (c in unsyncedCustomers) {
-                try {
-                    val customerDoc = hashMapOf<String, Any>(
-                        "id" to c.id,
-                        "name" to c.name,
-                        "fatherName" to c.fatherName,
-                        "phone" to c.phone,
-                        "phonesJson" to c.phonesJson,
-                        "village" to c.village,
-                        "currentBalance" to c.totalUdhari.toDouble(),
-                        "totalUdhari" to c.totalUdhari.toDouble(),
-                        "creditLimit" to c.creditLimit.toDouble(),
-                        "promiseDate" to (c.promiseDate ?: 0L),
-                        "createdByUserId" to c.createdByUserId,
-                        "createdAt" to c.createdAt,
-                        "updatedAt" to c.updatedAt,
-                        "isDeleted" to c.isDeleted
-                    )
-                    firestore.collection("users").document(storeUid).collection("customers")
-                        .document(c.id)
-                        .set(customerDoc, SetOptions.merge())
-                        .await()
-                    localDb.customerDao().updateCustomer(c.copy(syncStatus = SyncStatus.SYNCED))
-                    syncedCount++
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Error pushing customer ${c.id}", e)
-                    lastPushError = e.localizedMessage
-                }
-            }
-
-            // 3. Sync Unsynced Sales
-            val unsyncedSales = localDb.saleDao().getUnsyncedSales()
-            for (s in unsyncedSales) {
-                try {
-                    val txDoc = hashMapOf<String, Any>(
-                        "id" to s.id,
-                        "customerId" to s.customerId,
-                        "productId" to s.productId,
-                        "type" to "SALE_CREDIT",
-                        "amount" to s.totalSalePrice.toDouble(),
-                        "quantityKg" to s.quantityKg.toDouble(),
-                        "pricePerKgAtSale" to s.pricePerKgAtSale.toDouble(),
-                        "costPerKgAtSale" to s.costPerKgAtSale.toDouble(),
-                        "totalSalePrice" to s.totalSalePrice.toDouble(),
-                        "paidAmount" to s.paidAmount.toDouble(),
-                        "udhariAmount" to s.udhariAmount.toDouble(),
-                        "paymentStatus" to s.paymentStatus.name,
-                        "soldByUserId" to s.soldByUserId,
-                        "returnedKg" to s.returnedKg.toDouble(),
-                        "billStatus" to s.billStatus,
-                        "billNumber" to s.billNumber,
-                        "paymentMode" to s.paymentMode,
-                        "date" to s.date,
-                        "timestamp" to s.date,
-                        "createdAt" to s.createdAt,
-                        "updatedAt" to s.updatedAt,
-                        "isDeleted" to s.isDeleted,
-                        "description" to "Sale ${s.quantityKg}kg (${s.billStatus})"
-                    )
-                    firestore.collection("users").document(storeUid).collection("transactions")
-                        .document(s.id)
-                        .set(txDoc, SetOptions.merge())
-                        .await()
-                    localDb.saleDao().insertSale(s.copy(syncStatus = SyncStatus.SYNCED))
-                    syncedCount++
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Error pushing sale ${s.id}", e)
-                    lastPushError = e.localizedMessage
-                }
-            }
-
-            // 4. Sync Unsynced Payments
-            val unsyncedPayments = localDb.paymentDao().getUnsyncedPayments()
-            for (p in unsyncedPayments) {
-                try {
-                    val txDoc = hashMapOf<String, Any>(
-                        "id" to p.id,
-                        "customerId" to p.customerId,
-                        "type" to "PAYMENT_RECEIVED",
-                        "amount" to p.amount.toDouble(),
-                        "linkedSaleId" to (p.linkedSaleId ?: ""),
-                        "note" to p.note,
-                        "collectedByUserId" to p.collectedByUserId,
-                        "paymentMode" to p.paymentMode,
-                        "date" to p.date,
-                        "timestamp" to p.date,
-                        "createdAt" to p.createdAt,
-                        "updatedAt" to p.updatedAt,
-                        "isDeleted" to p.isDeleted,
-                        "description" to if (p.note.isNotBlank()) p.note else "Payment received"
-                    )
-                    firestore.collection("users").document(storeUid).collection("transactions")
-                        .document(p.id)
-                        .set(txDoc, SetOptions.merge())
-                        .await()
-                    localDb.paymentDao().insertPayment(p.copy(syncStatus = SyncStatus.SYNCED))
-                    syncedCount++
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Error pushing payment ${p.id}", e)
-                    lastPushError = e.localizedMessage
-                }
-            }
-
-            // 4b. Sync Unsynced Purchase Invoices & Supplier Payments
-            val unsyncedInvoices = localDb.purchaseInvoiceDao().getUnsyncedInvoices()
-            for (inv in unsyncedInvoices) {
-                try {
-                    val safeName = inv.wholesalerName.trim().ifBlank { "Supplier" }.take(100)
-                    val invDoc = hashMapOf<String, Any>(
-                        "recordId" to inv.id,
-                        "type" to "PURCHASE_INVOICE",
-                        "name" to safeName,
-                        "wholesalerName" to safeName,
-                        "wholesalerPhone" to inv.wholesalerPhone,
-                        "invoiceNumber" to inv.invoiceNumber,
-                        "date" to inv.date,
-                        "itemsJson" to inv.itemsJson,
-                        "ladhan" to inv.ladhan.toDouble(),
-                        "utaar" to inv.utaar.toDouble(),
-                        "gaadiKiraya" to inv.gaadiKiraya.toDouble(),
-                        "goodsSubtotal" to inv.goodsSubtotal.toDouble(),
-                        "totalInvoiceCost" to inv.totalInvoiceCost.toDouble(),
-                        "paidAmount" to inv.paidAmount.toDouble(),
-                        "balanceAmount" to inv.balanceAmount.toDouble(),
-                        "balance" to inv.balanceAmount.toDouble(),
-                        "paymentStatus" to inv.paymentStatus.name,
-                        "notes" to inv.notes,
-                        "recordedByUserId" to inv.recordedByUserId,
-                        "createdAt" to inv.createdAt,
-                        "updatedAt" to inv.updatedAt,
-                        "isDeleted" to inv.isDeleted
-                    )
-                    firestore.collection("users").document(storeUid).collection("suppliers")
-                        .document("inv_${inv.id}")
-                        .set(invDoc, SetOptions.merge())
-                        .await()
-                    localDb.purchaseInvoiceDao().insertInvoice(inv.copy(syncStatus = SyncStatus.SYNCED))
-                    syncedCount++
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Skipping/error pushing purchase invoice ${inv.id}: ${e.message}")
-                }
-            }
-
-            val unsyncedSupplierPayments = localDb.supplierPaymentDao().getUnsyncedPayments()
-            for (sp in unsyncedSupplierPayments) {
-                try {
-                    val safeName = sp.wholesalerName.trim().ifBlank { "Supplier" }.take(100)
-                    val spDoc = hashMapOf<String, Any>(
-                        "recordId" to sp.id,
-                        "type" to "SUPPLIER_PAYMENT",
-                        "name" to safeName,
-                        "wholesalerName" to safeName,
-                        "date" to sp.date,
-                        "amount" to sp.amount.toDouble(),
-                        "paymentMode" to sp.paymentMode,
-                        "note" to sp.note,
-                        "recordedByUserId" to sp.recordedByUserId,
-                        "createdAt" to sp.createdAt,
-                        "updatedAt" to sp.updatedAt,
-                        "isDeleted" to sp.isDeleted
-                    )
-                    firestore.collection("users").document(storeUid).collection("suppliers")
-                        .document("sp_${sp.id}")
-                        .set(spDoc, SetOptions.merge())
-                        .await()
-                    localDb.supplierPaymentDao().insertPayment(sp.copy(syncStatus = SyncStatus.SYNCED))
-                    syncedCount++
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Skipping/error pushing supplier payment ${sp.id}: ${e.message}")
-                }
-            }
-
-            // 5. Sync Unsynced Products / Inventory
-            val unsyncedProducts = localDb.productDao().getUnsyncedProducts()
-            for (p in unsyncedProducts) {
-                try {
-                    val bagCount = if (p.kgPerBag > BigDecimal.ZERO) {
-                        p.currentStockKg.divide(p.kgPerBag, java.math.RoundingMode.DOWN).toInt()
-                    } else {
-                        0
-                    }
-                    val looseKg = if (p.kgPerBag > BigDecimal.ZERO) {
-                        p.currentStockKg.remainder(p.kgPerBag).toDouble()
-                    } else {
-                        p.currentStockKg.toDouble()
-                    }
-                    val inventoryDoc = hashMapOf<String, Any>(
-                        "id" to p.id,
-                        "name" to p.feedName,
-                        "feedName" to p.feedName,
-                        "baseUnit" to p.baseUnit,
-                        "kgPerBag" to p.kgPerBag.toDouble(),
-                        "currentStockKg" to p.currentStockKg.toDouble(),
-                        "stockBags" to bagCount,
-                        "stockLooseKg" to looseKg,
-                        "sellingPricePerKg" to p.sellingPricePerKg.toDouble(),
-                        "salePricePerKg" to p.sellingPricePerKg.toDouble(),
-                        "looseSellingPricePerKg" to p.looseSellingPricePerKg.toDouble(),
-                        "averagePurchaseCostPerKg" to p.averagePurchaseCostPerKg.toDouble(),
-                        "isLooseOnly" to p.isLooseOnly,
-                        "createdAt" to p.createdAt,
-                        "updatedAt" to p.updatedAt,
-                        "isDeleted" to p.isDeleted
-                    )
-                    firestore.collection("users").document(storeUid).collection("inventory")
-                        .document(p.id)
-                        .set(inventoryDoc, SetOptions.merge())
-                        .await()
-                    localDb.productDao().insertProduct(p.copy(syncStatus = SyncStatus.SYNCED))
-                    syncedCount++
-                } catch (e: Throwable) {
-                    Log.w(TAG, "Error pushing product ${p.id}", e)
-                    lastPushError = e.localizedMessage
-                }
-            }
-
-            // 6. Sync Unsynced Users / Staff (Owner only)
-            if (isStoreOwner) {
-                val unsyncedUsers = localDb.userDao().getUnsyncedUsers()
-                for (u in unsyncedUsers) {
-                    try {
-                        if (u.isDeleted || !u.isActive) {
-                            try {
-                                firestore.collection("users").document(storeUid).collection("staff")
-                                    .document(u.id)
-                                    .delete()
-                                    .await()
-                            } catch (_: Throwable) {}
-                        } else {
-                            val staffDoc = hashMapOf<String, Any>(
-                                "staffUid" to u.id,
-                                "name" to u.name,
-                                "role" to u.role.name,
-                                "email" to u.email,
-                                "phone" to u.phone,
-                                "deviceInfo" to u.deviceInfo,
-                                "lastActiveAt" to u.lastActiveAt,
-                                "isActive" to u.isActive,
-                                "isApproved" to true,
-                                "status" to "APPROVED",
-                                "updatedAt" to u.updatedAt
+                        val id = doc.id
+                        val saleId = doc.safeString("saleId")
+                        val actionType = doc.safeString("actionType")
+                        if (saleId.isBlank() || actionType.isBlank()) continue
+                        localDb.billAuditLogDao().insertAuditLog(
+                            com.example.model.BillAuditLog(
+                                id = id,
+                                saleId = saleId,
+                                customerId = doc.safeString("customerId"),
+                                customerName = doc.safeString("customerName"),
+                                productName = doc.safeString("productName"),
+                                actionType = actionType,
+                                previousSummary = doc.safeString("previousSummary"),
+                                newSummary = doc.safeString("newSummary"),
+                                reason = doc.safeString("reason"),
+                                performedByUserId = doc.safeString("performedByUserId"),
+                                performedByUserName = doc.safeString("performedByUserName"),
+                                timestamp = doc.safeLong("timestamp") ?: System.currentTimeMillis()
                             )
-                            firestore.collection("users").document(storeUid).collection("staff")
-                                .document(u.id)
-                                .set(staffDoc, SetOptions.merge())
-                                .await()
-                        }
-                        localDb.userDao().updateUser(u.copy(syncStatus = SyncStatus.SYNCED))
-                        syncedCount++
+                        )
+                    } catch (_: Throwable) {}
+                }
+            } catch (_: Throwable) {}
+
+            if (!useIncrementalPull) {
+                lastFullPullStoreUid = storeUid
+                lastFullPullEpochMs = nowBeforePull
+            }
+
+            // -------------------------------------------------------------
+            // PHASE 2: Push Local Unsynced Records to Cloud (loops if pendingSyncRequested was set while syncing, P-2)
+            // -------------------------------------------------------------
+            var pushPasses = 0
+            do {
+                pendingSyncRequested = false
+                pushPasses++
+
+                // 1. Sync User / Store profile (Owner only)
+                if (isStoreOwner && pushPasses == 1) {
+                    try {
+                        val refreshedSettings = localDb.settingsDao().getSettings()
+                        val storeData = hashMapOf<String, Any>(
+                            "storeName" to (refreshedSettings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"),
+                            "shopName" to (refreshedSettings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"),
+                            "shopAddress" to (refreshedSettings?.shopAddress ?: ""),
+                            "shopPhone" to (refreshedSettings?.shopPhone ?: ""),
+                            "shopGstin" to (refreshedSettings?.shopGstin ?: ""),
+                            "shopUpiId" to (refreshedSettings?.shopUpiId ?: ""),
+                            "watchThreshold" to (refreshedSettings?.watchThreshold?.toDouble() ?: 2000.0),
+                            "criticalThreshold" to (refreshedSettings?.criticalThreshold?.toDouble() ?: 5000.0),
+                            "ownerName" to (user.displayName ?: "Store Owner"),
+                            "phone" to (user.phoneNumber ?: (refreshedSettings?.shopPhone ?: "")),
+                            "updatedAt" to System.currentTimeMillis(),
+                            "lastSyncedAt" to FieldValue.serverTimestamp()
+                        )
+                        firestore.collection("users").document(storeUid).set(storeData, SetOptions.merge()).await()
                     } catch (e: Throwable) {
-                        Log.w(TAG, "Error pushing staff ${u.id}", e)
+                        Log.w(TAG, "Error pushing store profile", e)
                         lastPushError = e.localizedMessage
                     }
                 }
-            }
+
+                // 2. Sync Unsynced Customers
+                val unsyncedCustomers = localDb.customerDao().getUnsyncedCustomers()
+                for (c in unsyncedCustomers) {
+                    try {
+                        val customerDoc = hashMapOf<String, Any>(
+                            "id" to c.id,
+                            "name" to c.name,
+                            "fatherName" to c.fatherName,
+                            "phone" to c.phone,
+                            "phonesJson" to c.phonesJson,
+                            "village" to c.village,
+                            "currentBalance" to c.totalUdhari.toDouble(),
+                            "totalUdhari" to c.totalUdhari.toDouble(),
+                            "creditLimit" to c.creditLimit.toDouble(),
+                            "promiseDate" to (c.promiseDate ?: 0L),
+                            "createdByUserId" to c.createdByUserId,
+                            "createdAt" to c.createdAt,
+                            "updatedAt" to c.updatedAt,
+                            "isDeleted" to c.isDeleted
+                        )
+                        firestore.collection("users").document(storeUid).collection("customers")
+                            .document(c.id)
+                            .set(customerDoc, SetOptions.merge())
+                            .await()
+                        localDb.customerDao().updateCustomer(c.copy(syncStatus = SyncStatus.SYNCED))
+                        syncedCount++
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "Error pushing customer ${c.id}", e)
+                        lastPushError = e.localizedMessage
+                    }
+                }
+
+                // 3. Sync Unsynced Sales
+                val unsyncedSales = localDb.saleDao().getUnsyncedSales()
+                for (s in unsyncedSales) {
+                    try {
+                        val txDoc = hashMapOf<String, Any>(
+                            "id" to s.id,
+                            "customerId" to s.customerId,
+                            "productId" to s.productId,
+                            "type" to "SALE_CREDIT",
+                            "amount" to s.totalSalePrice.toDouble(),
+                            "quantityKg" to s.quantityKg.toDouble(),
+                            "pricePerKgAtSale" to s.pricePerKgAtSale.toDouble(),
+                            "costPerKgAtSale" to s.costPerKgAtSale.toDouble(),
+                            "totalSalePrice" to s.totalSalePrice.toDouble(),
+                            "paidAmount" to s.paidAmount.toDouble(),
+                            "udhariAmount" to s.udhariAmount.toDouble(),
+                            "paymentStatus" to s.paymentStatus.name,
+                            "soldByUserId" to s.soldByUserId,
+                            "returnedKg" to s.returnedKg.toDouble(),
+                            "billStatus" to s.billStatus,
+                            "billNumber" to s.billNumber,
+                            "paymentMode" to s.paymentMode,
+                            "date" to s.date,
+                            "timestamp" to s.date,
+                            "createdAt" to s.createdAt,
+                            "updatedAt" to s.updatedAt,
+                            "isDeleted" to s.isDeleted,
+                            "description" to "Sale ${s.quantityKg}kg (${s.billStatus})"
+                        )
+                        firestore.collection("users").document(storeUid).collection("transactions")
+                            .document(s.id)
+                            .set(txDoc, SetOptions.merge())
+                            .await()
+                        localDb.saleDao().insertSale(s.copy(syncStatus = SyncStatus.SYNCED))
+                        syncedCount++
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "Error pushing sale ${s.id}", e)
+                        lastPushError = e.localizedMessage
+                    }
+                }
+
+                // 4. Sync Unsynced Payments
+                val unsyncedPayments = localDb.paymentDao().getUnsyncedPayments()
+                for (p in unsyncedPayments) {
+                    try {
+                        val txDoc = hashMapOf<String, Any>(
+                            "id" to p.id,
+                            "customerId" to p.customerId,
+                            "type" to "PAYMENT_RECEIVED",
+                            "amount" to p.amount.toDouble(),
+                            "linkedSaleId" to (p.linkedSaleId ?: ""),
+                            "note" to p.note,
+                            "collectedByUserId" to p.collectedByUserId,
+                            "paymentMode" to p.paymentMode,
+                            "date" to p.date,
+                            "timestamp" to p.date,
+                            "createdAt" to p.createdAt,
+                            "updatedAt" to p.updatedAt,
+                            "isDeleted" to p.isDeleted,
+                            "description" to if (p.note.isNotBlank()) p.note else "Payment received"
+                        )
+                        firestore.collection("users").document(storeUid).collection("transactions")
+                            .document(p.id)
+                            .set(txDoc, SetOptions.merge())
+                            .await()
+                        localDb.paymentDao().insertPayment(p.copy(syncStatus = SyncStatus.SYNCED))
+                        syncedCount++
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "Error pushing payment ${p.id}", e)
+                        lastPushError = e.localizedMessage
+                    }
+                }
+
+                // 4b. Sync Unsynced Purchase Invoices & Supplier Payments (F-13: Admin/Manager only)
+                if (canAccessSuppliers) {
+                    val unsyncedInvoices = localDb.purchaseInvoiceDao().getUnsyncedInvoices()
+                    for (inv in unsyncedInvoices) {
+                        try {
+                            val safeName = inv.wholesalerName.trim().ifBlank { "Supplier" }.take(100)
+                            val invDoc = hashMapOf<String, Any>(
+                                "recordId" to inv.id,
+                                "type" to "PURCHASE_INVOICE",
+                                "name" to safeName,
+                                "wholesalerName" to safeName,
+                                "wholesalerPhone" to inv.wholesalerPhone,
+                                "invoiceNumber" to inv.invoiceNumber,
+                                "date" to inv.date,
+                                "itemsJson" to inv.itemsJson,
+                                "ladhan" to inv.ladhan.toDouble(),
+                                "utaar" to inv.utaar.toDouble(),
+                                "gaadiKiraya" to inv.gaadiKiraya.toDouble(),
+                                "goodsSubtotal" to inv.goodsSubtotal.toDouble(),
+                                "totalInvoiceCost" to inv.totalInvoiceCost.toDouble(),
+                                "paidAmount" to inv.paidAmount.toDouble(),
+                                "balanceAmount" to inv.balanceAmount.toDouble(),
+                                "balance" to inv.balanceAmount.toDouble(),
+                                "paymentStatus" to inv.paymentStatus.name,
+                                "notes" to inv.notes,
+                                "recordedByUserId" to inv.recordedByUserId,
+                                "createdAt" to inv.createdAt,
+                                "updatedAt" to inv.updatedAt,
+                                "isDeleted" to inv.isDeleted
+                            )
+                            firestore.collection("users").document(storeUid).collection("suppliers")
+                                .document("inv_${inv.id}")
+                                .set(invDoc, SetOptions.merge())
+                                .await()
+                            localDb.purchaseInvoiceDao().insertInvoice(inv.copy(syncStatus = SyncStatus.SYNCED))
+                            syncedCount++
+                        } catch (e: Throwable) {
+                            Log.w(TAG, "Skipping/error pushing purchase invoice ${inv.id}: ${e.message}")
+                        }
+                    }
+
+                    val unsyncedSupplierPayments = localDb.supplierPaymentDao().getUnsyncedPayments()
+                    for (sp in unsyncedSupplierPayments) {
+                        try {
+                            val safeName = sp.wholesalerName.trim().ifBlank { "Supplier" }.take(100)
+                            val spDoc = hashMapOf<String, Any>(
+                                "recordId" to sp.id,
+                                "type" to "SUPPLIER_PAYMENT",
+                                "name" to safeName,
+                                "wholesalerName" to safeName,
+                                "date" to sp.date,
+                                "amount" to sp.amount.toDouble(),
+                                "paymentMode" to sp.paymentMode,
+                                "note" to sp.note,
+                                "recordedByUserId" to sp.recordedByUserId,
+                                "createdAt" to sp.createdAt,
+                                "updatedAt" to sp.updatedAt,
+                                "isDeleted" to sp.isDeleted
+                            )
+                            firestore.collection("users").document(storeUid).collection("suppliers")
+                                .document("sp_${sp.id}")
+                                .set(spDoc, SetOptions.merge())
+                                .await()
+                            localDb.supplierPaymentDao().insertPayment(sp.copy(syncStatus = SyncStatus.SYNCED))
+                            syncedCount++
+                        } catch (e: Throwable) {
+                            Log.w(TAG, "Skipping/error pushing supplier payment ${sp.id}: ${e.message}")
+                        }
+                    }
+                }
+
+                // 5. Sync Unsynced Products / Inventory
+                val unsyncedProducts = localDb.productDao().getUnsyncedProducts()
+                for (p in unsyncedProducts) {
+                    try {
+                        val bagCount = if (p.kgPerBag > BigDecimal.ZERO) {
+                            p.currentStockKg.divide(p.kgPerBag, java.math.RoundingMode.DOWN).toInt()
+                        } else {
+                            0
+                        }
+                        val looseKg = if (p.kgPerBag > BigDecimal.ZERO) {
+                            p.currentStockKg.remainder(p.kgPerBag).toDouble()
+                        } else {
+                            p.currentStockKg.toDouble()
+                        }
+                        val inventoryDoc = hashMapOf<String, Any>(
+                            "id" to p.id,
+                            "name" to p.feedName,
+                            "feedName" to p.feedName,
+                            "baseUnit" to p.baseUnit,
+                            "kgPerBag" to p.kgPerBag.toDouble(),
+                            "currentStockKg" to p.currentStockKg.toDouble(),
+                            "stockBags" to bagCount,
+                            "stockLooseKg" to looseKg,
+                            "sellingPricePerKg" to p.sellingPricePerKg.toDouble(),
+                            "salePricePerKg" to p.sellingPricePerKg.toDouble(),
+                            "looseSellingPricePerKg" to p.looseSellingPricePerKg.toDouble(),
+                            "averagePurchaseCostPerKg" to p.averagePurchaseCostPerKg.toDouble(),
+                            "isLooseOnly" to p.isLooseOnly,
+                            "createdAt" to p.createdAt,
+                            "updatedAt" to p.updatedAt,
+                            "isDeleted" to p.isDeleted
+                        )
+                        firestore.collection("users").document(storeUid).collection("inventory")
+                            .document(p.id)
+                            .set(inventoryDoc, SetOptions.merge())
+                            .await()
+                        localDb.productDao().insertProduct(p.copy(syncStatus = SyncStatus.SYNCED))
+                        syncedCount++
+                    } catch (e: Throwable) {
+                        Log.w(TAG, "Error pushing product ${p.id}", e)
+                        lastPushError = e.localizedMessage
+                    }
+                }
+
+                // 6. Sync Unsynced Users / Staff (Owner only)
+                if (isStoreOwner) {
+                    val unsyncedUsers = localDb.userDao().getUnsyncedUsers()
+                    for (u in unsyncedUsers) {
+                        try {
+                            if (u.isDeleted || !u.isActive) {
+                                try {
+                                    firestore.collection("users").document(storeUid).collection("staff")
+                                        .document(u.id)
+                                        .delete()
+                                        .await()
+                                } catch (_: Throwable) {}
+                            } else {
+                                val staffDoc = hashMapOf<String, Any>(
+                                    "staffUid" to u.id,
+                                    "name" to u.name,
+                                    "role" to u.role.name,
+                                    "email" to u.email,
+                                    "phone" to u.phone,
+                                    "deviceInfo" to u.deviceInfo,
+                                    "lastActiveAt" to u.lastActiveAt,
+                                    "isActive" to u.isActive,
+                                    "isApproved" to true,
+                                    "status" to "APPROVED",
+                                    "updatedAt" to u.updatedAt
+                                )
+                                firestore.collection("users").document(storeUid).collection("staff")
+                                    .document(u.id)
+                                    .set(staffDoc, SetOptions.merge())
+                                    .await()
+                            }
+                            localDb.userDao().updateUser(u.copy(syncStatus = SyncStatus.SYNCED))
+                            syncedCount++
+                        } catch (e: Throwable) {
+                            Log.w(TAG, "Error pushing staff ${u.id}", e)
+                            lastPushError = e.localizedMessage
+                        }
+                    }
+                }
+
+                // 7. Sync Recent Audit Logs (F-10)
+                if (pushPasses == 1) {
+                    try {
+                        val lastSync = currentSettings?.lastSyncTime ?: 0L
+                        val recentLogs = localDb.billAuditLogDao().getRecentAuditLogsList()
+                            .filter { it.timestamp >= (lastSync - 60_000L).coerceAtLeast(0L) }
+                        for (log in recentLogs) {
+                            try {
+                                val logDoc = hashMapOf<String, Any>(
+                                    "id" to log.id,
+                                    "saleId" to log.saleId,
+                                    "customerId" to log.customerId,
+                                    "customerName" to log.customerName,
+                                    "productName" to log.productName,
+                                    "actionType" to log.actionType,
+                                    "previousSummary" to log.previousSummary,
+                                    "newSummary" to log.newSummary,
+                                    "reason" to log.reason,
+                                    "performedByUserId" to log.performedByUserId,
+                                    "performedByUserName" to log.performedByUserName,
+                                    "timestamp" to log.timestamp
+                                )
+                                firestore.collection("users").document(storeUid).collection("audit_logs")
+                                    .document(log.id)
+                                    .set(logDoc, SetOptions.merge())
+                                    .await()
+                            } catch (_: Throwable) {}
+                        }
+                    } catch (_: Throwable) {}
+                }
+            } while (pendingSyncRequested && pushPasses < 3)
 
             if (lastPushError != null && syncedCount == 0) {
                 val err = FirestoreSyncState.Error(lastPushError ?: "Sync failed")

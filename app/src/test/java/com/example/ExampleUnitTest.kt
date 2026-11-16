@@ -405,4 +405,107 @@ class ExampleUnitTest {
             .joinToString("") { "%02x".format(it) }
         assertFalse("Legacy unsalted SHA-256 hex hash must be rejected", com.example.util.SecurityUtils.verifyPin(pin, sha256Hex))
     }
+
+    @Test
+    fun csvCellSanitizationNeutralizesFormulaPayloadsAndEscapesQuotes() {
+        assertEquals("'=SUM(A1:A2)", com.example.util.BackupExportUtil.sanitizeCsvCell("=SUM(A1:A2)"))
+        assertEquals("'+12345", com.example.util.BackupExportUtil.sanitizeCsvCell("+12345"))
+        assertEquals("'-cmd|' /C calc'!A0", com.example.util.BackupExportUtil.sanitizeCsvCell("-cmd|' /C calc'!A0"))
+        assertEquals("'@IMPORTXML()", com.example.util.BackupExportUtil.sanitizeCsvCell("@IMPORTXML()"))
+        assertEquals("Ramesh \"\"Patel\"\"", com.example.util.BackupExportUtil.sanitizeCsvCell("Ramesh \"Patel\""))
+    }
+
+    @Test
+    fun customerNegativeOpeningUdhariPreservesAdvanceBalance() {
+        val rawMeta = com.example.model.Customer.serializeCustomerMeta(
+            phones = listOf(com.example.model.TaggedMobileNumber("9876543210", "Self")),
+            notes = "Paid advance",
+            openingUdhari = java.math.BigDecimal("-500.00")
+        )
+        val customer = com.example.model.Customer(
+            id = "c_adv",
+            name = "Advance Customer",
+            phonesJson = rawMeta
+        )
+        assertEquals(0, customer.getOpeningUdhari().compareTo(java.math.BigDecimal("-500.00")))
+        assertEquals("Paid advance", customer.getNotes())
+    }
+
+    @Test
+    fun shopAnalyticsTreatsZeroCreditLimitAsNoLimit() {
+        val customerNoLimit = com.example.model.Customer(
+            id = "c_nolimit",
+            name = "Zero Limit Default Customer",
+            creditLimit = java.math.BigDecimal.ZERO,
+            totalUdhari = java.math.BigDecimal("2500.00")
+        )
+        val customerWithLimit = com.example.model.Customer(
+            id = "c_limit",
+            name = "Capped Customer",
+            creditLimit = java.math.BigDecimal("2000.00"),
+            totalUdhari = java.math.BigDecimal("2500.00")
+        )
+        val insights = com.example.util.ShopAnalytics.computeCustomerInsights(
+            customers = listOf(customerNoLimit, customerWithLimit),
+            sales = emptyList(),
+            payments = emptyList(),
+            nowMillis = 100_000L
+        )
+        val noLimitInsight = insights.first { it.customer.id == "c_nolimit" }
+        val withLimitInsight = insights.first { it.customer.id == "c_limit" }
+        assertFalse("creditLimit == 0 must mean no limit is configured", noLimitInsight.isOverCreditLimit)
+        assertTrue("creditLimit > 0 and exceeded by totalUdhari must flag isOverCreditLimit", withLimitInsight.isOverCreditLimit)
+    }
+
+    @Test
+    fun subLockoutFailedPinAttemptsDecayAfterFifteenMinutes() {
+        val userId = "decay_test_user"
+        com.example.util.SecurityUtils.resetLockout(userId)
+        val t0 = 1_700_000_000_000L
+
+        // 4 wrong attempts at t0 (1 short of the 5-attempt lockout threshold)
+        repeat(4) {
+            val res = com.example.util.SecurityUtils.recordFailedPinAttempt(userId = userId, nowMs = t0, elapsedRealtimeMs = 10_000L)
+            assertFalse(res.isLockedOut)
+        }
+        assertEquals(4, com.example.util.SecurityUtils.getFailedAttempts(userId))
+
+        // 16 minutes later, a single typo must decay the stale 4-attempt counter and count as attempt #1 (not lock out!)
+        val t16MinLater = t0 + 16 * 60 * 1000L
+        val resAfterDecay = com.example.util.SecurityUtils.recordFailedPinAttempt(
+            userId = userId,
+            nowMs = t16MinLater,
+            elapsedRealtimeMs = 10_000L + 16 * 60 * 1000L
+        )
+        assertFalse("Attempt after 15-minute decay window must not trigger lockout", resAfterDecay.isLockedOut)
+        assertEquals(1, com.example.util.SecurityUtils.getFailedAttempts(userId))
+        com.example.util.SecurityUtils.resetLockout(userId)
+    }
+
+    @Test
+    fun groupSalesIntoBillsSeparatesCollidingBillNumbersFromDifferentDevices() {
+        val s1 = com.example.model.SaleEntry(
+            id = "s1",
+            billNumber = "1001",
+            customerId = "c1",
+            productId = "p1",
+            quantityKg = java.math.BigDecimal("10"),
+            pricePerKgAtSale = java.math.BigDecimal("30"),
+            costPerKgAtSale = java.math.BigDecimal("25"),
+            totalSalePrice = java.math.BigDecimal("300"),
+            paidAmount = java.math.BigDecimal("300"),
+            udhariAmount = java.math.BigDecimal.ZERO,
+            paymentStatus = com.example.model.PaymentStatus.PAID,
+            soldByUserId = "device_a",
+            date = 100_000L
+        )
+        val s2 = s1.copy(
+            id = "s2",
+            soldByUserId = "device_b",
+            date = 500_000L
+        )
+        val grouped = com.example.model.groupSalesIntoBills(listOf(s1, s2))
+        assertEquals("Sales with colliding billNumber from different sellers/timestamps must not merge into one bill", 2, grouped.size)
+    }
 }
+

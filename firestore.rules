@@ -51,6 +51,11 @@ service cloud.firestore {
       );
     }
 
+    function isNonAnonymous() {
+      return isAuthenticated() &&
+             request.auth.token.get('firebase', {}).get('sign_in_provider', 'google.com') != 'anonymous';
+    }
+
     function isValidUser(data) {
       return (('storeName' in data && data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 100) ||
               ('shopName' in data && data.shopName is string && data.shopName.size() > 0 && data.shopName.size() <= 100));
@@ -60,36 +65,41 @@ service cloud.firestore {
       return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
              (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
              (!('village' in data) || (data.village is string && data.village.size() <= 100)) &&
-             (!('creditLimit' in data) || data.creditLimit is number) &&
-             (!('currentBalance' in data) || data.currentBalance is number) &&
-             (!('totalUdhari' in data) || data.totalUdhari is number);
+             (!('creditLimit' in data) || (data.creditLimit is number && data.creditLimit >= 0 && data.creditLimit <= 100000000)) &&
+             (!('currentBalance' in data) || (data.currentBalance is number && data.currentBalance >= -100000000 && data.currentBalance <= 100000000)) &&
+             (!('totalUdhari' in data) || (data.totalUdhari is number && data.totalUdhari >= -100000000 && data.totalUdhari <= 100000000));
     }
 
     function isValidTransaction(data) {
       return data.customerId is string && data.customerId.size() > 0 && data.customerId.size() <= 128 &&
-             data.type is string && data.type.size() <= 50 &&
-             data.amount is number && data.amount >= 0 &&
-             (!('totalSalePrice' in data) || data.totalSalePrice is number) &&
-             (!('paidAmount' in data) || data.paidAmount is number) &&
-             (!('udhariAmount' in data) || data.udhariAmount is number);
+             data.type is string && data.type.size() > 0 && data.type.size() <= 50 &&
+             data.amount is number && data.amount >= 0 && data.amount <= 100000000 &&
+             (!('totalSalePrice' in data) || (data.totalSalePrice is number && data.totalSalePrice >= 0 && data.totalSalePrice <= 100000000)) &&
+             (!('paidAmount' in data) || (data.paidAmount is number && data.paidAmount >= 0 && data.paidAmount <= 100000000)) &&
+             (!('udhariAmount' in data) || (data.udhariAmount is number && data.udhariAmount >= 0 && data.udhariAmount <= 100000000));
     }
 
     function isValidInventory(data) {
       return (('name' in data && data.name is string && data.name.size() > 0 && data.name.size() <= 150) ||
               ('feedName' in data && data.feedName is string && data.feedName.size() > 0 && data.feedName.size() <= 150)) &&
-             (!('stockBags' in data) || data.stockBags is number) &&
-             (!('stockLooseKg' in data) || data.stockLooseKg is number) &&
-             (!('currentStockKg' in data) || data.currentStockKg is number);
+             (!('stockBags' in data) || (data.stockBags is number && data.stockBags <= 1000000)) &&
+             (!('stockLooseKg' in data) || (data.stockLooseKg is number && data.stockLooseKg <= 50000000)) &&
+             (!('currentStockKg' in data) || (data.currentStockKg is number && data.currentStockKg <= 50000000));
     }
 
     function isValidBill(data) {
       return data.customerId is string && data.customerId.size() > 0 && data.customerId.size() <= 128 &&
-             data.totalAmount is number && data.totalAmount >= 0;
+             data.totalAmount is number && data.totalAmount >= 0 && data.totalAmount <= 100000000;
     }
 
     function isValidSupplier(data) {
       return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
-             (!('balance' in data) || data.balance is number);
+             (!('balance' in data) || (data.balance is number && data.balance >= -100000000 && data.balance <= 100000000));
+    }
+
+    function isValidAuditLog(data) {
+      return data.saleId is string && data.saleId.size() > 0 && data.saleId.size() <= 128 &&
+             data.actionType is string && data.actionType.size() > 0 && data.actionType.size() <= 32;
     }
 
     function isValidPairingToken(data, code) {
@@ -100,8 +110,8 @@ service cloud.firestore {
              data.assignedRole is string && data.assignedRole in ['CASHIER', 'MANAGER', 'STAFF'] &&
              data.status == 'ACTIVE' &&
              data.expiresAt is number &&
-             data.expiresAt > request.time.toMillis() &&
-             data.expiresAt <= request.time.toMillis() + 15 * 60 * 1000;
+             data.expiresAt > request.time.toMillis() - 5 * 60 * 1000 &&
+             data.expiresAt <= request.time.toMillis() + 20 * 60 * 1000;
     }
 
     function hasValidClaimedPairing(userId, staffId, data) {
@@ -150,7 +160,7 @@ service cloud.firestore {
       match /transactions/{txId} {
         allow read: if isStaffMember(userId);
         allow create: if isStaffMember(userId) && isValidTransaction(request.resource.data);
-        allow update: if isStaffMember(userId) && isValidTransaction(request.resource.data);
+        allow update: if isAdminOrManager(userId) && isValidTransaction(request.resource.data);
         allow delete: if isAdminOrManager(userId);
       }
 
@@ -169,23 +179,29 @@ service cloud.firestore {
 
       match /bills/{billId} {
         allow read: if isStaffMember(userId);
-        allow create, update: if isStaffMember(userId) && isValidBill(request.resource.data);
-        allow delete: if isAdminOrManager(userId);
+        allow create: if isStaffMember(userId) && isValidBill(request.resource.data);
+        allow update, delete: if isAdminOrManager(userId) && (request.method == 'delete' || isValidBill(request.resource.data));
       }
 
       match /suppliers/{supplierId} {
         allow read, write: if isAdminOrManager(userId) && (request.method != 'create' && request.method != 'update' || isValidSupplier(request.resource.data));
       }
 
+      match /audit_logs/{logId} {
+        allow read: if isStaffMember(userId);
+        allow create: if isStaffMember(userId) && isValidAuditLog(request.resource.data);
+        allow update, delete: if false;
+      }
+
       match /staff/{staffId} {
         allow read: if isStaffMember(userId) || (isAuthenticated() && request.auth.uid == staffId);
         allow create: if isAdmin(userId) || (
-          isAuthenticated() &&
+          isNonAnonymous() &&
           request.auth.uid == staffId &&
           isValidSelfPairedStaffDoc(userId, staffId, request.resource.data)
         );
         allow update: if isAdmin(userId) || (
-          isAuthenticated() &&
+          isNonAnonymous() &&
           request.auth.uid == staffId && (
             request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['lastActiveAt', 'deviceInfo', 'name', 'email', 'updatedAt', 'pairedAt']) ||
@@ -200,13 +216,13 @@ service cloud.firestore {
     }
 
     match /pairings/{code} {
-      allow create: if isAuthenticated() &&
+      allow create: if isNonAnonymous() &&
                        request.auth.uid == request.resource.data.adminUid &&
                        isValidPairingToken(request.resource.data, code);
 
       allow delete: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
 
-      allow get: if isAuthenticated() && (
+      allow get: if isNonAnonymous() && (
                     resource == null ||
                     (resource.data.status == 'ACTIVE' && request.time.toMillis() < resource.data.expiresAt) ||
                     resource.data.adminUid == request.auth.uid ||
@@ -215,7 +231,7 @@ service cloud.firestore {
 
       allow list: if isAuthenticated() && resource.data.adminUid == request.auth.uid;
 
-      allow update: if isAuthenticated() && (
+      allow update: if isNonAnonymous() && (
         resource.data.adminUid == request.auth.uid ||
         (resource.data.status == 'ACTIVE' &&
          request.time.toMillis() < resource.data.expiresAt &&

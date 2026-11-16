@@ -76,6 +76,7 @@ object GoogleAuthManager {
             .setFilterByAuthorizedAccounts(true)
             .setServerClientId(clientId)
             .setAutoSelectEnabled(true)
+            .setNonce(generateHashedNonce())
             .build()
 
         val request = GetCredentialRequest.Builder()
@@ -140,7 +141,9 @@ object GoogleAuthManager {
             return
         }
 
-        val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = clientId).build()
+        val signInOption = GetSignInWithGoogleOption.Builder(serverClientId = clientId)
+            .setNonce(generateHashedNonce())
+            .build()
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(signInOption)
             .build()
@@ -170,14 +173,17 @@ object GoogleAuthManager {
             } catch (e: Exception) {
                 Log.e(TAG, "Google Sign-In failed", e)
                 val fullError = "${e.javaClass.simpleName}: ${e.message ?: "No error message"} | Cause: ${e.cause?.message}"
+                val isDevError = Regex("(?:statusCode=|\\[|\\b)10(?:\\]|\\b)|DEVELOPER_ERROR").containsMatchIn(fullError)
+                val isConfigError = Regex("(?:statusCode=|\\[|\\b)12500(?:\\]|\\b)|SIGN_IN_FAILED").containsMatchIn(fullError)
+                val isNetworkError = Regex("(?:statusCode=|\\[)7(?:\\]|\\b)|NETWORK_ERROR|Unable to resolve host", RegexOption.IGNORE_CASE).containsMatchIn(fullError)
                 val userFriendlyMessage = when {
-                    fullError.contains("10") || fullError.contains("DEVELOPER_ERROR") ->
+                    isDevError ->
                         "Developer Error (Code 10): Keystore SHA-1 mismatch.\nThe APK's signing certificate SHA-1 does not match the OAuth client in Firebase Console.\nEnsure SHA-1 '6B:B0:60:1E:58:8B:48:2A:A6:9E:A7:FC:67:35:71:69:34:85:BA:32' is added in Firebase Console (Project Settings -> Android Apps)."
-                    fullError.contains("12500") || fullError.contains("SIGN_IN_FAILED") ->
+                    isConfigError ->
                         "Configuration Error (Code 12500): Google Sign-In is disabled or Support Email is missing.\nGo to Firebase Console -> Authentication -> Sign-in method -> Enable Google, and ensure a Support Email is selected in Project Settings."
                     fullError.contains("NoCredential") || fullError.contains("No credentials") ->
                         "No Google Account found on this device/emulator.\nPlease add a Google Account in Android Settings -> Accounts to continue."
-                    fullError.contains("7") || fullError.contains("NETWORK") ->
+                    isNetworkError ->
                         "Network Error: Unable to reach Google servers. Please check your internet connection."
                     else ->
                         "Google Sign-In Error: ${e.message ?: e.javaClass.simpleName}"
@@ -215,6 +221,13 @@ object GoogleAuthManager {
                 onSignOutComplete()
             }
         }
+    }
+
+    private fun generateHashedNonce(): String {
+        val randomBytes = ByteArray(24)
+        java.security.SecureRandom().nextBytes(randomBytes)
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(randomBytes)
+        return digest.joinToString("") { "%02x".format(it) }
     }
 
     private fun getWebClientId(context: Context): String? {

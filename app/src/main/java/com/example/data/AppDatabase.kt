@@ -374,9 +374,28 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_9_10,
                     MIGRATION_10_11
                 )
-                .fallbackToDestructiveMigration(dropAllTables = true)
-                .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
                 .build()
+        }
+
+        private fun backupDatabaseFilesBeforeRecovery(context: Context) {
+            try {
+                val dbFile = context.getDatabasePath(DB_NAME)
+                if (dbFile.exists() && dbFile.length() > 0L) {
+                    val backupDir = java.io.File(context.noBackupFilesDir, "db_recovery_backups")
+                    if (!backupDir.exists()) backupDir.mkdirs()
+                    val stamp = System.currentTimeMillis()
+                    listOf("", "-wal", "-shm").forEach { suffix ->
+                        val src = java.io.File(dbFile.absolutePath + suffix)
+                        if (src.exists()) {
+                            val dst = java.io.File(backupDir, "${DB_NAME}_$stamp$suffix")
+                            src.copyTo(dst, overwrite = true)
+                        }
+                    }
+                    Log.w(TAG, "Backed up local database to ${backupDir.absolutePath} before recovery")
+                }
+            } catch (backupErr: Throwable) {
+                Log.w(TAG, "Failed to back up database before recovery", backupErr)
+            }
         }
 
         fun getInstance(context: Context): AppDatabase {
@@ -385,16 +404,13 @@ abstract class AppDatabase : RoomDatabase() {
                     val appContext = context.applicationContext
                     var dbInstance = buildDatabase(appContext)
                     try {
-                        // Force Room to open and validate the database schema immediately.
-                        // If a legacy on-device SQLite file has an incompatible column type/nullability
-                        // or mismatched identity hash that cannot be migrated, recover cleanly
-                        // by recreating the local database file instead of crashing the app.
                         dbInstance.openHelper.writableDatabase
                     } catch (e: Throwable) {
-                        Log.e(TAG, "Database validation failed on open, recovering cleanly", e)
+                        Log.e(TAG, "Database validation failed on open, backing up before recovery", e)
                         try {
                             dbInstance.close()
                         } catch (_: Throwable) {}
+                        backupDatabaseFilesBeforeRecovery(appContext)
                         try {
                             appContext.deleteDatabase(DB_NAME)
                         } catch (_: Throwable) {}

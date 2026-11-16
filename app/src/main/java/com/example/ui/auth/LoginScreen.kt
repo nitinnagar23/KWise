@@ -1197,15 +1197,23 @@ fun LoginScreen(
 
                         scope.launch {
                             try {
-                                val db = FirebaseFirestore.getInstance(context.getString(R.string.firestore_database_id))
+                                val dbId = context.getString(R.string.firestore_database_id).trim()
+                                val db = if (dbId.isBlank() || dbId == "(default)") {
+                                    FirebaseFirestore.getInstance()
+                                } else {
+                                    FirebaseFirestore.getInstance(dbId)
+                                }
                                 val storeData = mapOf(
                                     "storeName" to resolvedShop,
+                                    "shopName" to resolvedShop,
                                     "ownerName" to ownerName,
                                     "email" to (adminUser.email ?: ""),
                                     "updatedAt" to System.currentTimeMillis()
                                 )
                                 withContext(Dispatchers.IO) {
-                                    db.collection("users").document(adminUser.uid).set(storeData).await()
+                                    db.collection("users").document(adminUser.uid)
+                                        .set(storeData, com.google.firebase.firestore.SetOptions.merge())
+                                        .await()
                                 }
                             } catch (e: Exception) {
                                 android.util.Log.w("KhataWise", "Firestore store init: ${e.message}")

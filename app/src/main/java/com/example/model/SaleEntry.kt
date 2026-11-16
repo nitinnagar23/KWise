@@ -104,7 +104,10 @@ fun groupSalesIntoBills(
             } else {
                 val anchor = currentBatch.first()
                 val sameBill = if (anchor.billNumber.isNotBlank() || s.billNumber.isNotBlank()) {
-                    anchor.billNumber.isNotBlank() && anchor.billNumber == s.billNumber
+                    anchor.billNumber.isNotBlank() &&
+                        anchor.billNumber == s.billNumber &&
+                        anchor.soldByUserId == s.soldByUserId &&
+                        abs(s.date - anchor.date) <= 60_000L
                 } else {
                     abs(s.date - anchor.date) <= 2500L
                 }

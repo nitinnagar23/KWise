@@ -440,6 +440,36 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     })
   );
 
+  // F-1: Bob (STAFF/CASHIER) can create a new transaction, but CANNOT overwrite an existing transaction or bill
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("transactions").doc("tx_immutable_1").set({
+      customerId: "cust_sec1",
+      type: "SALE_CREDIT",
+      amount: 1200,
+    })
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("transactions").doc("tx_immutable_1").update({
+      amount: 10,
+    })
+  );
+
+  // F-10: Bob can append an audit_logs entry, and neither Bob nor anyone can mutate/delete an audit log
+  await assertSucceeds(
+    bobDb.collection("users").doc(ALICE_UID).collection("audit_logs").doc("audit_1").set({
+      saleId: "tx_immutable_1",
+      billNumber: "1001",
+      actionType: "CREATED",
+      performedByUserId: BOB_UID,
+      performedByUserName: "Bob Counter",
+      summary: "Created bill #1001",
+      timestamp: Date.now(),
+    })
+  );
+  await assertFails(
+    bobDb.collection("users").doc(ALICE_UID).collection("audit_logs").doc("audit_1").delete()
+  );
+
   // Bob CANNOT delete another staff member's document, but CAN delete his own staff document when unpairing his device
   await assertFails(
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(UNAPPROVED_UID).delete()
@@ -448,3 +478,4 @@ test("Bob can claim active pairing code and then access Alice's store as staff; 
     bobDb.collection("users").doc(ALICE_UID).collection("staff").doc(BOB_UID).delete()
   );
 });
+
