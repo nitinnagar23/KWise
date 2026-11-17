@@ -156,74 +156,6 @@ fun HomeScreen(
     val todaySales = remember(activeSales, startOfToday) {
         activeSales.filter { it.date >= startOfToday }.sortedByDescending { it.date }
     }
-    val todayPayments = remember(payments, startOfToday) {
-        payments.filter { !it.isDeleted && it.date >= startOfToday }
-    }
-
-    val todaySalesTotal = remember(todaySales) {
-        todaySales.fold(BigDecimal.ZERO) { acc, s -> acc.add(s.totalSalePrice) }
-    }
-    val todayCollectedTotal = remember(todaySales, todayPayments) {
-        val fromSales = todaySales.fold(BigDecimal.ZERO) { acc, s -> acc.add(s.paidAmount) }
-        val fromRepayments = todayPayments.fold(BigDecimal.ZERO) { acc, p -> acc.add(p.amount) }
-        fromSales.add(fromRepayments)
-    }
-    val todayUdhariAdded = remember(todaySales) {
-        todaySales.fold(BigDecimal.ZERO) { acc, s -> acc.add(s.udhariAmount) }
-    }
-
-    val lowStockCount = remember(activeProducts, activeSales, nowMillis / 60_000L) {
-        val reorderAlerts = try {
-            ShopAnalytics.computeReorderSuggestions(activeProducts, activeSales, nowMillis)
-        } catch (_: Throwable) {
-            emptyList()
-        }
-        val lowFromAnalytics = reorderAlerts.map { it.product.id }.toSet()
-        val lowFromStock = activeProducts.filter { p ->
-            p.currentStockKg <= p.kgPerBag.multiply(BigDecimal("3"))
-        }.map { it.id }.toSet()
-        (lowFromAnalytics + lowFromStock).size
-    }
-
-    // KPI summary cards are hidden by default, reveal when clicked, and auto-hide after 1 minute or screen change
-    var hideSalesKpi by remember { mutableStateOf(true) }
-    var hideCollectedKpi by remember { mutableStateOf(true) }
-    var hideUdhariKpi by remember { mutableStateOf(true) }
-    var hideLowStockKpi by remember { mutableStateOf(true) }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            hideSalesKpi = true
-            hideCollectedKpi = true
-            hideUdhariKpi = true
-            hideLowStockKpi = true
-        }
-    }
-
-    LaunchedEffect(hideSalesKpi) {
-        if (!hideSalesKpi) {
-            delay(60_000L)
-            hideSalesKpi = true
-        }
-    }
-    LaunchedEffect(hideCollectedKpi) {
-        if (!hideCollectedKpi) {
-            delay(60_000L)
-            hideCollectedKpi = true
-        }
-    }
-    LaunchedEffect(hideUdhariKpi) {
-        if (!hideUdhariKpi) {
-            delay(60_000L)
-            hideUdhariKpi = true
-        }
-    }
-    LaunchedEffect(hideLowStockKpi) {
-        if (!hideLowStockKpi) {
-            delay(60_000L)
-            hideLowStockKpi = true
-        }
-    }
 
     var showQuickCollectDialog by remember { mutableStateOf(false) }
     var showGlobalSearch by remember { mutableStateOf(false) }
@@ -459,81 +391,7 @@ fun HomeScreen(
         }
 
         // -------------------------------------------------------------
-        // 3. 2x2 DASHBOARD KPI GRID
-        // (Today's Sales, Collected Today, Udhari Added, Low Stock)
-        // Hidden by default; tap card to reveal; auto-hides after 1 min
-        // -------------------------------------------------------------
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    DashboardKpiTile(
-                        title = tr("TODAY'S SALES", "आज की बिक्री"),
-                        value = if (hideSalesKpi) "₹ ••••" else CurrencyUtils.formatInr(todaySalesTotal),
-                        subtitle = if (hideSalesKpi) {
-                            "•• ${tr("bills today", "बिल आज")}"
-                        } else {
-                            "${todaySales.size} ${tr("bills today", "बिल आज")}"
-                        },
-                        valueColor = primaryForestGreen,
-                        onClick = { hideSalesKpi = !hideSalesKpi },
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    DashboardKpiTile(
-                        title = tr("COLLECTED TODAY", "आज की वसूली"),
-                        value = if (hideCollectedKpi) "₹ ••••" else CurrencyUtils.formatInr(todayCollectedTotal),
-                        subtitle = tr("Cash + UPI", "नकद + UPI"),
-                        valueColor = primaryForestGreen,
-                        onClick = { hideCollectedKpi = !hideCollectedKpi },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                if (canViewCustomerFull || canAccessInventory) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (canViewCustomerFull) {
-                            val udhariBillsCount = todaySales.count { it.udhariAmount > BigDecimal.ZERO }
-                            DashboardKpiTile(
-                                title = tr("UDHARI ADDED", "आज की उधारी"),
-                                value = if (hideUdhariKpi) "₹ ••••" else CurrencyUtils.formatInr(todayUdhariAdded),
-                                subtitle = if (hideUdhariKpi) {
-                                    "•• ${tr("udhari bills", "उधारी बिल")}"
-                                } else {
-                                    "$udhariBillsCount ${tr("udhari bills", "उधारी बिल")}"
-                                },
-                                valueColor = udhariCrimsonRed,
-                                onClick = { hideUdhariKpi = !hideUdhariKpi },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        if (canAccessInventory) {
-                            DashboardKpiTile(
-                                title = tr("LOW STOCK", "कम स्टॉक"),
-                                value = if (hideLowStockKpi) {
-                                    "•• ${tr("items", "आइटम")}"
-                                } else {
-                                    "$lowStockCount ${tr("items", "आइटम")}"
-                                },
-                                subtitle = tr("Show to view list", "सूची देखने के लिए टैप करें"),
-                                valueColor = lowStockAmber,
-                                onClick = { hideLowStockKpi = !hideLowStockKpi },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // -------------------------------------------------------------
-        // 4. ONE LARGE "New Bill" PRIMARY BUTTON
+        // 3. ONE LARGE "New Bill" PRIMARY BUTTON
         // -------------------------------------------------------------
         item {
             Button(
@@ -1044,61 +902,6 @@ private data class Quadruple<A, B, C, D>(
     val third: C,
     val fourth: D
 )
-
-@Composable
-private fun DashboardKpiTile(
-    title: String,
-    value: String,
-    subtitle: String,
-    valueColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = FlatDarkCard),
-        border = BorderStroke(1.dp, FlatDarkBorder)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 11.5.sp,
-                    letterSpacing = 0.6.sp
-                ),
-                color = FlatTextSecondary,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
-                fontWeight = FontWeight.Bold,
-                color = valueColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.5.sp),
-                color = FlatTextSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
 
 @Composable
 private fun FriendlyEmptyRegisterIllustration(

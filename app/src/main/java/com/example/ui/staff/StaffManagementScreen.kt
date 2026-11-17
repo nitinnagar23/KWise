@@ -78,6 +78,9 @@ import com.example.ui.theme.FlatDarkBorder
 import com.example.ui.theme.FlatDarkCard
 import com.example.ui.theme.FlatTextPrimary
 import com.example.ui.theme.FlatTextSecondary
+import com.example.sync.safeBoolean
+import com.example.sync.safeLong
+import com.example.sync.safeString
 import com.example.util.SecurityUtils
 import com.example.util.tr
 import com.google.firebase.firestore.FirebaseFirestore
@@ -138,11 +141,12 @@ fun StaffManagementScreen(
     val shortDateFormatter = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
 
     // Listen to real pending staff approval documents under users/{adminUid}/staff in Firestore (F-7: remove listener onDispose)
-    androidx.compose.runtime.DisposableEffect(googleUser?.uid, currentUser?.id) {
+    androidx.compose.runtime.DisposableEffect(googleUser?.uid, currentUser?.id, allUsers) {
         val adminUid = googleUser?.uid ?: currentUser?.id?.takeIf { it != "admin" && it.isNotBlank() }
         if (adminUid.isNullOrBlank()) {
             return@DisposableEffect onDispose {}
         }
+        val existingTeamIds = allUsers.asSequence().filter { !it.isDeleted }.map { it.id }.toSet()
         val registration = try {
             val dbId = context.getString(com.example.R.string.firestore_database_id).trim()
             val db = if (dbId.isBlank() || dbId == "(default)") {
@@ -153,36 +157,53 @@ fun StaffManagementScreen(
             db.collection("users").document(adminUid).collection("staff")
                 .addSnapshotListener { snapshot, error ->
                     if (error != null || snapshot == null) return@addSnapshotListener
-                    val pendingList = snapshot.documents.mapNotNull { doc ->
-                        val uid = doc.getString("staffUid") ?: doc.id
-                        // Match firestore.rules isApprovedActiveStaff(): missing fields default to false / PENDING
-                        val isApproved = doc.getBoolean("isApproved") == true ||
-                            (doc.getString("status") ?: "PENDING") == "APPROVED"
-                        if (!isApproved) {
-                            val name = doc.getString("name") ?: "Staff"
-                            val email = doc.getString("email") ?: ""
-                            val dev = doc.getString("deviceInfo") ?: ""
-                            val roleStr = doc.getString("role") ?: "CASHIER"
-                            val pairedAt = doc.getLong("pairedAt") ?: System.currentTimeMillis()
-                            StaffProfileItem(
-                                id = uid,
-                                displayName = name,
-                                registeredName = doc.getString("registeredName") ?: name,
-                                email = email,
-                                deviceModel = dev,
-                                androidVersion = doc.getString("androidVersion") ?: "",
-                                lastSeenLabel = "asked ${timeFormatter.format(Date(pairedAt))}",
-                                joinedLabel = "${dateFormatter.format(Date(pairedAt))} · via counter code",
-                                role = if (roleStr.equals("MANAGER", true)) Role.MANAGER else Role.STAFF,
-                                hasPin = false,
-                                isPendingApproval = true,
-                                isCurrentUser = false
-                            )
-                        } else null
-                    }
-                    pendingRequests = pendingList
+                    try {
+                        val pendingList = snapshot.documents.mapNotNull { doc ->
+                            try {
+                                val uid = doc.safeString("staffUid").ifBlank { doc.id }
+                                val roleStr = doc.safeString("role", "CASHIER")
+                                val isActiveDoc = doc.safeBoolean("isActive", true)
+                                val statusStr = doc.safeString("status", "")
+                                val hasExplicitUnapproved = doc.contains("isApproved") &&
+                                    !doc.safeBoolean("isApproved", true)
+                                val isExplicitlyPending = statusStr.equals("PENDING", ignoreCase = true) || hasExplicitUnapproved
+                                val isApproved = uid == adminUid ||
+                                    roleStr.equals("ADMINISTRATOR", ignoreCase = true) ||
+                                    uid in existingTeamIds ||
+                                    doc.safeBoolean("isApproved", false) ||
+                                    statusStr.equals("APPROVED", ignoreCase = true) ||
+                                    !isExplicitlyPending
+
+                                if (isActiveDoc && !isApproved) {
+                                    val name = doc.safeString("name", "Staff").ifBlank { "Staff" }
+                                    val regName = doc.safeString("registeredName", name).ifBlank { name }
+                                    val email = doc.safeString("email")
+                                    val dev = doc.safeString("deviceInfo")
+                                    val androidVer = doc.safeString("androidVersion")
+                                    val pairedAt = doc.safeLong("pairedAt") ?: System.currentTimeMillis()
+                                    StaffProfileItem(
+                                        id = uid,
+                                        displayName = name,
+                                        registeredName = regName,
+                                        email = email,
+                                        deviceModel = dev,
+                                        androidVersion = androidVer,
+                                        lastSeenLabel = "asked ${timeFormatter.format(Date(pairedAt))}",
+                                        joinedLabel = "${dateFormatter.format(Date(pairedAt))} · via counter code",
+                                        role = if (roleStr.equals("MANAGER", true)) Role.MANAGER else Role.STAFF,
+                                        hasPin = false,
+                                        isPendingApproval = true,
+                                        isCurrentUser = false
+                                    )
+                                } else null
+                            } catch (_: Throwable) {
+                                null
+                            }
+                        }.distinctBy { it.id }
+                        pendingRequests = pendingList
+                    } catch (_: Throwable) {}
                 }
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             null
         }
         onDispose {
@@ -208,7 +229,7 @@ fun StaffManagementScreen(
             listOf(currentUser)
         } else {
             emptyList()
-        }
+        }.distinctBy { it.id }
 
         baseUsers.map { user ->
             val isYou = user.id == currentUser?.id ||
@@ -259,6 +280,7 @@ fun StaffManagementScreen(
     val pairedDevices = remember(allUsers, currentUser, shortDateFormatter, dateFormatter) {
         allUsers
             .filter { !it.isDeleted && it.id != currentUser?.id && (it.deviceInfo.isNotBlank() || it.role != Role.ADMINISTRATOR) }
+            .distinctBy { it.id }
             .map { user ->
                 val pairedDateStr = shortDateFormatter.format(Date(user.createdAt))
                 val modelAndDate = if (user.deviceInfo.isNotBlank()) {
@@ -688,7 +710,7 @@ fun StaffManagementScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // Pending Approval Banner Card(s) — only shown when real pending requests exist
-                        items(pendingRequests, key = { it.id }) { pending ->
+                        items(pendingRequests, key = { "pending_${it.id}" }) { pending ->
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -893,7 +915,7 @@ fun StaffManagementScreen(
                         }
 
                         // Team Member Cards
-                        items(teamProfiles, key = { it.id }) { member ->
+                        items(teamProfiles, key = { "team_${it.id}" }) { member ->
                             TeamMemberCard(
                                 member = member,
                                 onClick = { selectedStaffForDetails = member }
