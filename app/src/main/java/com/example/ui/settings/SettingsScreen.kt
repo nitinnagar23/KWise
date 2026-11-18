@@ -528,7 +528,7 @@ fun SettingsScreen(
     val purpleIconTint = if (isLightTheme) kw(0xFF6D28D9) else Color(0xFFA78BFA)
     val purpleIconBg = if (isLightTheme) kw(0xFFEDE9FE) else Color(0xFF281B46)
 
-    // 8-Tile SHOP HUB Grid matching Page 1 of the PDF
+    // 8-Tile SHOP HUB Grid — all tiles share one unified green icon tile style
     val hubTiles = buildList {
         if (can(role, Permission.VIEW_CUSTOMERS)) {
             add(
@@ -550,8 +550,8 @@ fun SettingsScreen(
                     title = tr("Collections", "उधारी वसूली"),
                     subtitle = tr("Promises & reminders", "वायदा और रिमाइंडर"),
                     icon = Icons.Default.ContactPhone,
-                    iconTint = redIconTint,
-                    iconBgColor = redIconBg,
+                    iconTint = greenIconTint,
+                    iconBgColor = greenIconBg,
                     badge = if (dueCollectionsCount > 0) "$dueCollectionsCount due" else null,
                     badgeStyle = HubBadgeStyle.URGENT_RED,
                     onClick = onNavigateToCollections
@@ -578,8 +578,8 @@ fun SettingsScreen(
                     title = tr("Reports", "रिपोर्ट"),
                     subtitle = tr("Profit & GST", "मुनाफा और GST"),
                     icon = Icons.Default.Assessment,
-                    iconTint = amberIconTint,
-                    iconBgColor = amberIconBg,
+                    iconTint = greenIconTint,
+                    iconBgColor = greenIconBg,
                     onClick = onNavigateToReports
                 )
             )
@@ -591,8 +591,8 @@ fun SettingsScreen(
                     title = tr("Inventory", "स्टॉक"),
                     subtitle = tr("Stock alerts", "स्टॉक अलर्ट"),
                     icon = Icons.Default.Inventory,
-                    iconTint = amberIconTint,
-                    iconBgColor = amberIconBg,
+                    iconTint = greenIconTint,
+                    iconBgColor = greenIconBg,
                     badge = if (lowStockCount > 0) "$lowStockCount low" else null,
                     badgeStyle = HubBadgeStyle.WARNING_AMBER,
                     onClick = onNavigateToInventory
@@ -606,8 +606,8 @@ fun SettingsScreen(
                     title = tr("Suppliers", "सप्लायर"),
                     subtitle = tr("Bills & khata", "बिल और खाता"),
                     icon = Icons.Default.LocalShipping,
-                    iconTint = blueIconTint,
-                    iconBgColor = blueIconBg,
+                    iconTint = greenIconTint,
+                    iconBgColor = greenIconBg,
                     onClick = onNavigateToSupplierLedger
                 )
             )
@@ -632,8 +632,8 @@ fun SettingsScreen(
                     title = tr("Staff", "स्टाफ"),
                     subtitle = tr("Roles & devices", "रोल और डिवाइस"),
                     icon = Icons.Default.Security,
-                    iconTint = purpleIconTint,
-                    iconBgColor = purpleIconBg,
+                    iconTint = greenIconTint,
+                    iconBgColor = greenIconBg,
                     onClick = onNavigateToStaffManagement
                 )
             )
@@ -795,7 +795,8 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(14.dp))
 
         // -------------------------------------------------------------
-        // 1. HERO CARD: Store & User Profile + Metadata Pills
+        // 1. HERO CARD: Store Name (largest), "Nitin Nagar · Admin" below it,
+        //    and City & Phone sharing one quiet line (no UPI chip).
         // -------------------------------------------------------------
         Card(
             modifier = Modifier
@@ -805,159 +806,126 @@ fun SettingsScreen(
             colors = CardDefaults.cardColors(containerColor = FlatDarkCard),
             border = BorderStroke(1.dp, FlatDarkBorder)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val displayInitial = (
+                    settings?.shopName?.trim()?.takeIf { it.isNotEmpty() }?.take(1)
+                        ?: currentUser?.name?.trim()?.takeIf { it.isNotEmpty() }?.take(1)
+                        ?: "K"
+                    ).uppercase()
+
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(greenIconBg)
+                        .clickable(enabled = canManageShopProfile) {
+                            adminNameInput = currentUser?.name ?: ""
+                            showEditProfileDialog = true
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    val displayInitial = (
-                        currentUser?.name?.trim()?.takeIf { it.isNotEmpty() }?.take(1)
-                            ?: settings?.shopName?.trim()?.takeIf { it.isNotEmpty() }?.take(1)
-                            ?: "K"
-                        ).uppercase()
+                    Text(
+                        text = displayInitial,
+                        color = greenIconTint,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when (currentUser?.role) {
-                                    Role.ADMINISTRATOR -> kw(0xFF9A3412)
-                                    Role.MANAGER -> kw(0xFF1D4ED8)
-                                    else -> kw(0xFF047857)
-                                }
-                            )
-                            .clickable(enabled = canManageShopProfile) {
-                                adminNameInput = currentUser?.name ?: ""
-                                showEditProfileDialog = true
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = displayInitial,
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    // Store name is the largest text
+                    Text(
+                        text = settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 22.sp,
+                            letterSpacing = (-0.3).sp
+                        ),
+                        fontWeight = FontWeight.Bold,
+                        color = FlatTextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    val ownerDisplayName = currentUser?.name?.trim()?.takeIf { it.isNotEmpty() } ?: "Nitin Nagar"
+                    val roleBadgeText = when (currentUser?.role) {
+                        Role.ADMINISTRATOR -> tr("Admin", "एडमिन")
+                        Role.MANAGER -> tr("Manager", "मैनेजर")
+                        else -> tr("Staff", "स्टाफ")
                     }
+                    Text(
+                        text = "$ownerDisplayName · $roleBadgeText",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        fontWeight = FontWeight.SemiBold,
+                        color = FlatTextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable(enabled = canManageShopProfile) {
+                            adminNameInput = currentUser?.name ?: ""
+                            showEditProfileDialog = true
+                        }
+                    )
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    val cityText = extraPrefs.villageCity.trim().ifBlank {
+                        settings?.shopAddress?.trim().orEmpty()
+                    }
+                    val phoneText = settings?.shopPhone?.trim().orEmpty()
+                    val cityAndPhoneLine = listOf(cityText, phoneText)
+                        .filter { it.isNotBlank() }
+                        .joinToString(" · ")
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    if (cityAndPhoneLine.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = settings?.shopName?.ifBlank { "Shop Name" } ?: "Shop Name",
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary,
+                            text = cityAndPhoneLine,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.5.sp,
+                                fontFeatureSettings = "tnum"
+                            ),
+                            color = FlatTextMuted,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-
-                        Spacer(modifier = Modifier.height(3.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = currentUser?.name ?: "Admin",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = FlatTextSecondary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.clickable(enabled = canManageShopProfile) {
-                                    adminNameInput = currentUser?.name ?: ""
-                                    showEditProfileDialog = true
-                                }
-                            )
-
-                            val roleBadgeText = when (currentUser?.role) {
-                                Role.ADMINISTRATOR -> tr("Admin", "एडमिन")
-                                Role.MANAGER -> tr("Manager", "मैनेजर")
-                                else -> tr("Staff", "स्टाफ")
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFF14305E)
-                            ) {
-                                Text(
-                                    text = roleBadgeText,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    if (canManageShopProfile) {
-                        Surface(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
-                                .testTag("btn_edit_shop_profile"),
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (isLightTheme) kw(0xFFF5F4EE) else FlatDarkInput,
-                            border = BorderStroke(1.dp, FlatDarkBorder)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = tr("Edit store profile", "दुकान प्रोफ़ाइल संपादित करें"),
-                                    tint = FlatTextPrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
+                    } else if (canManageShopProfile) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = tr("+ Add city & phone", "+ शहर और फ़ोन जोड़ें"),
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.5.sp),
+                            color = FlatTextMuted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
+                        )
                     }
                 }
 
-                // Metadata Chips inside Hero Card (Shop Address, Phone, UPI)
-                val address = settings?.shopAddress?.trim().orEmpty()
-                val phone = settings?.shopPhone?.trim().orEmpty()
-                val upi = settings?.shopUpiId?.trim().orEmpty()
-
-                val metadataPills = buildList {
-                    if (address.isNotBlank()) add(address)
-                    if (phone.isNotBlank()) add(phone)
-                    if (upi.isNotBlank()) add("UPI $upi")
-                }
-
-                if (metadataPills.isNotEmpty() || canManageShopProfile) {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                if (canManageShopProfile) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Surface(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
+                            .testTag("btn_edit_shop_profile"),
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isLightTheme) kw(0xFFF5F4EE) else FlatDarkInput,
+                        border = BorderStroke(1.dp, FlatDarkBorder)
                     ) {
-                        if (metadataPills.isNotEmpty()) {
-                            metadataPills.forEach { chipText ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput
-                                ) {
-                                    Text(
-                                        text = chipText,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = FlatTextSecondary,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                                    )
-                                }
-                            }
-                        } else if (canManageShopProfile) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
-                                modifier = Modifier.clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
-                            ) {
-                                Text(
-                                    text = tr("+ Add village, phone & UPI ID", "+ पता, फोन और UPI जोड़ें"),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = FlatTextSecondary,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                                )
-                            }
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = tr("Edit store profile", "दुकान प्रोफ़ाइल संपादित करें"),
+                                tint = FlatTextPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
@@ -1074,19 +1042,11 @@ fun SettingsScreen(
         }
 
         // -------------------------------------------------------------
-        // 3. STORE SECTION (Store profile, UPI & GST, Bill & PDF)
+        // 3. STORE SECTION (Store profile, UPI & GST, Bill & PDF — no subtitles, green icon tiles)
         // -------------------------------------------------------------
         if (canManageShopProfile) {
             Spacer(modifier = Modifier.height(18.dp))
             SectionHeaderLabel(text = tr("STORE", "दुकान"))
-
-            val upiDisplay = settings?.shopUpiId?.trim().orEmpty()
-            val gstDisplay = if (!settings?.shopGstin.isNullOrBlank() || extraPrefs.hasGstin) {
-                tr("GSTIN added", "GSTIN जुड़ा है")
-            } else {
-                tr("No GSTIN", "GSTIN नहीं")
-            }
-            val upiGstSubtitle = if (upiDisplay.isNotBlank()) "$upiDisplay · $gstDisplay" else gstDisplay
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1098,10 +1058,10 @@ fun SettingsScreen(
                     // Row 1: Store profile
                     SettingsMenuRow(
                         icon = Icons.Default.Store,
-                        iconTint = FlatTextPrimary,
-                        iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                        iconTint = greenIconTint,
+                        iconBg = greenIconBg,
                         title = tr("Store profile", "दुकान प्रोफ़ाइल"),
-                        subtitle = tr("Name, address, logo", "नाम, पता, लोगो"),
+                        subtitle = null,
                         testTag = "row_store_profile",
                         onClick = { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
                     )
@@ -1111,10 +1071,10 @@ fun SettingsScreen(
                     // Row 2: UPI & GST
                     SettingsMenuRow(
                         icon = Icons.Default.QrCode2,
-                        iconTint = FlatTextPrimary,
-                        iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                        iconTint = greenIconTint,
+                        iconBg = greenIconBg,
                         title = tr("UPI & GST", "UPI और GST"),
-                        subtitle = upiGstSubtitle,
+                        subtitle = null,
                         testTag = "row_upi_gst_details",
                         onClick = { currentSubScreen = SettingsSubScreen.UPI_GST }
                     )
@@ -1124,10 +1084,10 @@ fun SettingsScreen(
                     // Row 3: Bill & PDF
                     SettingsMenuRow(
                         icon = Icons.Default.Description,
-                        iconTint = FlatTextPrimary,
-                        iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                        iconTint = greenIconTint,
+                        iconBg = greenIconBg,
                         title = tr("Bill & PDF", "बिल और PDF"),
-                        subtitle = "${extraPrefs.billPaperSize} · ${extraPrefs.billLanguage}",
+                        subtitle = null,
                         testTag = "row_bill_pdf",
                         onClick = { currentSubScreen = SettingsSubScreen.BILL_PDF }
                     )
@@ -1239,20 +1199,13 @@ fun SettingsScreen(
         }
 
         // -------------------------------------------------------------
-        // 5. PREFERENCES SECTION (Without "Hide numbers" per user instruction)
+        // 5. PREFERENCES SECTION (No subtitles, unified green icon tiles)
         //    1. Theme & Language
         //    2. Notifications
         //    3. App lock & security
         // -------------------------------------------------------------
         Spacer(modifier = Modifier.height(18.dp))
         SectionHeaderLabel(text = tr("PREFERENCES", "प्राथमिकताएं"))
-
-        val currentThemeLabel = when (settings?.themeMode?.uppercase()) {
-            "DARK" -> tr("Dark", "डार्क")
-            "SYSTEM" -> tr("Auto", "ऑटो")
-            else -> tr("Light", "लाइट")
-        }
-        val currentLanguageLabel = if (settings?.language == "hi") "हिंदी" else "English"
 
         Card(
             modifier = Modifier
@@ -1266,10 +1219,10 @@ fun SettingsScreen(
                 // Row 1: Theme & Language
                 SettingsMenuRow(
                     icon = Icons.Default.Palette,
-                    iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                    iconTint = greenIconTint,
+                    iconBg = greenIconBg,
                     title = tr("Theme & Language", "थीम और भाषा"),
-                    subtitle = "$currentThemeLabel · $currentLanguageLabel",
+                    subtitle = null,
                     testTag = "row_theme_preference",
                     onClick = { currentSubScreen = SettingsSubScreen.THEME_LANGUAGE }
                 )
@@ -1296,29 +1249,22 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput),
+                                .background(greenIconBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.NotificationsNone,
                                 contentDescription = null,
-                                tint = FlatTextPrimary,
+                                tint = greenIconTint,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        Column {
-                            Text(
-                                text = tr("Notifications", "सूचनाएं"),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextPrimary
-                            )
-                            Text(
-                                text = tr("Reminders & alerts", "रिमाइंडर और अलर्ट"),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = FlatTextSecondary
-                            )
-                        }
+                        Text(
+                            text = tr("Notifications", "सूचनाएं"),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = FlatTextPrimary
+                        )
                     }
 
                     Row(
@@ -1351,17 +1297,12 @@ fun SettingsScreen(
                 HorizontalDivider(color = FlatDarkBorder, modifier = Modifier.padding(horizontal = 14.dp))
 
                 // Row 3: App lock & security
-                val securitySubtitle = when {
-                    !extraPrefs.lockAppEnabled -> tr("Off", "बंद")
-                    extraPrefs.unlockFingerprint -> tr("Fingerprint + PIN", "फिंगरप्रिंट + PIN")
-                    else -> tr("PIN only", "केवल PIN")
-                }
                 SettingsMenuRow(
                     icon = Icons.Default.Lock,
-                    iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                    iconTint = greenIconTint,
+                    iconBg = greenIconBg,
                     title = tr("App lock & security", "ऐप लॉक और सुरक्षा"),
-                    subtitle = securitySubtitle,
+                    subtitle = null,
                     testTag = "row_app_lock_security",
                     onClick = { currentSubScreen = SettingsSubScreen.APP_LOCK_SECURITY }
                 )
@@ -1369,7 +1310,7 @@ fun SettingsScreen(
         }
 
         // -------------------------------------------------------------
-        // 6. HELP SECTION (Help & support, About KhataWise)
+        // 6. HELP SECTION (Help & support, About KhataWise — no subtitles, green icon tiles)
         // -------------------------------------------------------------
         Spacer(modifier = Modifier.height(18.dp))
         SectionHeaderLabel(text = tr("HELP", "सहायता"))
@@ -1383,8 +1324,8 @@ fun SettingsScreen(
             Column(modifier = Modifier.fillMaxWidth()) {
                 SettingsMenuRow(
                     icon = Icons.AutoMirrored.Filled.HelpOutline,
-                    iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                    iconTint = greenIconTint,
+                    iconBg = greenIconBg,
                     title = tr("Help & support", "सहायता और सपोर्ट"),
                     subtitle = null,
                     testTag = "row_help_support",
@@ -1395,10 +1336,10 @@ fun SettingsScreen(
 
                 SettingsMenuRow(
                     icon = Icons.Default.Info,
-                    iconTint = FlatTextPrimary,
-                    iconBg = if (isLightTheme) kw(0xFFF3F1EC) else FlatDarkInput,
+                    iconTint = greenIconTint,
+                    iconBg = greenIconBg,
                     title = tr("About KhataWise", "KhataWise के बारे में"),
-                    subtitle = tr("Version 1.0", "वर्ज़न 1.0"),
+                    subtitle = null,
                     testTag = "row_about_khatawise",
                     onClick = { showAboutDialog = true }
                 )

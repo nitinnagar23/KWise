@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -629,6 +631,24 @@ fun ReportsScreen(
             Triple(2, tr("Customers", "ग्राहक"), "reports_tab_insights")
         )
 
+        val pagerState = rememberPagerState(
+            initialPage = selectedTab.coerceIn(0, tabs.size - 1),
+            pageCount = { tabs.size }
+        )
+
+        LaunchedEffect(selectedTab) {
+            val target = selectedTab.coerceIn(0, tabs.size - 1)
+            if (pagerState.currentPage != target) {
+                pagerState.scrollToPage(target)
+            }
+        }
+
+        LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+            if (!pagerState.isScrollInProgress && selectedTab != pagerState.currentPage) {
+                selectedTab = pagerState.currentPage
+            }
+        }
+
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = FlatDarkBg,
@@ -669,117 +689,125 @@ fun ReportsScreen(
             }
         }
 
-        Column(
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Period Selector Pills: Today | This Week | This Month | 3 Months | 6 Month | This Year | All Time | Custom
-            val allPeriods = ReportPeriod.entries
-            Row(
+                .fillMaxWidth()
+                .weight(1f),
+            beyondViewportPageCount = 1
+        ) { page ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                allPeriods.forEach { period ->
-                    val isSelected = selectedPeriod == period
-                    val chipBg by animateColorAsState(
-                        targetValue = if (isSelected) RepGreen else RepChipIdleBg,
-                        animationSpec = tween(durationMillis = 150),
-                        label = "reports_period_chip_bg"
-                    )
-                    val chipTextColor by animateColorAsState(
-                        targetValue = if (isSelected) Color.White else FlatTextPrimary,
-                        animationSpec = tween(durationMillis = 150),
-                        label = "reports_period_chip_text"
-                    )
-                    Surface(
-                        onClick = {
-                            selectedPeriod = period
-                            if (period == ReportPeriod.CUSTOM) {
-                                showCustomDateDialog = true
-                            }
-                        },
-                        shape = RoundedCornerShape(50),
-                        color = chipBg,
-                        modifier = Modifier
-                            .defaultMinSize(minHeight = 36.dp)
-                            .testTag("reports_period_chip_${period.name.lowercase()}")
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
+                // Period Selector Pills: Today | This Week | This Month | 3 Months | 6 Month | This Year | All Time | Custom
+                val allPeriods = ReportPeriod.entries
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    allPeriods.forEach { period ->
+                        val isSelected = selectedPeriod == period
+                        val chipBg by animateColorAsState(
+                            targetValue = if (isSelected) RepGreen else RepChipIdleBg,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "reports_period_chip_bg"
+                        )
+                        val chipTextColor by animateColorAsState(
+                            targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "reports_period_chip_text"
+                        )
+                        Surface(
+                            onClick = {
+                                selectedPeriod = period
+                                if (period == ReportPeriod.CUSTOM) {
+                                    showCustomDateDialog = true
+                                }
+                            },
+                            shape = RoundedCornerShape(50),
+                            color = chipBg,
+                            modifier = Modifier
+                                .defaultMinSize(minHeight = 36.dp)
+                                .testTag("reports_period_chip_${period.name.lowercase()}")
                         ) {
-                            Text(
-                                text = tr(period.label, period.labelHi),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = chipTextColor
-                            )
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
+                            ) {
+                                Text(
+                                    text = tr(period.label, period.labelHi),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = chipTextColor
+                                )
+                            }
                         }
                     }
                 }
+
+                // Date range subtitle (e.g. 1 Nov – 5 Nov 2026)
+                Text(
+                    text = periodDateRangeText,
+                    fontSize = 13.sp,
+                    color = FlatTextSecondary
+                )
+
+                when (page) {
+                    0 -> {
+                        ReportsOverviewTab(
+                            totalRevenue = totalRevenue,
+                            totalQuantityKg = totalQuantityKg,
+                            totalGrossProfit = totalGrossProfit,
+                            profitMarginPercent = profitMarginPercent,
+                            netProfitAfterExpenses = netProfitAfterExpenses,
+                            netProfitPercent = netProfitPercent,
+                            totalCogs = totalCogs,
+                            totalHandlingExpenses = totalHandlingExpenses,
+                            otherExpenses = otherExpenses,
+                            totalUdhariExtended = totalUdhariExtended,
+                            totalCollectedRepayments = totalCollectedRepayments,
+                            totalPaidAtSale = totalPaidAtSale,
+                            cashAmount = cashPaidAtSale,
+                            upiAmount = upiPaidAtSale,
+                            dailyProfits = dailyProfits,
+                            lastSyncTimeMillis = appSettings.lastSyncTime,
+                            onOpenExportAndBackup = { showExportAndBackupScreen = true },
+                            onOpenGstReport = { activeExtraReport = "GST" },
+                            onOpenStockReport = { activeExtraReport = "STOCK" },
+                            onOpenExpenseReport = { activeExtraReport = "EXPENSE" }
+                        )
+                    }
+
+                    1 -> {
+                        ReportsProfitViewTab(
+                            totalGrossProfit = totalGrossProfit,
+                            profitMarginPercent = profitMarginPercent,
+                            netProfitAfterExpenses = netProfitAfterExpenses,
+                            totalAllExpenses = totalAllExpenses,
+                            productProfits = productProfits,
+                            productsMap = productMap,
+                            dailyProfits = dailyProfits
+                        )
+                    }
+
+                    2 -> {
+                        ReportsCustomerInsightsTab(
+                            customerInsights = customerInsights,
+                            villageSummaries = villageSummaries,
+                            totalCollectedMonth = totalCollectedRepayments,
+                            onCollectClick = onNavigateToCollections
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
-
-            // Date range subtitle (e.g. 1 Nov – 5 Nov 2026)
-            Text(
-                text = periodDateRangeText,
-                fontSize = 13.sp,
-                color = FlatTextSecondary
-            )
-
-            when (selectedTab) {
-                0 -> {
-                    ReportsOverviewTab(
-                        totalRevenue = totalRevenue,
-                        totalQuantityKg = totalQuantityKg,
-                        totalGrossProfit = totalGrossProfit,
-                        profitMarginPercent = profitMarginPercent,
-                        netProfitAfterExpenses = netProfitAfterExpenses,
-                        netProfitPercent = netProfitPercent,
-                        totalCogs = totalCogs,
-                        totalHandlingExpenses = totalHandlingExpenses,
-                        otherExpenses = otherExpenses,
-                        totalUdhariExtended = totalUdhariExtended,
-                        totalCollectedRepayments = totalCollectedRepayments,
-                        totalPaidAtSale = totalPaidAtSale,
-                        cashAmount = cashPaidAtSale,
-                        upiAmount = upiPaidAtSale,
-                        dailyProfits = dailyProfits,
-                        lastSyncTimeMillis = appSettings.lastSyncTime,
-                        onOpenExportAndBackup = { showExportAndBackupScreen = true },
-                        onOpenGstReport = { activeExtraReport = "GST" },
-                        onOpenStockReport = { activeExtraReport = "STOCK" },
-                        onOpenExpenseReport = { activeExtraReport = "EXPENSE" }
-                    )
-                }
-
-                1 -> {
-                    ReportsProfitViewTab(
-                        totalGrossProfit = totalGrossProfit,
-                        profitMarginPercent = profitMarginPercent,
-                        netProfitAfterExpenses = netProfitAfterExpenses,
-                        totalAllExpenses = totalAllExpenses,
-                        productProfits = productProfits,
-                        productsMap = productMap,
-                        dailyProfits = dailyProfits
-                    )
-                }
-
-                2 -> {
-                    ReportsCustomerInsightsTab(
-                        customerInsights = customerInsights,
-                        villageSummaries = villageSummaries,
-                        totalCollectedMonth = totalCollectedRepayments,
-                        onCollectClick = onNavigateToCollections
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

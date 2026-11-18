@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -312,10 +314,57 @@ class MainActivity : FragmentActivity() {
                                 }
                             }
                         ) { innerPadding ->
+                            val bottomRoutes = remember {
+                                listOf(
+                                    Screen.Home.route,
+                                    Screen.Ledger.route,
+                                    Screen.Estimate.route,
+                                    Screen.Settings.route
+                                )
+                            }
+                            var accumulatedHorizontalDrag by remember(currentRoute) { androidx.compose.runtime.mutableFloatStateOf(0f) }
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
+                                    .let { baseModifier ->
+                                        if (currentRoute in bottomRoutes) {
+                                            baseModifier.pointerInput(currentRoute) {
+                                                detectHorizontalDragGestures(
+                                                    onDragStart = { accumulatedHorizontalDrag = 0f },
+                                                    onHorizontalDrag = { _, dragAmount ->
+                                                        accumulatedHorizontalDrag += dragAmount
+                                                    },
+                                                    onDragEnd = {
+                                                        val thresholdPx = 110.dp.toPx()
+                                                        val currentIndex = bottomRoutes.indexOf(currentRoute)
+                                                        if (currentIndex != -1) {
+                                                            val targetIndex = when {
+                                                                accumulatedHorizontalDrag < -thresholdPx -> (currentIndex + 1).coerceAtMost(bottomRoutes.lastIndex)
+                                                                accumulatedHorizontalDrag > thresholdPx -> (currentIndex - 1).coerceAtLeast(0)
+                                                                else -> currentIndex
+                                                            }
+                                                            if (targetIndex != currentIndex) {
+                                                                val nextRoute = bottomRoutes[targetIndex]
+                                                                navController.navigate(nextRoute) {
+                                                                    popUpTo(navController.graph.findStartDestination().id) {
+                                                                        saveState = true
+                                                                    }
+                                                                    launchSingleTop = true
+                                                                    restoreState = true
+                                                                }
+                                                            }
+                                                        }
+                                                        accumulatedHorizontalDrag = 0f
+                                                    },
+                                                    onDragCancel = { accumulatedHorizontalDrag = 0f }
+                                                )
+                                            }
+                                        } else {
+                                            baseModifier
+                                        }
+                                    }
                             ) {
                                 NavHost(
                                     navController = navController,

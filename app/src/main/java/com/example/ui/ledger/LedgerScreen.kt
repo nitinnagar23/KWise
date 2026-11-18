@@ -24,8 +24,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -69,6 +73,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -205,6 +210,24 @@ fun LedgerScreen(
         selectedTab = 0
     }
 
+    val pagerState = rememberPagerState(
+        initialPage = selectedTab.coerceIn(0, maxTabs - 1),
+        pageCount = { maxTabs }
+    )
+
+    LaunchedEffect(selectedTab) {
+        val target = selectedTab.coerceIn(0, maxTabs - 1)
+        if (pagerState.currentPage != target) {
+            pagerState.scrollToPage(target)
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+        if (!pagerState.isScrollInProgress && selectedTab != pagerState.currentPage) {
+            selectedTab = pagerState.currentPage
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -292,27 +315,35 @@ fun LedgerScreen(
                 }
             }
 
-            when (selectedTab) {
-                0 -> CustomersTab(
-                    customers = customers,
-                    canViewCustomerFull = canViewCustomerFull,
-                    watchThreshold = watchThreshold,
-                    criticalThreshold = criticalThreshold,
-                    onCustomerClick = onCustomerClick,
-                    onAddCustomer = { showAddCustomerDialog = true },
-                    onImportCustomers = { showImportCustomersFlow = true }
-                )
-                1 -> SalesTab(
-                    sales = sales,
-                    products = products,
-                    customers = customers,
-                    canViewCustomerFull = canViewCustomerFull
-                )
-                2 -> if (canAccessCollections) {
-                    PaymentsTab(
-                        payments = payments,
-                        customers = customers
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                beyondViewportPageCount = 1
+            ) { page ->
+                when (page) {
+                    0 -> CustomersTab(
+                        customers = customers,
+                        canViewCustomerFull = canViewCustomerFull,
+                        watchThreshold = watchThreshold,
+                        criticalThreshold = criticalThreshold,
+                        onCustomerClick = onCustomerClick,
+                        onAddCustomer = { showAddCustomerDialog = true },
+                        onImportCustomers = { showImportCustomersFlow = true }
                     )
+                    1 -> SalesTab(
+                        sales = sales,
+                        products = products,
+                        customers = customers,
+                        canViewCustomerFull = canViewCustomerFull
+                    )
+                    2 -> if (canAccessCollections) {
+                        PaymentsTab(
+                            payments = payments,
+                            customers = customers
+                        )
+                    }
                 }
             }
         }
@@ -552,15 +583,17 @@ fun CustomersTab(
             shape = RoundedCornerShape(16.dp)
         )
 
-        // Filter Chips ("All", "Udhari only", "Clear") + Sort Pill
+        // Filter Chips ("All", "Udhari only", "Clear", "Import") + Pinned Sort Pill
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -581,14 +614,19 @@ fun CustomersTab(
                     shape = RoundedCornerShape(50),
                     color = allPillBg,
                     border = if (isAll) null else BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                    modifier = Modifier.height(36.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    ) {
                         Text(
                             text = tr("All", "सभी"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = allPillFg
+                            color = allPillFg,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -612,15 +650,20 @@ fun CustomersTab(
                     shape = RoundedCornerShape(50),
                     color = udhariPillBg,
                     modifier = Modifier
-                        .defaultMinSize(minHeight = 36.dp)
+                        .height(36.dp)
                         .testTag("filter_udhari_checkbox")
                 ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    ) {
                         Text(
                             text = tr("Udhari only", "केवल उधारी"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = udhariPillFg
+                            color = udhariPillFg,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -643,68 +686,80 @@ fun CustomersTab(
                     },
                     shape = RoundedCornerShape(50),
                     color = clearPillBg,
-                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+                    modifier = Modifier.height(36.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    ) {
                         Text(
                             text = tr("Clear", "क्लियर"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = clearPillFg
+                            color = clearPillFg,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
-            }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // "Import" pill
                 Surface(
                     onClick = onImportCustomers,
                     shape = RoundedCornerShape(50),
                     color = FlatDarkInput,
                     border = BorderStroke(1.dp, FlatDarkBorder),
                     modifier = Modifier
-                        .defaultMinSize(minHeight = 36.dp)
+                        .height(36.dp)
                         .testTag("ledger_import_customers_btn")
                 ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    ) {
                         Text(
                             text = tr("Import", "इम्पोर्ट"),
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = LedgerBrandGreen
+                            color = LedgerBrandGreen,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
+            }
 
-                // Sort pill button
-                Surface(
-                    onClick = { sortByUdhariDesc = !sortByUdhariDesc },
-                    shape = RoundedCornerShape(50),
-                    color = FlatDarkInput,
-                    border = BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Pinned Sort pill button — uniform 36.dp height, never crushed or wrapped
+            Surface(
+                onClick = { sortByUdhariDesc = !sortByUdhariDesc },
+                shape = RoundedCornerShape(50),
+                color = FlatDarkInput,
+                border = BorderStroke(1.dp, FlatDarkBorder),
+                modifier = Modifier
+                    .height(36.dp)
+                    .testTag("customer_sort_btn")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SwapVert,
-                            contentDescription = null,
-                            tint = FlatTextPrimary,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Text(
-                            text = tr("Sort", "क्रम"),
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.SwapVert,
+                        contentDescription = null,
+                        tint = FlatTextPrimary,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Text(
+                        text = tr("Sort", "क्रम"),
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = FlatTextPrimary,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
             }
         }

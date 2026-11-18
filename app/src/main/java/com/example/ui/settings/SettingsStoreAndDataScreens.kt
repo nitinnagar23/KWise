@@ -239,6 +239,54 @@ class SettingsExtraPrefsStore(context: Context) {
         get() = prefs.getString("bill_prefix", "INV-") ?: "INV-"
         set(value) = prefs.edit().putString("bill_prefix", value).apply()
 
+    var billShowLogo: Boolean
+        get() = prefs.getBoolean("bill_show_logo", true)
+        set(value) = prefs.edit().putBoolean("bill_show_logo", value).apply()
+
+    var billShowShopAddressPhone: Boolean
+        get() = prefs.getBoolean("bill_show_shop_address_phone", true)
+        set(value) = prefs.edit().putBoolean("bill_show_shop_address_phone", value).apply()
+
+    var billShowGstin: Boolean
+        get() = prefs.getBoolean("bill_show_gstin", true)
+        set(value) = prefs.edit().putBoolean("bill_show_gstin", value).apply()
+
+    var billShowShopHours: Boolean
+        get() = prefs.getBoolean("bill_show_shop_hours", true)
+        set(value) = prefs.edit().putBoolean("bill_show_shop_hours", value).apply()
+
+    var billShowCustomerDetails: Boolean
+        get() = prefs.getBoolean("bill_show_customer_details", true)
+        set(value) = prefs.edit().putBoolean("bill_show_customer_details", value).apply()
+
+    var billShowItemHsnGst: Boolean
+        get() = prefs.getBoolean("bill_show_item_hsn_gst", true)
+        set(value) = prefs.edit().putBoolean("bill_show_item_hsn_gst", value).apply()
+
+    var billShowWeightBreakdown: Boolean
+        get() = prefs.getBoolean("bill_show_weight_breakdown", true)
+        set(value) = prefs.edit().putBoolean("bill_show_weight_breakdown", value).apply()
+
+    var billShowRateDiscount: Boolean
+        get() = prefs.getBoolean("bill_show_rate_discount", true)
+        set(value) = prefs.edit().putBoolean("bill_show_rate_discount", value).apply()
+
+    var billShowUdhariSummary: Boolean
+        get() = prefs.getBoolean("bill_show_udhari_summary", true)
+        set(value) = prefs.edit().putBoolean("bill_show_udhari_summary", value).apply()
+
+    var billShowPaymentDetails: Boolean
+        get() = prefs.getBoolean("bill_show_payment_details", true)
+        set(value) = prefs.edit().putBoolean("bill_show_payment_details", value).apply()
+
+    var billShowPromiseDate: Boolean
+        get() = prefs.getBoolean("bill_show_promise_date", true)
+        set(value) = prefs.edit().putBoolean("bill_show_promise_date", value).apply()
+
+    var billShowSignatureFooter: Boolean
+        get() = prefs.getBoolean("bill_show_signature_footer", true)
+        set(value) = prefs.edit().putBoolean("bill_show_signature_footer", value).apply()
+
     // Sync / Backup
     var autoSync: Boolean
         get() = prefs.getBoolean("auto_sync", true)
@@ -3274,6 +3322,71 @@ fun BillAndPdfSubScreen(
     var billLang by remember { mutableStateOf(extraPrefs.billLanguage) }
     var billPrefix by remember { mutableStateOf(extraPrefs.billPrefix) }
 
+    // Bill Element Toggles
+    var showLogo by remember { mutableStateOf(extraPrefs.billShowLogo) }
+    var showShopAddressPhone by remember { mutableStateOf(extraPrefs.billShowShopAddressPhone) }
+    var showGstin by remember { mutableStateOf(extraPrefs.billShowGstin) }
+    var showShopHours by remember { mutableStateOf(extraPrefs.billShowShopHours) }
+    var showCustomerDetails by remember { mutableStateOf(extraPrefs.billShowCustomerDetails) }
+    var showItemHsnGst by remember { mutableStateOf(extraPrefs.billShowItemHsnGst) }
+    var showWeightBreakdown by remember { mutableStateOf(extraPrefs.billShowWeightBreakdown) }
+    var showRateDiscount by remember { mutableStateOf(extraPrefs.billShowRateDiscount) }
+    var showGstSplit by remember { mutableStateOf(extraPrefs.showGstSplitOnBills) }
+    var showUdhariSummary by remember { mutableStateOf(extraPrefs.billShowUdhariSummary) }
+    var showPaymentDetails by remember { mutableStateOf(extraPrefs.billShowPaymentDetails) }
+    var showPayNowQr by remember { mutableStateOf(extraPrefs.showPayNowQrOnBills) }
+    var showPromiseDate by remember { mutableStateOf(extraPrefs.billShowPromiseDate) }
+    var showSignatureFooter by remember { mutableStateOf(extraPrefs.billShowSignatureFooter) }
+
+    val includeEveryElement = showLogo &&
+        showShopAddressPhone &&
+        showGstin &&
+        showShopHours &&
+        showCustomerDetails &&
+        showItemHsnGst &&
+        showWeightBreakdown &&
+        showRateDiscount &&
+        showGstSplit &&
+        showUdhariSummary &&
+        showPaymentDetails &&
+        showPayNowQr &&
+        showPromiseDate &&
+        showSignatureFooter
+
+    val enabledElementsCount = listOf(
+        showLogo,
+        showShopAddressPhone,
+        showGstin,
+        showShopHours,
+        showCustomerDetails,
+        showItemHsnGst,
+        showWeightBreakdown,
+        showRateDiscount,
+        showGstSplit,
+        showUdhariSummary,
+        showPaymentDetails,
+        showPayNowQr,
+        showPromiseDate,
+        showSignatureFooter
+    ).count { it }
+
+    fun setAllElements(enabled: Boolean) {
+        showLogo = enabled
+        showShopAddressPhone = enabled
+        showGstin = enabled
+        showShopHours = enabled
+        showCustomerDetails = enabled
+        showItemHsnGst = enabled
+        showWeightBreakdown = enabled
+        showRateDiscount = enabled
+        showGstSplit = enabled
+        showUdhariSummary = enabled
+        showPaymentDetails = enabled
+        showPayNowQr = enabled
+        showPromiseDate = enabled
+        showSignatureFooter = enabled
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -3282,7 +3395,7 @@ fun BillAndPdfSubScreen(
     ) {
         SettingsSubScreenHeader(
             title = tr("Bill & PDF", "बिल और PDF"),
-            subtitle = tr("Paper size, language and invoice prefix", "पेपर साइज़, भाषा और बिल नंबर प्रीफ़िक्स"),
+            subtitle = tr("Paper size, language, prefix and printed bill elements", "पेपर साइज़, भाषा, प्रीफ़िक्स और बिल पर दिखने वाले तत्व"),
             onBack = onBack
         )
 
@@ -3371,6 +3484,219 @@ fun BillAndPdfSubScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
+            // ================================================================
+            // ELEMENTS SHOWN ON BILL (Master Toggle + Individual Element Toggles)
+            // ================================================================
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FieldSectionLabel(text = tr("ELEMENTS SHOWN ON BILL", "बिल पर दिखने वाले तत्व"))
+                    Text(
+                        text = "$enabledElementsCount / 14 ${tr("shown", "चालू")}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFeatureSettings = "tnum"
+                        ),
+                        color = KwGreenDark
+                    )
+                }
+
+                // Master Toggle: Include every element
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { setAllElements(!includeEveryElement) }
+                        .testTag("bill_toggle_include_all_card"),
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (includeEveryElement) KwGreenSoft else KwCardBg,
+                    border = BorderStroke(1.dp, if (includeEveryElement) KwGreen else KwBorder)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text(
+                                text = tr("Include every element", "सभी तत्व शामिल करें"),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (includeEveryElement) KwGreenDark else KwTextPrimary
+                            )
+                            Text(
+                                text = tr(
+                                    "Show all store, customer, item, tax, QR and udhari details on bills & PDFs",
+                                    "बिल और PDF पर दुकान, ग्राहक, आइटम, टैक्स, QR और उधारी की पूरी जानकारी दिखाएं"
+                                ),
+                                fontSize = 12.sp,
+                                color = KwTextSecondary,
+                                lineHeight = 16.sp
+                            )
+                        }
+                        Switch(
+                            checked = includeEveryElement,
+                            onCheckedChange = { setAllElements(it) },
+                            modifier = Modifier.testTag("bill_toggle_include_all"),
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = KwGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
+                            )
+                        )
+                    }
+                }
+
+                // Individual Toggles Card — Store & Header Elements
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = KwCardBg,
+                    border = BorderStroke(1.dp, KwBorder)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        BillElementToggleRow(
+                            title = tr("Store logo & emblem", "दुकान का लोगो"),
+                            subtitle = tr("Print your store logo at the top of the invoice", "बिल के शीर्ष पर दुकान का लोगो छापें"),
+                            checked = showLogo,
+                            onCheckedChange = { showLogo = it },
+                            testTag = "bill_toggle_logo"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Store address & phone numbers", "दुकान का पता और फ़ोन नंबर"),
+                            subtitle = tr("Village/city address and primary/alternate mobile numbers", "पता और मुख्य/वैकल्पिक मोबाइल नंबर"),
+                            checked = showShopAddressPhone,
+                            onCheckedChange = { showShopAddressPhone = it },
+                            testTag = "bill_toggle_address_phone"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("GSTIN & legal registration", "GSTIN और कानूनी पंजीकरण"),
+                            subtitle = tr("Print GSTIN, state code and legal business name", "GSTIN, राज्य कोड और कानूनी नाम दिखाएं"),
+                            checked = showGstin,
+                            onCheckedChange = { showGstin = it },
+                            testTag = "bill_toggle_gstin"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Store timings", "दुकान खुलने का समय"),
+                            subtitle = tr("Opening and closing hours in the header", "हेडर में खुलने और बंद होने का समय"),
+                            checked = showShopHours,
+                            onCheckedChange = { showShopHours = it },
+                            testTag = "bill_toggle_shop_hours"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Customer village & phone", "ग्राहक का गाँव और फ़ोन"),
+                            subtitle = tr("Customer name, village/city and phone number", "ग्राहक का नाम, गाँव/शहर और मोबाइल नंबर"),
+                            checked = showCustomerDetails,
+                            onCheckedChange = { showCustomerDetails = it },
+                            testTag = "bill_toggle_customer_details"
+                        )
+                    }
+                }
+
+                // Individual Toggles Card — Line Items & Tax Breakdown
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = KwCardBg,
+                    border = BorderStroke(1.dp, KwBorder)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        BillElementToggleRow(
+                            title = tr("Item HSN code & GST %", "आइटम HSN कोड और GST %"),
+                            subtitle = tr("Show HSN/SAC code and tax rate column per item", "प्रत्येक आइटम के साथ HSN कोड और टैक्स दर दिखाएं"),
+                            checked = showItemHsnGst,
+                            onCheckedChange = { showItemHsnGst = it },
+                            testTag = "bill_toggle_item_hsn"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Bag & loose weight breakdown", "बोरी और खुले वज़न का विवरण"),
+                            subtitle = tr("Show bag count × bag kg + loose kg on each line", "बोरी संख्या × वज़न और खुला वज़न अलग-अलग दिखाएं"),
+                            checked = showWeightBreakdown,
+                            onCheckedChange = { showWeightBreakdown = it },
+                            testTag = "bill_toggle_weight_breakdown"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Item rate & discount", "आइटम दर और छूट (Discount)"),
+                            subtitle = tr("Show per-bag/per-kg rate and line-level discounts", "प्रति बोरी/किलो दर और छूट दिखाएं"),
+                            checked = showRateDiscount,
+                            onCheckedChange = { showRateDiscount = it },
+                            testTag = "bill_toggle_rate_discount"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("GST tax split (CGST + SGST)", "GST टैक्स विभाजन (CGST + SGST)"),
+                            subtitle = tr("Print taxable value, CGST and SGST breakdown table", "कर योग्य मूल्य, CGST और SGST तालिका छापें"),
+                            checked = showGstSplit,
+                            onCheckedChange = { showGstSplit = it },
+                            testTag = "bill_toggle_gst_split"
+                        )
+                    }
+                }
+
+                // Individual Toggles Card — Udhari, Payment, QR & Footer
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    color = KwCardBg,
+                    border = BorderStroke(1.dp, KwBorder)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        BillElementToggleRow(
+                            title = tr("Previous & closing udhari balance", "पिछली और कुल बकाया उधारी"),
+                            subtitle = tr("Show previous balance, current bill due and total udhari", "पुराना बकाया, इस बिल का बकाया और कुल उधारी दिखाएं"),
+                            checked = showUdhariSummary,
+                            onCheckedChange = { showUdhariSummary = it },
+                            testTag = "bill_toggle_udhari_summary"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Payment mode & paid amount", "भुगतान का तरीका और जमा राशि"),
+                            subtitle = tr("Cash, UPI or split payment received on the bill", "नकद, UPI या आंशिक भुगतान का विवरण"),
+                            checked = showPaymentDetails,
+                            onCheckedChange = { showPaymentDetails = it },
+                            testTag = "bill_toggle_payment_details"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("UPI 'Pay now' QR code", "UPI 'Pay now' QR कोड"),
+                            subtitle = tr("Scannable UPI QR code for instant digital payment", "तुरंत भुगतान के लिए स्कैन करने योग्य UPI QR कोड"),
+                            checked = showPayNowQr,
+                            onCheckedChange = { showPayNowQr = it },
+                            testTag = "bill_toggle_pay_now_qr"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Promise date & due reminder", "वादा तारीख़ और बकाया रिमाइंडर"),
+                            subtitle = tr("Print promised repayment date when bill has udhari", "उधारी वाले बिल पर भुगतान की वादा तारीख़ छापें"),
+                            checked = showPromiseDate,
+                            onCheckedChange = { showPromiseDate = it },
+                            testTag = "bill_toggle_promise_date"
+                        )
+                        HorizontalDivider(color = KwBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                        BillElementToggleRow(
+                            title = tr("Authorized signature & thank-you note", "हस्ताक्षर और धन्यवाद संदेश"),
+                            subtitle = tr("Footer with signatory line, terms and thank-you message", "फुटर में हस्ताक्षर स्थान, शर्तें और धन्यवाद संदेश"),
+                            checked = showSignatureFooter,
+                            onCheckedChange = { showSignatureFooter = it },
+                            testTag = "bill_toggle_signature_footer"
+                        )
+                    }
+                }
+            }
         }
 
         Surface(
@@ -3388,6 +3714,20 @@ fun BillAndPdfSubScreen(
                         extraPrefs.billPaperSize = paperSize
                         extraPrefs.billLanguage = billLang
                         extraPrefs.billPrefix = billPrefix.ifBlank { "INV-" }
+                        extraPrefs.billShowLogo = showLogo
+                        extraPrefs.billShowShopAddressPhone = showShopAddressPhone
+                        extraPrefs.billShowGstin = showGstin
+                        extraPrefs.billShowShopHours = showShopHours
+                        extraPrefs.billShowCustomerDetails = showCustomerDetails
+                        extraPrefs.billShowItemHsnGst = showItemHsnGst
+                        extraPrefs.billShowWeightBreakdown = showWeightBreakdown
+                        extraPrefs.billShowRateDiscount = showRateDiscount
+                        extraPrefs.showGstSplitOnBills = showGstSplit
+                        extraPrefs.billShowUdhariSummary = showUdhariSummary
+                        extraPrefs.billShowPaymentDetails = showPaymentDetails
+                        extraPrefs.showPayNowQrOnBills = showPayNowQr
+                        extraPrefs.billShowPromiseDate = showPromiseDate
+                        extraPrefs.billShowSignatureFooter = showSignatureFooter
                         onSaveBillPdf()
                     },
                     shape = RoundedCornerShape(12.dp),
@@ -3395,6 +3735,7 @@ fun BillAndPdfSubScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
+                        .testTag("bill_pdf_save_btn")
                 ) {
                     Text(
                         text = tr("Save", "सेव करें"),
@@ -3404,6 +3745,55 @@ fun BillAndPdfSubScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BillElementToggleRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    testTag: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = KwTextPrimary
+            )
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = KwTextSecondary,
+                lineHeight = 16.sp
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag(testTag),
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = KwGreen,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = kw(0xFFD1D5DB)
+            )
+        )
     }
 }
 

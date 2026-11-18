@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -663,6 +665,24 @@ fun StaffManagementScreen(
                 Triple(2, tr("Roles", "भूमिकाएँ"), "staff_tab_roles")
             )
 
+            val pagerState = rememberPagerState(
+                initialPage = selectedTab.coerceIn(0, tabs.size - 1),
+                pageCount = { tabs.size }
+            )
+
+            LaunchedEffect(selectedTab) {
+                val target = selectedTab.coerceIn(0, tabs.size - 1)
+                if (pagerState.currentPage != target) {
+                    pagerState.scrollToPage(target)
+                }
+            }
+
+            LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+                if (!pagerState.isScrollInProgress && selectedTab != pagerState.currentPage) {
+                    selectedTab = pagerState.currentPage
+                }
+            }
+
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = FlatDarkBg,
@@ -703,9 +723,16 @@ fun StaffManagementScreen(
                 }
             }
 
-            when (selectedTab) {
-                0 -> {
-                    // TAB 1: Staff
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                beyondViewportPageCount = 1
+            ) { page ->
+                when (page) {
+                    0 -> {
+                        // TAB 1: Staff
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -957,6 +984,7 @@ fun StaffManagementScreen(
                         }
                     )
                 }
+            }
             }
         }
 

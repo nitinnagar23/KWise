@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -107,6 +109,27 @@ fun CollectionsScreen(
 
     var selectedTab by remember { mutableStateOf(CollectionsTab.PENDING) }
     var metaRefreshTick by remember { mutableIntStateOf(0) }
+
+    val allTabs = remember { CollectionsTab.entries }
+    val pagerState = rememberPagerState(
+        initialPage = selectedTab.ordinal,
+        pageCount = { allTabs.size }
+    )
+
+    LaunchedEffect(selectedTab) {
+        if (pagerState.currentPage != selectedTab.ordinal) {
+            pagerState.scrollToPage(selectedTab.ordinal)
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+        if (!pagerState.isScrollInProgress) {
+            val targetTab = allTabs.getOrElse(pagerState.currentPage) { CollectionsTab.PENDING }
+            if (selectedTab != targetTab) {
+                selectedTab = targetTab
+            }
+        }
+    }
 
     // ONLY mask total Overdue, total due today, and total coming up (and NO eye icon)
     var maskTotalOverdue by remember { mutableStateOf(true) }
@@ -389,14 +412,22 @@ fun CollectionsScreen(
             HorizontalDivider(color = FlatDarkBorder)
         }
 
-        // 3. Tab Content
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            when (selectedTab) {
-                CollectionsTab.PENDING -> {
+        // 3. Tab Content (Swipeable HorizontalPager)
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            beyondViewportPageCount = 1
+        ) { pageIndex ->
+            val pageTab = allTabs.getOrElse(pageIndex) { CollectionsTab.PENDING }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                when (pageTab) {
+                    CollectionsTab.PENDING -> {
                     // OVERDUE Summary Card (MASKED by default, NO eye icon per user instructions)
                     item {
                         CollectionsSummaryCard(
@@ -663,6 +694,7 @@ fun CollectionsScreen(
                     }
                 }
             }
+        }
         }
     }
 
