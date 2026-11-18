@@ -245,13 +245,16 @@ fun LedgerScreen(
                                 maxLines = 1
                             )
                             Surface(
-                                shape = RoundedCornerShape(50),
+                                shape = RoundedCornerShape(8.dp),
                                 color = FlatDarkInput
                             ) {
                                 Text(
                                     text = customers.size.toString(),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFeatureSettings = "tnum"
+                                    ),
                                     color = FlatTextPrimary,
                                     modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                                 )
@@ -997,20 +1000,36 @@ fun SalesTab(
             )
             filterOptions.forEach { (type, label) ->
                 val isSelected = selectedFilter == type
+                val chipBg by animateColorAsState(
+                    targetValue = if (isSelected) LedgerBrandGreen else FlatDarkCard,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "salesFilterBg_${type.name}"
+                )
+                val chipFg by animateColorAsState(
+                    targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "salesFilterFg_${type.name}"
+                )
                 Surface(
                     onClick = { selectedFilter = type },
                     shape = RoundedCornerShape(50),
-                    color = if (isSelected) LedgerBrandGreen else FlatDarkCard,
+                    color = chipBg,
                     border = if (isSelected) null else BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier.testTag("sales_filter_${type.name.lowercase()}")
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 36.dp)
+                        .testTag("sales_filter_${type.name.lowercase()}")
                 ) {
-                    Text(
-                        text = label,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else FlatTextPrimary,
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
-                    )
+                    ) {
+                        Text(
+                            text = label,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = chipFg
+                        )
+                    }
                 }
             }
         }
@@ -1149,17 +1168,20 @@ fun SalesTab(
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                // Right: Total Amount + Status Pill
+                                // Right: Total Amount + Concentric Status Pill
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = CurrencyUtils.formatInr(bill.totalSalePrice),
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFeatureSettings = "tnum"
+                                        ),
                                         color = FlatTextPrimary
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Surface(
-                                        shape = RoundedCornerShape(50),
+                                        shape = RoundedCornerShape(8.dp),
                                         color = pillBg
                                     ) {
                                         Text(
@@ -1377,15 +1399,22 @@ fun PaymentsTab(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = CurrencyUtils.formatInr(todayTotal),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp,
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = LedgerBrandGreen,
                         modifier = Modifier.testTag("repayments_received_today_text")
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "$todayCount ${if (todayCount == 1) tr("payment", "भुगतान") else tr("payments", "भुगतान")}",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = FlatTextSecondary
                     )
                 }
@@ -1410,15 +1439,22 @@ fun PaymentsTab(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = CurrencyUtils.formatInr(monthTotal),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp,
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = LedgerBrandGreen,
                         modifier = Modifier.testTag("repayments_this_month_text")
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "$monthCount ${if (monthCount == 1) tr("payment", "भुगतान") else tr("payments", "भुगतान")}",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = FlatTextSecondary
                     )
                 }
@@ -1440,20 +1476,36 @@ fun PaymentsTab(
             )
             filterOptions.forEach { (type, label) ->
                 val isSelected = selectedFilter == type
+                val chipBg by animateColorAsState(
+                    targetValue = if (isSelected) LedgerBrandGreen else FlatDarkCard,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "repayFilterBg_${type.name}"
+                )
+                val chipFg by animateColorAsState(
+                    targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "repayFilterFg_${type.name}"
+                )
                 Surface(
                     onClick = { selectedFilter = type },
                     shape = RoundedCornerShape(50),
-                    color = if (isSelected) LedgerBrandGreen else FlatDarkCard,
+                    color = chipBg,
                     border = if (isSelected) null else BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier.testTag("repayments_filter_${type.name.lowercase()}")
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 36.dp)
+                        .testTag("repayments_filter_${type.name.lowercase()}")
                 ) {
-                    Text(
-                        text = label,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else FlatTextPrimary,
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
-                    )
+                    ) {
+                        Text(
+                            text = label,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = chipFg
+                        )
+                    }
                 }
             }
         }
@@ -1553,18 +1605,21 @@ fun PaymentsTab(
 
                                 Spacer(modifier = Modifier.width(10.dp))
 
-                                // Right: +₹1,000 + Unhidden Balance or Cleared pill (NO hidden amounts!)
+                                // Right: +₹1,000 + Unhidden Balance or Concentric Cleared pill (NO hidden amounts!)
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
                                         text = "+${CurrencyUtils.formatInr(pay.amount)}",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFeatureSettings = "tnum"
+                                        ),
                                         color = LedgerBrandGreen
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     if (currentBalance <= BigDecimal.ZERO) {
                                         Surface(
-                                            shape = RoundedCornerShape(50),
+                                            shape = RoundedCornerShape(8.dp),
                                             color = LedgerMintBg
                                         ) {
                                             Text(
@@ -1578,8 +1633,11 @@ fun PaymentsTab(
                                     } else {
                                         Text(
                                             text = "${tr("Balance", "बाक़ी")} ${CurrencyUtils.formatInr(currentBalance)}",
-                                            fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontFeatureSettings = "tnum"
+                                            ),
                                             color = FlatTextSecondary
                                         )
                                     }

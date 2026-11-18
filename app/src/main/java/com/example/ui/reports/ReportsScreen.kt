@@ -2,6 +2,8 @@ package com.example.ui.reports
 
 import com.example.ui.theme.pickerThemedContext
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -609,6 +611,7 @@ fun ReportsScreen(
                     text = tr("Reports & Insights", "रिपोर्ट और विश्लेषण"),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp,
                     color = FlatTextPrimary
                 )
                 Text(
@@ -683,6 +686,16 @@ fun ReportsScreen(
             ) {
                 allPeriods.forEach { period ->
                     val isSelected = selectedPeriod == period
+                    val chipBg by animateColorAsState(
+                        targetValue = if (isSelected) RepGreen else RepChipIdleBg,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "reports_period_chip_bg"
+                    )
+                    val chipTextColor by animateColorAsState(
+                        targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "reports_period_chip_text"
+                    )
                     Surface(
                         onClick = {
                             selectedPeriod = period
@@ -691,7 +704,7 @@ fun ReportsScreen(
                             }
                         },
                         shape = RoundedCornerShape(50),
-                        color = if (isSelected) RepGreen else RepChipIdleBg,
+                        color = chipBg,
                         modifier = Modifier
                             .defaultMinSize(minHeight = 36.dp)
                             .testTag("reports_period_chip_${period.name.lowercase()}")
@@ -704,7 +717,7 @@ fun ReportsScreen(
                                 text = tr(period.label, period.labelHi),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else FlatTextPrimary
+                                color = chipTextColor
                             )
                         }
                     }
@@ -885,12 +898,15 @@ private fun ReportsOverviewTab(
                         text = CurrencyUtils.formatInr(totalRevenue),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FlatTextPrimary
+                        letterSpacing = (-0.3).sp,
+                        color = FlatTextPrimary,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum")
                     )
                     Text(
                         text = "${CurrencyUtils.formatWeight(totalQuantityKg)} kg sold",
                         fontSize = 13.sp,
-                        color = FlatTextSecondary
+                        color = FlatTextSecondary,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum")
                     )
                 }
             }
@@ -916,12 +932,15 @@ private fun ReportsOverviewTab(
                         text = CurrencyUtils.formatInr(totalGrossProfit),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = RepGreen
+                        letterSpacing = (-0.3).sp,
+                        color = RepGreen,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum")
                     )
                     Text(
                         text = "$profitMarginPercent% margin",
                         fontSize = 13.sp,
-                        color = FlatTextSecondary
+                        color = FlatTextSecondary,
+                        style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum")
                     )
                 }
             }
@@ -957,11 +976,13 @@ private fun ReportsOverviewTab(
                         text = CurrencyUtils.formatInr(netProfitAfterExpenses),
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (netProfitAfterExpenses >= BigDecimal.ZERO) RepGreen else RepRed
+                        letterSpacing = (-0.4).sp,
+                        color = if (netProfitAfterExpenses >= BigDecimal.ZERO) RepGreen else RepRed,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum")
                     )
 
                     Surface(
-                        shape = RoundedCornerShape(50),
+                        shape = RoundedCornerShape(8.dp),
                         color = RepGreenSoft
                     ) {
                         Text(
@@ -969,6 +990,7 @@ private fun ReportsOverviewTab(
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = RepGreen,
+                            style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                         )
                     }

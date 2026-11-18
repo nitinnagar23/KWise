@@ -3,6 +3,8 @@ package com.example.ui.inventory
 import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +38,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -757,11 +761,11 @@ private fun InventoryListView(
                     ) {
                         Surface(
                             onClick = onBack,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(13.dp),
                             color = FlatDarkCard,
                             border = BorderStroke(1.dp, FlatDarkBorder),
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(44.dp)
                                 .testTag("inventory_back_btn")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -779,6 +783,7 @@ private fun InventoryListView(
                                 text = tr("Inventory", "इन्वेंटरी"),
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -786,6 +791,7 @@ private fun InventoryListView(
                                 fontSize = 13.sp,
                                 color = FlatTextSecondary,
                                 fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
                                 modifier = Modifier.testTag("inventory_stock_value_subtitle")
                             )
                         }
@@ -793,11 +799,11 @@ private fun InventoryListView(
 
                     Surface(
                         onClick = onOpenBarcodeScanner,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(44.dp)
                             .testTag("inventory_scan_btn")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -1000,22 +1006,38 @@ private fun InventoryListView(
                 ) {
                     InventoryFilter.entries.forEach { filter ->
                         val isSelected = selectedFilter == filter && !reorderOnlyToggle
+                        val chipBg by animateColorAsState(
+                            targetValue = if (isSelected) InvBrandGreen else InvChipUnselectedBg,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "inventory_filter_bg"
+                        )
+                        val chipTextColor by animateColorAsState(
+                            targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "inventory_filter_text"
+                        )
                         Surface(
                             onClick = {
                                 reorderOnlyToggle = false
                                 selectedFilter = filter
                             },
                             shape = RoundedCornerShape(50),
-                            color = if (isSelected) InvBrandGreen else InvChipUnselectedBg,
-                            modifier = Modifier.testTag("inventory_filter_${filter.name.lowercase()}")
+                            color = chipBg,
+                            modifier = Modifier
+                                .defaultMinSize(minHeight = 38.dp)
+                                .testTag("inventory_filter_${filter.name.lowercase()}")
                         ) {
-                            Text(
-                                text = tr(filter.labelEn, filter.labelHi),
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else FlatTextPrimary,
+                            Box(
+                                contentAlignment = Alignment.Center,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp)
-                            )
+                            ) {
+                                Text(
+                                    text = tr(filter.labelEn, filter.labelHi),
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = chipTextColor
+                                )
+                            }
                         }
                     }
                 }
@@ -1078,7 +1100,9 @@ private fun SummaryStatusCard(
                 text = count.toString(),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = contentColor
+                letterSpacing = (-0.2).sp,
+                color = contentColor,
+                style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum")
             )
             Text(
                 text = label,
@@ -1151,7 +1175,8 @@ private fun InventoryItemCard(
                         text = formatProductQuantityLabel(product),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FlatTextPrimary
+                        color = FlatTextPrimary,
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum")
                     )
                     InventoryStatusBadge(status = status)
                 }

@@ -9,6 +9,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,6 +52,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -596,11 +600,11 @@ fun CashbookScreen(
                     ) {
                         Surface(
                             onClick = onBack,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(13.dp),
                             color = FlatDarkCard,
                             border = BorderStroke(1.dp, FlatDarkBorder),
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(44.dp)
                                 .testTag("cashbook_back_btn")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -618,6 +622,7 @@ fun CashbookScreen(
                                 text = tr("Cashbook", "कैशबुक"),
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp,
                                 color = FlatTextPrimary
                             )
                             Text(
@@ -645,11 +650,11 @@ fun CashbookScreen(
                                 context.startActivity(Intent.createChooser(shareIntent, "Export Cashbook"))
                             } catch (_: Exception) {}
                         },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(44.dp)
                             .testTag("cashbook_export_btn")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -748,7 +753,9 @@ fun CashbookScreen(
                                     text = CurrencyUtils.formatInr(closingCash),
                                     fontSize = 30.sp,
                                     fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.4).sp,
                                     color = FlatTextPrimary,
+                                    style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"),
                                     modifier = Modifier.testTag("cashbook_closing_cash_text")
                                 )
                             }
@@ -767,6 +774,7 @@ fun CashbookScreen(
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                                     modifier = Modifier.testTag("cashbook_upi_today_text")
                                 )
                             }
@@ -780,7 +788,7 @@ fun CashbookScreen(
                             // Opening
                             Surface(
                                 onClick = { showEditOpeningDialog = true },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 color = CbNeutralPillBg,
                                 modifier = Modifier
                                     .weight(1f)
@@ -800,6 +808,7 @@ fun CashbookScreen(
                                         fontSize = 15.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                                         maxLines = 1
                                     )
                                 }
@@ -808,7 +817,7 @@ fun CashbookScreen(
                             // Cash in
                             Surface(
                                 onClick = { selectedFilter = CashbookFilter.CASH_IN },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 color = CbMintBg,
                                 modifier = Modifier
                                     .weight(1f)
@@ -828,6 +837,7 @@ fun CashbookScreen(
                                         fontSize = 15.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = CbBrandGreen,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                                         maxLines = 1
                                     )
                                 }
@@ -836,7 +846,7 @@ fun CashbookScreen(
                             // Cash out
                             Surface(
                                 onClick = { selectedFilter = CashbookFilter.CASH_OUT },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 color = CbCrimsonSoftBg,
                                 modifier = Modifier
                                     .weight(1f)
@@ -856,6 +866,7 @@ fun CashbookScreen(
                                         fontSize = 15.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = CbCrimsonRed,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                                         maxLines = 1
                                     )
                                 }
@@ -936,19 +947,35 @@ fun CashbookScreen(
                 ) {
                     CashbookFilter.entries.forEach { filter ->
                         val isSelected = selectedFilter == filter
+                        val chipBg by animateColorAsState(
+                            targetValue = if (isSelected) CbBrandGreen else CbChipUnselectedBg,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "cashbook_filter_bg"
+                        )
+                        val chipTextColor by animateColorAsState(
+                            targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "cashbook_filter_text"
+                        )
                         Surface(
                             onClick = { selectedFilter = filter },
                             shape = RoundedCornerShape(50),
-                            color = if (isSelected) CbBrandGreen else CbChipUnselectedBg,
-                            modifier = Modifier.testTag("cashbook_filter_${filter.name.lowercase()}")
+                            color = chipBg,
+                            modifier = Modifier
+                                .defaultMinSize(minHeight = 38.dp)
+                                .testTag("cashbook_filter_${filter.name.lowercase()}")
                         ) {
-                            Text(
-                                text = tr(filter.labelEn, filter.labelHi),
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else FlatTextPrimary,
+                            Box(
+                                contentAlignment = Alignment.Center,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp)
-                            )
+                            ) {
+                                Text(
+                                    text = tr(filter.labelEn, filter.labelHi),
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = chipTextColor
+                                )
+                            }
                         }
                     }
                 }
@@ -1203,7 +1230,8 @@ private fun CashbookEntryRow(entry: CashbookEntry) {
             text = "$amountPrefix${CurrencyUtils.formatInr(entry.amount)}",
             fontSize = 15.5.sp,
             fontWeight = FontWeight.Bold,
-            color = symbolColor
+            color = symbolColor,
+            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum")
         )
     }
 }

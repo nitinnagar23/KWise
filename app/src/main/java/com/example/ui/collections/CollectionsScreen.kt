@@ -5,6 +5,8 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +35,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -267,11 +270,11 @@ fun CollectionsScreen(
             ) {
                 Surface(
                     onClick = onBack,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(13.dp),
                     color = FlatDarkCard,
                     border = BorderStroke(1.dp, FlatDarkBorder),
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .testTag("collections_back_btn")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -289,6 +292,7 @@ fun CollectionsScreen(
                         text = tr("Collections", "वसूली"),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp,
                         color = FlatTextPrimary
                     )
                     Text(
@@ -311,11 +315,11 @@ fun CollectionsScreen(
                         customerForSetPromise = candidate
                     }
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(13.dp),
                 color = FlatDarkCard,
                 border = BorderStroke(1.dp, FlatDarkBorder),
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(44.dp)
                     .testTag("collections_calendar_btn")
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -769,7 +773,7 @@ private fun CollectionsTabItem(
                 maxLines = 1
             )
             Surface(
-                shape = RoundedCornerShape(50),
+                shape = RoundedCornerShape(8.dp),
                 color = badgeBg
             ) {
                 Text(
@@ -777,6 +781,7 @@ private fun CollectionsTabItem(
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = badgeTextColor,
+                    style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
                     modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                 )
             }
@@ -833,7 +838,9 @@ private fun CollectionsSummaryCard(
                     text = if (masked) "₹ • • • •" else CurrencyUtils.formatInr(totalAmount),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp,
                     color = amountColor,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
                     modifier = Modifier.testTag(amountTestTag)
                 )
                 Text(
@@ -967,11 +974,12 @@ private fun CollectionCustomerCard(
                         fontSize = 16.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = ColCrimson,
+                        style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                         modifier = Modifier.testTag("collection_customer_amount_${customer.id}")
                     )
 
                     Surface(
-                        shape = RoundedCornerShape(50),
+                        shape = RoundedCornerShape(8.dp),
                         color = statusPillBg,
                         modifier = Modifier.clickable { onSetPromiseClick() }
                     ) {
@@ -980,6 +988,7 @@ private fun CollectionCustomerCard(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = statusPillTextColor,
+                            style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }

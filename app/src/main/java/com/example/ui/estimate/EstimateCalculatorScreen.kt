@@ -3,6 +3,8 @@ package com.example.ui.estimate
 import com.example.ui.theme.CGreenPrimary
 import com.example.ui.theme.kw
 import android.content.Intent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,6 +51,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -447,9 +450,12 @@ fun EstimateCalculatorScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = CurrencyUtils.formatWeightKg(activeTotalWeight),
-                                fontSize = 20.sp,
-                                color = FlatTextPrimary,
-                                fontWeight = FontWeight.Bold
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    color = FlatTextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFeatureSettings = "tnum"
+                                )
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -463,9 +469,13 @@ fun EstimateCalculatorScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = CurrencyUtils.formatInr(activeTotalPrice),
-                                fontSize = 26.sp,
-                                color = EstimateBrandGreen,
-                                fontWeight = FontWeight.Bold,
+                                style = TextStyle(
+                                    fontSize = 26.sp,
+                                    color = EstimateBrandGreen,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.3).sp,
+                                    fontFeatureSettings = "tnum"
+                                ),
                                 modifier = Modifier.testTag("calculator_total_amount")
                             )
                         }
@@ -584,9 +594,12 @@ fun EstimateCalculatorScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = tr("Estimate", "एस्टीमेट (पर्चा)"),
-                        fontSize = 24.sp,
-                        color = FlatTextPrimary,
-                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            color = FlatTextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp
+                        ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -611,11 +624,11 @@ fun EstimateCalculatorScreen(
                     // 0. Voice Bill Mic icon button
                     Surface(
                         onClick = { showVoiceBillFlow = true },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = EstimateMintSurface,
                         border = BorderStroke(1.dp, EstimateBrandGreen.copy(alpha = 0.35f)),
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .testTag("open_voice_bill_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -623,7 +636,7 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Default.Mic,
                                 contentDescription = tr("Voice bill", "बोलकर बिल"),
                                 tint = EstimateBrandGreen,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         }
                     }
@@ -631,11 +644,11 @@ fun EstimateCalculatorScreen(
                     // 1. Today's Rates icon button
                     Surface(
                         onClick = onNavigateToDailyRates,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .testTag("open_daily_rates_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -643,7 +656,7 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Outlined.LocalOffer,
                                 contentDescription = tr("Today's Rates", "आज के भाव"),
                                 tint = CAmber,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         }
                     }
@@ -651,11 +664,11 @@ fun EstimateCalculatorScreen(
                     // 2. Open Drafts folder icon button
                     Surface(
                         onClick = { showDraftsDialog = true },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .testTag("open_drafts_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -663,7 +676,7 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Outlined.FolderOpen,
                                 contentDescription = tr("Drafts", "ड्राफ्ट"),
                                 tint = FlatTextPrimary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         }
                     }
@@ -690,11 +703,11 @@ fun EstimateCalculatorScreen(
                                 showSaveDraftDialog = true
                             }
                         },
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .testTag("save_draft_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -702,7 +715,7 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Outlined.Save,
                                 contentDescription = tr("Save draft", "ड्राफ्ट सेव"),
                                 tint = if (hasValidSaleItems) FlatTextPrimary else FlatTextSecondary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(19.dp)
                             )
                         }
                     }
@@ -711,7 +724,30 @@ fun EstimateCalculatorScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Full-Width Mode Toggle ("Items" | "Budget")
+            // Full-Width Mode Toggle ("Items" | "Budget") — Concentric radius: 16dp outer - 4dp pad = 12dp inner
+            val isItems = calcMode == CalculatorTabMode.ITEMS
+            val itemsTabBg by animateColorAsState(
+                targetValue = if (isItems) EstimateBrandGreen else Color.Transparent,
+                animationSpec = tween(durationMillis = 150),
+                label = "itemsTabBg"
+            )
+            val itemsTabFg by animateColorAsState(
+                targetValue = if (isItems) Color.White else FlatTextSecondary,
+                animationSpec = tween(durationMillis = 150),
+                label = "itemsTabFg"
+            )
+            val isBudget = calcMode == CalculatorTabMode.BUDGET
+            val budgetTabBg by animateColorAsState(
+                targetValue = if (isBudget) EstimateBrandGreen else Color.Transparent,
+                animationSpec = tween(durationMillis = 150),
+                label = "budgetTabBg"
+            )
+            val budgetTabFg by animateColorAsState(
+                targetValue = if (isBudget) Color.White else FlatTextSecondary,
+                animationSpec = tween(durationMillis = 150),
+                label = "budgetTabFg"
+            )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -721,12 +757,12 @@ fun EstimateCalculatorScreen(
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                val isItems = calcMode == CalculatorTabMode.ITEMS
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .defaultMinSize(minHeight = 40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isItems) EstimateBrandGreen else Color.Transparent)
+                        .background(itemsTabBg)
                         .clickable { calcMode = CalculatorTabMode.ITEMS }
                         .padding(vertical = 10.dp)
                         .testTag("calc_mode_items"),
@@ -736,16 +772,16 @@ fun EstimateCalculatorScreen(
                         text = tr("Items", "सामान"),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isItems) Color.White else FlatTextSecondary
+                        color = itemsTabFg
                     )
                 }
 
-                val isBudget = calcMode == CalculatorTabMode.BUDGET
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .defaultMinSize(minHeight = 40.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isBudget) EstimateBrandGreen else Color.Transparent)
+                        .background(budgetTabBg)
                         .clickable { calcMode = CalculatorTabMode.BUDGET }
                         .padding(vertical = 10.dp)
                         .testTag("calc_mode_budget"),
@@ -755,7 +791,7 @@ fun EstimateCalculatorScreen(
                         text = tr("Budget", "बजट"),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isBudget) Color.White else FlatTextSecondary
+                        color = budgetTabFg
                     )
                 }
             }

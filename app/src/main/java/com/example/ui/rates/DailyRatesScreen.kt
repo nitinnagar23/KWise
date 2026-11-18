@@ -4,6 +4,8 @@ import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -380,15 +383,15 @@ fun DailyRatesScreen(
                     if (onBack != null) {
                         Surface(
                             onClick = onBack,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(13.dp),
                             color = FlatDarkCard,
                             border = BorderStroke(1.dp, FlatDarkBorder),
-                            modifier = Modifier.size(42.dp)
+                            modifier = Modifier.size(44.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = tr("Back", "वापस"),
                                     tint = FlatTextPrimary,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -399,32 +402,38 @@ fun DailyRatesScreen(
                     Column {
                         Text(
                             text = tr("Today's rates", "आज के भाव"),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            style = TextStyle(
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp,
+                                color = FlatTextPrimary
+                            )
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${tr("Live price list", "लाइव रेट लिस्ट")} · ${products.size} ${tr("items", "आइटम")}",
-                            fontSize = 13.sp,
-                            color = FlatTextSecondary
+                            style = TextStyle(
+                                fontSize = 13.sp,
+                                color = FlatTextSecondary,
+                                fontFeatureSettings = "tnum"
+                            )
                         )
                     }
                 }
 
                 Surface(
                     onClick = { sharePriceList() },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(13.dp),
                     color = FlatDarkCard,
                     border = BorderStroke(1.dp, FlatDarkBorder),
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .testTag("share_rates_btn")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share Rate List",
+                            contentDescription = tr("Share rate list", "भाव सूची शेयर करें"),
                             tint = FlatTextPrimary,
                             modifier = Modifier.size(19.dp)
                         )
@@ -492,18 +501,33 @@ fun DailyRatesScreen(
                 )
                 filters.forEach { (filter, label) ->
                     val isSelected = selectedFilter == filter
+                    val pillBg by animateColorAsState(
+                        targetValue = if (isSelected) RatesBrandGreen else FlatDarkInput,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "rateFilterBg_${filter.name}"
+                    )
+                    val pillFg by animateColorAsState(
+                        targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "rateFilterFg_${filter.name}"
+                    )
                     Surface(
                         onClick = { selectedFilter = filter },
                         shape = RoundedCornerShape(50),
-                        color = if (isSelected) RatesBrandGreen else FlatDarkInput
+                        color = pillBg,
+                        modifier = Modifier.defaultMinSize(minHeight = 38.dp)
                     ) {
-                        Text(
-                            text = label,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isSelected) Color.White else FlatTextPrimary,
+                        Box(
+                            contentAlignment = Alignment.Center,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = pillFg
+                            )
+                        }
                     }
                 }
             }
@@ -593,7 +617,7 @@ private fun CommodityRateCard(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(50),
+                        shape = RoundedCornerShape(8.dp),
                         color = stockBg
                     ) {
                         Text(
@@ -601,17 +625,17 @@ private fun CommodityRateCard(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = stockTextColor,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            modifier = Modifier.padding(horizontal = 11.dp, vertical = 5.dp)
                         )
                     }
 
                     if (canEditRates) {
                         Surface(
                             onClick = onEditClick,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = RatesEditBtnBg,
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(42.dp)
                                 .testTag("edit_rate_btn_${product.id}")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -627,7 +651,7 @@ private fun CommodityRateCard(
                 }
             }
 
-            // Rate Tiles Row (1 kg | 5 kg | Bag · X kg)
+            // Rate Tiles Row (1 kg | 5 kg | Bag · X kg) — Concentric radius: 18dp outer - 8dp visual inset = 10dp inner
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -668,7 +692,7 @@ private fun RateUnitTile(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(FlatDarkBg)
             .padding(vertical = 10.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -676,17 +700,23 @@ private fun RateUnitTile(
     ) {
         Text(
             text = label,
-            fontSize = 12.sp,
-            color = FlatTextSecondary,
-            fontWeight = FontWeight.SemiBold,
+            style = TextStyle(
+                fontSize = 12.sp,
+                color = FlatTextSecondary,
+                fontWeight = FontWeight.SemiBold,
+                fontFeatureSettings = "tnum"
+            ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             text = priceText,
-            fontSize = 17.sp,
-            color = FlatTextPrimary,
-            fontWeight = FontWeight.Bold,
+            style = TextStyle(
+                fontSize = 17.sp,
+                color = FlatTextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontFeatureSettings = "tnum"
+            ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
