@@ -19,6 +19,9 @@ interface CustomerDao {
     @Query("SELECT * FROM customers WHERE id = :customerId LIMIT 1")
     suspend fun getCustomerById(customerId: String): Customer?
 
+    @Query("SELECT DISTINCT village FROM customers WHERE isDeleted = 0 AND TRIM(village) != ''")
+    suspend fun getDistinctSavedVillages(): List<String>
+
     @Query("SELECT * FROM customers WHERE id = :customerId LIMIT 1")
     fun observeCustomerById(customerId: String): Flow<Customer?>
 

@@ -70,6 +70,7 @@ import com.example.util.tr
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -600,12 +601,18 @@ internal fun SetPromiseDateDialog(
 internal fun CollectPaymentDialog(
     customer: Customer,
     onDismiss: () -> Unit,
-    onConfirmCollect: (amount: BigDecimal, note: String) -> Unit
+    onConfirmCollect: (amount: BigDecimal, note: String, customDateMillis: Long?) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var amountInput by remember {
         mutableStateOf(customer.totalUdhari.setScale(0, RoundingMode.HALF_UP).toPlainString())
     }
     var noteInput by remember { mutableStateOf("Cash collection") }
+    var customDateMillis by remember { mutableStateOf<Long?>(null) }
+
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val activeTimestamp = customDateMillis ?: System.currentTimeMillis()
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -717,6 +724,100 @@ internal fun CollectPaymentDialog(
                     )
                 }
 
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = tr("PAYMENT TIMING (DATE & TIME)", "भुगतान का समय"),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = FlatTextSecondary
+                        )
+                        if (customDateMillis != null) {
+                            Text(
+                                text = tr("Reset to Now", "अभी का समय"),
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ColBrandGreen,
+                                modifier = Modifier.clickable { customDateMillis = null }
+                            )
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                                android.app.DatePickerDialog(
+                                    com.example.ui.theme.pickerThemedContext(context),
+                                    { _, y, m, d ->
+                                        val updated = Calendar.getInstance().apply {
+                                            timeInMillis = activeTimestamp
+                                            set(Calendar.YEAR, y)
+                                            set(Calendar.MONTH, m)
+                                            set(Calendar.DAY_OF_MONTH, d)
+                                        }
+                                        customDateMillis = updated.timeInMillis
+                                    },
+                                    cal.get(Calendar.YEAR),
+                                    cal.get(Calendar.MONTH),
+                                    cal.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, FlatDarkBorder),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("collect_payment_custom_date_btn")
+                        ) {
+                            Text(
+                                text = dateFormatter.format(Date(activeTimestamp)),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = FlatTextPrimary
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                                android.app.TimePickerDialog(
+                                    com.example.ui.theme.pickerThemedContext(context),
+                                    { _, hourOfDay, minute ->
+                                        val updated = Calendar.getInstance().apply {
+                                            timeInMillis = activeTimestamp
+                                            set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                            set(Calendar.MINUTE, minute)
+                                            set(Calendar.SECOND, 0)
+                                        }
+                                        customDateMillis = updated.timeInMillis
+                                    },
+                                    cal.get(Calendar.HOUR_OF_DAY),
+                                    cal.get(Calendar.MINUTE),
+                                    false
+                                ).show()
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, FlatDarkBorder),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("collect_payment_custom_time_btn")
+                        ) {
+                            Text(
+                                text = timeFormatter.format(Date(activeTimestamp)),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = FlatTextPrimary
+                            )
+                        }
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -739,7 +840,7 @@ internal fun CollectPaymentDialog(
                         onClick = {
                             val amt = amountInput.trim().toBigDecimalOrNull() ?: BigDecimal.ZERO
                             if (amt > BigDecimal.ZERO) {
-                                onConfirmCollect(amt, noteInput.trim())
+                                onConfirmCollect(amt, noteInput.trim(), customDateMillis)
                             }
                         },
                         shape = RoundedCornerShape(14.dp),

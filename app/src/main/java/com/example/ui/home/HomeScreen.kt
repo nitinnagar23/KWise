@@ -1,5 +1,11 @@
 package com.example.ui.home
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import com.example.model.buildConsolidatedBillNoMap
+import com.example.ui.bills.BillSummaryCard
+import com.example.ui.bills.UnifiedBillInspectorOverlay
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.kw
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -7,6 +13,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -157,9 +167,27 @@ fun HomeScreen(
         activeSales.filter { it.date >= startOfToday }.sortedByDescending { it.date }
     }
 
+    val auditLogs by repository.allBillAuditLogs.collectAsState(initial = emptyList())
+    val editedSaleIds = remember(auditLogs) {
+        auditLogs.filter { it.actionType == "EDIT" }.map { it.saleId }.toSet()
+    }
+    val billNoMap = remember(sales) { buildConsolidatedBillNoMap(sales) }
+    val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+
     var showQuickCollectDialog by remember { mutableStateOf(false) }
     var showGlobalSearch by remember { mutableStateOf(false) }
-    var saleToEdit by remember { mutableStateOf<SaleEntry?>(null) }
+    var selectedSaleForInspector by remember { mutableStateOf<SaleEntry?>(null) }
+
+    if (selectedSaleForInspector != null) {
+        UnifiedBillInspectorOverlay(
+            primarySale = selectedSaleForInspector!!,
+            repository = repository,
+            currentUser = currentUser,
+            onClose = { selectedSaleForInspector = null },
+            onOpenAllBills = onNavigateToBills
+        )
+        return
+    }
 
     if (showGlobalSearch) {
         GlobalSearchScreen(
@@ -443,22 +471,27 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
-                Text(
-                    text = tr("View all Khata →", "पूरा खाता देखें →"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = primaryForestGreen,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onNavigateToLedger() }
-                        .padding(horizontal = 6.dp, vertical = 6.dp)
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = tr("All Bills →", "सभी बिल →"),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = primaryForestGreen,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onNavigateToBills() }
+                            .padding(horizontal = 6.dp, vertical = 6.dp)
+                            .testTag("home_open_all_bills_btn")
+                    )
+                }
             }
         }
 
         // -------------------------------------------------------------
-        // 6. TODAY'S SALES LIST
-        // (Per-customer transaction amount is NEVER hidden)
+        // 6. TODAY'S SALES LIST (Unified BillSummaryCard + UnifiedBillInspectorOverlay)
         // -------------------------------------------------------------
         val todayGroupedBills = com.example.model.groupSalesIntoBills(todaySales, descending = true)
         if (todayGroupedBills.isEmpty()) {
@@ -469,247 +502,21 @@ fun HomeScreen(
             }
         } else {
             items(todayGroupedBills, key = { "today_sale_${it.id}" }) { bill ->
-                val sale = bill.primarySale
-                val customer = customersMap[bill.customerId]
-                val customerName = customer?.name?.ifBlank { "Customer" } ?: "Customer"
-                val customerVillage = customer?.village?.trim().orEmpty()
-                val feedName = productsMap[sale.productId]?.feedName ?: tr("Feed item", "पशु आहार")
-
-                val initials = remember(customerName) {
-                    val parts = customerName.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
-                    when {
-                        parts.size >= 2 -> "${parts[0].first()}${parts[1].first()}".uppercase()
-                        parts.size == 1 && parts[0].length >= 2 -> parts[0].take(2).uppercase()
-                        parts.size == 1 -> parts[0].take(1).uppercase()
-                        else -> "CU"
-                    }
-                }
-
-                val avatarBg = if (isLightTheme) kw(0xFFE6EEF6) else Color(0xFF1E293B)
-                val avatarFg = if (isLightTheme) kw(0xFF1E3A5F) else Color(0xFF93C5FD)
-
-                val isUdhariSale = bill.udhariAmount > BigDecimal.ZERO
-                val statusPillBg = if (isUdhariSale) {
-                    if (isLightTheme) kw(0xFFFDE8E8) else Color(0xFF331416)
-                } else {
-                    if (isLightTheme) kw(0xFFE1F5EB) else CGreenContainer
-                }
-                val statusPillFg = if (isUdhariSale) {
-                    udhariCrimsonRed
-                } else {
-                    primaryForestGreen
-                }
-                val statusPillLabel = when {
-                    isUdhariSale && bill.paidAmount > BigDecimal.ZERO -> tr("Part udhari", "आंशिक उधारी")
-                    isUdhariSale -> tr("Udhari", "उधारी")
-                    else -> tr("Paid · Cash", "नकद प्राप्त")
-                }
-
-                val extraSuffix = if (bill.extraItemCount > 0) " +${bill.extraItemCount}" else ""
-                val subtitleText = if (customerVillage.isNotBlank()) {
-                    "$customerVillage · $feedName (${CurrencyUtils.formatWeight(sale.quantityKg)} kg)$extraSuffix"
-                } else {
-                    "$feedName · ${CurrencyUtils.formatWeight(sale.quantityKg)} kg$extraSuffix"
-                }
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = canEditTodaySales) { saleToEdit = sale },
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = FlatDarkCard),
-                    border = BorderStroke(1.dp, FlatDarkBorder)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(CircleShape)
-                                    .background(avatarBg),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = initials,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = avatarFg
-                                )
-                            }
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = customerName,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.5.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = FlatTextPrimary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = subtitleText,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                                    color = FlatTextSecondary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.End,
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                // Always show per-customer transaction amount clearly with tabular figures
-                                Text(
-                                    text = CurrencyUtils.formatInr(bill.totalSalePrice),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontSize = 16.sp,
-                                        fontFeatureSettings = "tnum"
-                                    ),
-                                    fontWeight = FontWeight.Bold,
-                                    color = FlatTextPrimary
-                                )
-
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = statusPillBg
-                                ) {
-                                    Text(
-                                        text = statusPillLabel,
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
-                                        fontWeight = FontWeight.Bold,
-                                        color = statusPillFg,
-                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-
-                            if (canEditTodaySales) {
-                                IconButton(
-                                    onClick = { saleToEdit = sale },
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .testTag("edit_today_sale_${bill.id}")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = tr("Edit today's sale", "आज की बिक्री बदलें"),
-                                        tint = FlatTextMuted,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
+                val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                Box(modifier = Modifier.testTag("edit_today_sale_${bill.id}")) {
+                    BillSummaryCard(
+                        bill = bill,
+                        shortBillNo = shortNo,
+                        customer = customersMap[bill.customerId],
+                        product = productsMap[bill.primarySale.productId],
+                        timeFormatted = timeFormat.format(Date(bill.date)),
+                        isEdited = isEdited,
+                        onClick = { selectedSaleForInspector = bill.primarySale }
+                    )
                 }
             }
         }
-    }
-
-    // Admin/Manager Edit Today's Sale Dialog
-    saleToEdit?.let { sale ->
-        var qtyInput by remember(sale) { mutableStateOf(sale.quantityKg.stripTrailingZeros().toPlainString()) }
-        var rateInput by remember(sale) { mutableStateOf(sale.pricePerKgAtSale.stripTrailingZeros().toPlainString()) }
-        var paidInput by remember(sale) { mutableStateOf(sale.paidAmount.stripTrailingZeros().toPlainString()) }
-        var reasonInput by remember(sale) { mutableStateOf("Corrected today's sale") }
-
-        AlertDialog(
-            onDismissRequest = { saleToEdit = null },
-            containerColor = FlatDarkCard,
-            title = {
-                Text(
-                    tr("Edit Today's Sale", "आज की बिक्री संशोधित करें"),
-                    color = FlatTextPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = qtyInput,
-                        onValueChange = { qtyInput = it },
-                        label = { Text(tr("Quantity (kg)", "मात्रा (किग्रा)")) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = rateInput,
-                        onValueChange = { rateInput = it },
-                        label = { Text(tr("Rate per kg (₹)", "दर प्रति किग्रा (₹)")) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = paidInput,
-                        onValueChange = { paidInput = it },
-                        label = { Text(tr("Paid Amount (₹)", "जमा राशि (₹)")) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = reasonInput,
-                        onValueChange = { reasonInput = it },
-                        label = { Text(tr("Edit reason", "कारण")) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val user = currentUser ?: return@Button
-                        val newQty = qtyInput.toBigDecimalOrNull() ?: sale.quantityKg
-                        val newRate = rateInput.toBigDecimalOrNull() ?: sale.pricePerKgAtSale
-                        val newPaid = paidInput.toBigDecimalOrNull() ?: sale.paidAmount
-                        scope.launch {
-                            repository.editSaleBill(
-                                saleId = sale.id,
-                                newQuantityKg = newQty,
-                                newPricePerKg = newRate,
-                                newPaidAmount = newPaid,
-                                reason = reasonInput,
-                                performedBy = user
-                            )
-                            saleToEdit = null
-                            Toast.makeText(context, "Sale updated", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = CGreenPrimary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { saleToEdit = null }) {
-                    Text(tr("Cancel", "रद्द करें"))
-                }
-            }
-        )
     }
 
     // Quick Collect Udhari Dialog (Admin & Manager only)
@@ -721,6 +528,11 @@ fun HomeScreen(
         var selectedDueCustomer by remember { mutableStateOf(customersWithDue.firstOrNull()) }
         var collectAmountStr by remember { mutableStateOf("") }
         var collectNote by remember { mutableStateOf("") }
+        var customDateMillis by remember { mutableStateOf<Long?>(null) }
+
+        val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+        val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+        val activeTimestamp = customDateMillis ?: System.currentTimeMillis()
 
         AlertDialog(
             onDismissRequest = { showQuickCollectDialog = false },
@@ -807,6 +619,111 @@ fun HomeScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = tr("Payment Timing:", "भुगतान का समय:"),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = FlatTextSecondary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (customDateMillis != null) {
+                                Text(
+                                    text = tr("Reset to Now", "अभी का समय"),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryForestGreen,
+                                    modifier = Modifier.clickable { customDateMillis = null }
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Surface(
+                                onClick = {
+                                    val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                                    DatePickerDialog(
+                                        pickerThemedContext(context),
+                                        { _, y, m, d ->
+                                            val updated = Calendar.getInstance().apply {
+                                                timeInMillis = activeTimestamp
+                                                set(Calendar.YEAR, y)
+                                                set(Calendar.MONTH, m)
+                                                set(Calendar.DAY_OF_MONTH, d)
+                                            }
+                                            customDateMillis = updated.timeInMillis
+                                        },
+                                        cal.get(Calendar.YEAR),
+                                        cal.get(Calendar.MONTH),
+                                        cal.get(Calendar.DAY_OF_MONTH)
+                                    ).show()
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                color = FlatDarkBg,
+                                border = BorderStroke(1.dp, FlatDarkBorder),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("quick_collect_custom_date_btn")
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
+                                ) {
+                                    Text(
+                                        text = dateFormatter.format(Date(activeTimestamp)),
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = FlatTextPrimary
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                                    TimePickerDialog(
+                                        pickerThemedContext(context),
+                                        { _, hourOfDay, minute ->
+                                            val updated = Calendar.getInstance().apply {
+                                                timeInMillis = activeTimestamp
+                                                set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                                set(Calendar.MINUTE, minute)
+                                                set(Calendar.SECOND, 0)
+                                            }
+                                            customDateMillis = updated.timeInMillis
+                                        },
+                                        cal.get(Calendar.HOUR_OF_DAY),
+                                        cal.get(Calendar.MINUTE),
+                                        false
+                                    ).show()
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                color = FlatDarkBg,
+                                border = BorderStroke(1.dp, FlatDarkBorder),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("quick_collect_custom_time_btn")
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
+                                ) {
+                                    Text(
+                                        text = timeFormatter.format(Date(activeTimestamp)),
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = FlatTextPrimary
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -823,7 +740,8 @@ fun HomeScreen(
                                         amount = amt,
                                         note = collectNote.ifBlank { "Cash received" },
                                         collectedByUserId = currentUser?.id ?: "admin",
-                                        performedByRole = currentUser?.role
+                                        performedByRole = currentUser?.role,
+                                        customDateMillis = customDateMillis
                                     )
                                     showQuickCollectDialog = false
                                     Toast.makeText(context, "Recorded ${CurrencyUtils.formatInr(amt)} from ${cust.name}", Toast.LENGTH_SHORT).show()

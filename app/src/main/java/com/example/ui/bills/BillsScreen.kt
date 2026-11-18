@@ -1,5 +1,8 @@
 package com.example.ui.bills
 
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.LaunchedEffect
 import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.kw
 import android.app.DatePickerDialog
@@ -121,11 +124,14 @@ private val BillsEditedText: Color get() = kw(0xFF374151)
 private val BillsAvatarBg: Color get() = kw(0xFFE8EEF7)
 private val BillsAvatarText: Color get() = kw(0xFF1E3A8A)
 private val BillsChipIdleBg: Color get() = kw(0xFFF1F1F7)
+
 @Composable
-fun BillsScreen(
+fun UnifiedBillInspectorOverlay(
+    primarySale: SaleEntry,
     repository: CattleFeedRepository,
     currentUser: User?,
-    onBack: () -> Unit
+    onClose: () -> Unit,
+    onOpenAllBills: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -133,26 +139,20 @@ fun BillsScreen(
     val customers by repository.allCustomers.collectAsState(initial = emptyList())
     val products by repository.allProducts.collectAsState(initial = emptyList())
     val auditLogs by repository.allBillAuditLogs.collectAsState(initial = emptyList())
-    val allUsers by repository.allUsers.collectAsState(initial = emptyList())
     val settings by repository.settingsFlow.collectAsState(initial = null)
 
     val customerMap = remember(customers) { customers.associateBy { it.id } }
     val productMap = remember(products) { products.associateBy { it.id } }
 
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All") } // All, Paid, Udhari, Returned
-    var filterDateMillis by remember { mutableStateOf<Long?>(null) }
-    var selectedSaleIdForDetail by remember { mutableStateOf<String?>(null) }
-    var showAllAuditModal by remember { mutableStateOf(false) }
+    var activeSaleId by remember(primarySale.id) { mutableStateOf(primarySale.id) }
+    val currentSale = remember(sales, activeSaleId, primarySale) {
+        sales.find { it.id == activeSaleId } ?: primarySale
+    }
 
     var saleToEdit by remember { mutableStateOf<SaleEntry?>(null) }
     var saleToReturn by remember { mutableStateOf<SaleEntry?>(null) }
     var saleToCancel by remember { mutableStateOf<SaleEntry?>(null) }
     var billDataToShare by remember { mutableStateOf<BillData?>(null) }
-
-    val selectedSaleForDetail = remember(sales, selectedSaleIdForDetail) {
-        selectedSaleIdForDetail?.let { id -> sales.find { it.id == id } }
-    }
 
     when {
         saleToReturn != null -> {
@@ -174,9 +174,8 @@ fun BillsScreen(
                 repository = repository,
                 onBack = { saleToReturn = null },
                 onViewBill = {
-                    val id = targetSale.id
+                    activeSaleId = targetSale.id
                     saleToReturn = null
-                    selectedSaleIdForDetail = id
                 },
                 onDone = { saleToReturn = null }
             )
@@ -205,15 +204,6 @@ fun BillsScreen(
             )
         }
 
-        showAllAuditModal -> {
-            AuditLogFullScreen(
-                auditLogs = auditLogs,
-                allSales = sales,
-                allUsers = allUsers,
-                onBack = { showAllAuditModal = false }
-            )
-        }
-
         billDataToShare != null -> {
             BillShareScreen(
                 billData = billDataToShare!!,
@@ -223,19 +213,104 @@ fun BillsScreen(
             )
         }
 
-        selectedSaleForDetail != null -> {
+        else -> {
             BillDetailAndAuditScreen(
-                sale = selectedSaleForDetail,
+                sale = currentSale,
                 allSales = sales,
                 customerMap = customerMap,
                 productMap = productMap,
                 auditLogs = auditLogs,
                 currentUser = currentUser,
-                onBack = { selectedSaleIdForDetail = null },
+                onBack = onClose,
                 onShare = { billData -> billDataToShare = billData },
                 onEdit = { saleToEdit = it },
                 onReturn = { saleToReturn = it },
-                onCancel = { saleToCancel = it }
+                onCancel = { saleToCancel = it },
+                onOpenAllBills = onOpenAllBills
+            )
+        }
+    }
+
+    saleToCancel?.let { sale ->
+        val consolidatedNoMap = remember(sales) { buildConsolidatedBillNoMap(sales) }
+        val shortBillNo = consolidatedNoMap[sale.id] ?: sale.id.takeLast(4).uppercase()
+        val toastCancelMsg = tr("Bill deleted & stock restored", "बिल हटाया गया और स्टॉक वापस किया गया")
+
+        com.example.ui.components.DeleteBillConfirmationDialog(
+            billNumber = shortBillNo,
+            requireAdminPin = true,
+            onReturnItemsInstead = {
+                val target = sale
+                saleToCancel = null
+                saleToReturn = target
+            },
+            onConfirmDeleteBill = { reason, _ ->
+                val actor = currentUser ?: User(id = "admin", name = "Admin", role = Role.ADMINISTRATOR, pinHash = "")
+                scope.launch {
+                    repository.cancelSaleBill(
+                        saleId = sale.id,
+                        reason = reason.ifBlank { "Deleted by ${actor.name}" },
+                        performedBy = actor
+                    )
+                    saleToCancel = null
+                    Toast.makeText(context, toastCancelMsg, Toast.LENGTH_SHORT).show()
+                    onClose()
+                }
+            },
+            onDismiss = { saleToCancel = null }
+        )
+    }
+}
+
+@Composable
+fun BillsScreen(
+    repository: CattleFeedRepository,
+    currentUser: User?,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sales by repository.allSales.collectAsState(initial = emptyList())
+    val customers by repository.allCustomers.collectAsState(initial = emptyList())
+    val products by repository.allProducts.collectAsState(initial = emptyList())
+    val auditLogs by repository.allBillAuditLogs.collectAsState(initial = emptyList())
+    val allUsers by repository.allUsers.collectAsState(initial = emptyList())
+    val settings by repository.settingsFlow.collectAsState(initial = null)
+
+    val customerMap = remember(customers) { customers.associateBy { it.id } }
+    val productMap = remember(products) { products.associateBy { it.id } }
+
+    val filterKeys = remember { listOf("All", "Paid", "Udhari", "Returned") }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilter by remember { mutableStateOf("All") } // All, Paid, Udhari, Returned
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { filterKeys.size })
+    LaunchedEffect(pagerState.currentPage) {
+        selectedFilter = filterKeys[pagerState.currentPage]
+    }
+    var filterDateMillis by remember { mutableStateOf<Long?>(null) }
+    var selectedSaleIdForDetail by remember { mutableStateOf<String?>(null) }
+    var showAllAuditModal by remember { mutableStateOf(false) }
+
+    val selectedSaleForDetail = remember(sales, selectedSaleIdForDetail) {
+        selectedSaleIdForDetail?.let { id -> sales.find { it.id == id } }
+    }
+
+    when {
+        showAllAuditModal -> {
+            AuditLogFullScreen(
+                auditLogs = auditLogs,
+                allSales = sales,
+                allUsers = allUsers,
+                onBack = { showAllAuditModal = false }
+            )
+        }
+
+        selectedSaleForDetail != null -> {
+            UnifiedBillInspectorOverlay(
+                primarySale = selectedSaleForDetail,
+                repository = repository,
+                currentUser = currentUser,
+                onClose = { selectedSaleIdForDetail = null }
             )
         }
 
@@ -258,8 +333,8 @@ fun BillsScreen(
             buildConsolidatedBillNoMap(sales)
         }
 
-        val filteredSales = remember(groupedBills, searchQuery, selectedFilter, filterDateMillis, customerMap, productMap) {
-            groupedBills.filter { bill ->
+        fun filterBillsForKey(filterKey: String): List<GroupedSaleBill> {
+            return groupedBills.filter { bill ->
                 val customerName = customerMap[bill.customerId]?.name ?: "Walk-in"
                 val shortNo = bill.billNumber.ifBlank { bill.id.takeLast(4).uppercase() }
                 val matchesSearch = if (searchQuery.isBlank()) {
@@ -280,7 +355,7 @@ fun BillsScreen(
                 val isUdhari = bill.udhariAmount > BigDecimal.ZERO && !bill.isCancelled
                 val isPaid = bill.paymentStatus == PaymentStatus.PAID && !isReturned && !bill.isCancelled
 
-                val matchesFilter = when (selectedFilter) {
+                val matchesFilter = when (filterKey) {
                     "Paid" -> isPaid
                     "Udhari" -> isUdhari
                     "Returned" -> isReturned
@@ -295,6 +370,10 @@ fun BillsScreen(
 
                 matchesSearch && matchesFilter && matchesDate
             }
+        }
+
+        val filteredSales = remember(groupedBills, searchQuery, selectedFilter, filterDateMillis, customerMap, productMap) {
+            filterBillsForKey(selectedFilter)
         }
 
         val todayStart = remember { startOfDayMillis(System.currentTimeMillis()) }
@@ -320,17 +399,6 @@ fun BillsScreen(
                 filteredSales.any { it.date >= todayStart } -> "Today"
                 else -> "Today"
             }
-        }
-
-        val todayGroup = remember(filteredSales, todayStart) {
-            filteredSales.filter { it.date >= todayStart }
-        }
-        val yesterdayGroup = remember(filteredSales, todayStart, yesterdayStart) {
-            filteredSales.filter { it.date in yesterdayStart until todayStart }
-        }
-        val olderGroups = remember(filteredSales, yesterdayStart) {
-            filteredSales.filter { it.date < yesterdayStart }
-                .groupBy { dayFormat.format(Date(it.date)).uppercase(Locale.getDefault()) }
         }
 
         Column(
@@ -451,10 +519,13 @@ fun BillsScreen(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                filterOptions.forEach { (key, label) ->
-                    val isSelected = selectedFilter == key
+                filterOptions.forEachIndexed { pageIndex, (key, label) ->
+                    val isSelected = pagerState.currentPage == pageIndex
                     Surface(
-                        onClick = { selectedFilter = key },
+                        onClick = {
+                            selectedFilter = key
+                            scope.launch { pagerState.animateScrollToPage(pageIndex) }
+                        },
                         shape = RoundedCornerShape(50),
                         color = if (isSelected) BillsGreen else BillsChipIdleBg,
                         modifier = Modifier
@@ -544,58 +615,52 @@ fun BillsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (filteredSales.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    if (searchQuery.isNotBlank()) {
-                        com.example.ui.components.NoSearchResultsStateCard(
-                            query = searchQuery,
-                            onClearSearch = { searchQuery = "" }
-                        )
-                    } else {
-                        com.example.ui.components.EmptyBillsTodayStateCard(
-                            onNewBill = onBack
-                        )
-                    }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { pageIndex ->
+                val pageFilterKey = filterKeys[pageIndex]
+                val pageSales = remember(groupedBills, searchQuery, pageFilterKey, filterDateMillis, customerMap, productMap) {
+                    filterBillsForKey(pageFilterKey)
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(top = 4.dp, bottom = 28.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(todayGroup, key = { it.id }) { bill ->
-                        val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
-                        val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
-                        BillSummaryCard(
-                            bill = bill,
-                            shortBillNo = shortNo,
-                            customer = customerMap[bill.customerId],
-                            product = productMap[bill.primarySale.productId],
-                            timeFormatted = timeFormat.format(Date(bill.date)),
-                            isEdited = isEdited,
-                            onClick = { selectedSaleIdForDetail = bill.id }
-                        )
-                    }
+                val pageTodayGroup = remember(pageSales, todayStart) {
+                    pageSales.filter { it.date >= todayStart }
+                }
+                val pageYesterdayGroup = remember(pageSales, todayStart, yesterdayStart) {
+                    pageSales.filter { it.date in yesterdayStart until todayStart }
+                }
+                val pageOlderGroups = remember(pageSales, yesterdayStart) {
+                    pageSales.filter { it.date < yesterdayStart }
+                        .groupBy { dayFormat.format(Date(it.date)).uppercase(Locale.getDefault()) }
+                }
 
-                    if (yesterdayGroup.isNotEmpty()) {
-                        item(key = "header_yesterday") {
-                            Text(
-                                text = tr("YESTERDAY", "कल"),
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.8.sp,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
+                if (pageSales.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        if (searchQuery.isNotBlank()) {
+                            com.example.ui.components.NoSearchResultsStateCard(
+                                query = searchQuery,
+                                onClearSearch = { searchQuery = "" }
+                            )
+                        } else {
+                            com.example.ui.components.EmptyBillsTodayStateCard(
+                                onNewBill = onBack
                             )
                         }
-                        items(yesterdayGroup, key = { it.id }) { bill ->
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(top = 4.dp, bottom = 28.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(pageTodayGroup, key = { it.id }) { bill ->
                             val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
                             val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
                             BillSummaryCard(
@@ -608,35 +673,61 @@ fun BillsScreen(
                                 onClick = { selectedSaleIdForDetail = bill.id }
                             )
                         }
-                    }
 
-                    olderGroups.forEach { (dateHeader, salesInDate) ->
-                        item(key = "header_$dateHeader") {
-                            Text(
-                                text = if (todayGroup.isEmpty() && yesterdayGroup.isEmpty() && olderGroups.keys.first() == dateHeader) {
-                                    tr("YESTERDAY", "पिछले बिल")
-                                } else {
-                                    dateHeader
-                                },
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.8.sp,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
-                            )
+                        if (pageYesterdayGroup.isNotEmpty()) {
+                            item(key = "header_yesterday") {
+                                Text(
+                                    text = tr("YESTERDAY", "कल"),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextSecondary,
+                                    letterSpacing = 0.8.sp,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
+                                )
+                            }
+                            items(pageYesterdayGroup, key = { it.id }) { bill ->
+                                val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                                val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                                BillSummaryCard(
+                                    bill = bill,
+                                    shortBillNo = shortNo,
+                                    customer = customerMap[bill.customerId],
+                                    product = productMap[bill.primarySale.productId],
+                                    timeFormatted = timeFormat.format(Date(bill.date)),
+                                    isEdited = isEdited,
+                                    onClick = { selectedSaleIdForDetail = bill.id }
+                                )
+                            }
                         }
-                        items(salesInDate, key = { it.id }) { bill ->
-                            val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
-                            val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
-                            BillSummaryCard(
-                                bill = bill,
-                                shortBillNo = shortNo,
-                                customer = customerMap[bill.customerId],
-                                product = productMap[bill.primarySale.productId],
-                                timeFormatted = timeFormat.format(Date(bill.date)),
-                                isEdited = isEdited,
-                                onClick = { selectedSaleIdForDetail = bill.id }
-                            )
+
+                        pageOlderGroups.forEach { (dateHeader, salesInDate) ->
+                            item(key = "header_$dateHeader") {
+                                Text(
+                                    text = if (pageTodayGroup.isEmpty() && pageYesterdayGroup.isEmpty() && pageOlderGroups.keys.first() == dateHeader) {
+                                        tr("YESTERDAY", "पिछले बिल")
+                                    } else {
+                                        dateHeader
+                                    },
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextSecondary,
+                                    letterSpacing = 0.8.sp,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
+                                )
+                            }
+                            items(salesInDate, key = { it.id }) { bill ->
+                                val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                                val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                                BillSummaryCard(
+                                    bill = bill,
+                                    shortBillNo = shortNo,
+                                    customer = customerMap[bill.customerId],
+                                    product = productMap[bill.primarySale.productId],
+                                    timeFormatted = timeFormat.format(Date(bill.date)),
+                                    isEdited = isEdited,
+                                    onClick = { selectedSaleIdForDetail = bill.id }
+                                )
+                            }
                         }
                     }
                 }
@@ -644,41 +735,10 @@ fun BillsScreen(
         }
         }
     }
-
-    // Delete Bill Confirmation Dialog (Page 12 of KhataWise – Onboarding & states.pdf)
-    saleToCancel?.let { sale ->
-        val consolidatedNoMap = remember(sales) { buildConsolidatedBillNoMap(sales) }
-        val shortBillNo = consolidatedNoMap[sale.id] ?: sale.id.takeLast(4).uppercase()
-        val toastCancelMsg = tr("Bill deleted & stock restored", "बिल हटाया गया और स्टॉक वापस किया गया")
-
-        com.example.ui.components.DeleteBillConfirmationDialog(
-            billNumber = shortBillNo,
-            requireAdminPin = true,
-            onReturnItemsInstead = {
-                val target = sale
-                saleToCancel = null
-                saleToReturn = target
-            },
-            onConfirmDeleteBill = { reason, _ ->
-                val actor = currentUser ?: User(id = "admin", name = "Admin", role = Role.ADMINISTRATOR, pinHash = "")
-                scope.launch {
-                    repository.cancelSaleBill(
-                        saleId = sale.id,
-                        reason = reason.ifBlank { "Deleted by ${actor.name}" },
-                        performedBy = actor
-                    )
-                    saleToCancel = null
-                    selectedSaleIdForDetail = null
-                    Toast.makeText(context, toastCancelMsg, Toast.LENGTH_SHORT).show()
-                }
-            },
-            onDismiss = { saleToCancel = null }
-        )
-    }
 }
 
 @Composable
-private fun BillSummaryCard(
+fun BillSummaryCard(
     bill: GroupedSaleBill,
     shortBillNo: String,
     customer: Customer?,
@@ -806,7 +866,8 @@ private fun BillDetailAndAuditScreen(
     onShare: (BillData) -> Unit,
     onEdit: (SaleEntry) -> Unit,
     onReturn: (SaleEntry) -> Unit,
-    onCancel: (SaleEntry) -> Unit
+    onCancel: (SaleEntry) -> Unit,
+    onOpenAllBills: (() -> Unit)? = null
 ) {
     BackHandler { onBack() }
 
@@ -993,6 +1054,28 @@ private fun BillDetailAndAuditScreen(
                     fontSize = 13.5.sp,
                     color = FlatTextSecondary
                 )
+            }
+
+            if (onOpenAllBills != null) {
+                Surface(
+                    onClick = {
+                        onBack()
+                        onOpenAllBills()
+                    },
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .testTag("bill_detail_open_all_bills_btn"),
+                    shape = RoundedCornerShape(12.dp),
+                    color = BillsGreenSoft
+                ) {
+                    Text(
+                        text = tr("All Bills →", "सभी बिल →"),
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BillsGreen,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
             }
 
             if (!isCancelled) {

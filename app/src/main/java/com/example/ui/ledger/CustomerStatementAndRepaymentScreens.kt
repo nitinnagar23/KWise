@@ -1712,8 +1712,17 @@ fun CollectUdhariScreen(
                             contentAlignment = Alignment.CenterStart,
                             modifier = Modifier.padding(horizontal = 14.dp)
                         ) {
+                            val calNow = Calendar.getInstance()
+                            val calSel = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
+                            val isToday = calNow.get(Calendar.YEAR) == calSel.get(Calendar.YEAR) &&
+                                calNow.get(Calendar.DAY_OF_YEAR) == calSel.get(Calendar.DAY_OF_YEAR)
+                            val displayDateStr = if (isToday) {
+                                "Today, ${dateLabelFmt.format(Date(selectedDateMillis))}"
+                            } else {
+                                SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(selectedDateMillis))
+                            }
                             Text(
-                                text = "Today, ${dateLabelFmt.format(Date(selectedDateMillis))}",
+                                text = displayDateStr,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = KhataNavyText

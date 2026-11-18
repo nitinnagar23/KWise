@@ -1,10 +1,17 @@
 package com.example.ui.ledger
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import com.example.ui.bills.BillSummaryCard
+import com.example.ui.bills.UnifiedBillInspectorOverlay
+import com.example.model.buildConsolidatedBillNoMap
+import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.CGreenPrimary
 import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import java.util.Calendar
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -149,7 +156,8 @@ fun LedgerScreen(
     repository: CattleFeedRepository,
     currentUser: User?,
     onCustomerClick: (String) -> Unit,
-    onNavigateToNewBill: () -> Unit = {}
+    onNavigateToNewBill: () -> Unit = {},
+    onNavigateToBills: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -158,6 +166,7 @@ fun LedgerScreen(
     val sales by repository.allSales.collectAsState(initial = emptyList())
     val payments by repository.allPayments.collectAsState(initial = emptyList())
     val products by repository.allProducts.collectAsState(initial = emptyList())
+    val auditLogs by repository.allBillAuditLogs.collectAsState(initial = emptyList())
     val settings by repository.settingsFlow.collectAsState(initial = null)
 
     val canViewCustomerFull = can(currentUser?.role, Permission.VIEW_CUSTOMER_FULL)
@@ -169,6 +178,18 @@ fun LedgerScreen(
     var showAddCustomerDialog by remember { mutableStateOf(false) }
     var showImportCustomersFlow by remember { mutableStateOf(false) }
     var showRecordPaymentDialog by remember { mutableStateOf(false) }
+    var selectedSaleForInspector by remember { mutableStateOf<SaleEntry?>(null) }
+
+    if (selectedSaleForInspector != null) {
+        UnifiedBillInspectorOverlay(
+            primarySale = selectedSaleForInspector!!,
+            repository = repository,
+            currentUser = currentUser,
+            onClose = { selectedSaleForInspector = null },
+            onOpenAllBills = onNavigateToBills
+        )
+        return
+    }
 
     if (showAddCustomerDialog) {
         AddOrEditCustomerScreen(
@@ -215,18 +236,13 @@ fun LedgerScreen(
         pageCount = { maxTabs }
     )
 
-    LaunchedEffect(selectedTab) {
-        val target = selectedTab.coerceIn(0, maxTabs - 1)
-        if (pagerState.currentPage != target) {
-            pagerState.scrollToPage(target)
-        }
-    }
-
-    LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
-        if (!pagerState.isScrollInProgress && selectedTab != pagerState.currentPage) {
+    LaunchedEffect(pagerState.currentPage) {
+        if (selectedTab != pagerState.currentPage) {
             selectedTab = pagerState.currentPage
         }
     }
+
+    val activeTab = pagerState.currentPage.coerceIn(0, maxTabs - 1)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -236,13 +252,13 @@ fun LedgerScreen(
         ) {
             // Header Tabs: Customers, Sales Ledger, and (for Admin/Manager) Repayments
             TabRow(
-                selectedTabIndex = selectedTab,
+                selectedTabIndex = activeTab,
                 containerColor = FlatDarkNav,
                 contentColor = FlatTextPrimary,
                 indicator = { tabPositions ->
-                    if (selectedTab < tabPositions.size) {
+                    if (activeTab < tabPositions.size) {
                         TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            modifier = Modifier.tabIndicatorOffset(tabPositions[activeTab]),
                             color = LedgerBrandGreen,
                             height = 2.5.dp
                         )
@@ -253,8 +269,11 @@ fun LedgerScreen(
                 }
             ) {
                 Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
+                    selected = activeTab == 0,
+                    onClick = {
+                        selectedTab = 0
+                        scope.launch { pagerState.animateScrollToPage(0) }
+                    },
                     text = {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -262,9 +281,9 @@ fun LedgerScreen(
                         ) {
                             Text(
                                 text = tr("Customers", "ग्राहक"),
-                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.SemiBold,
+                                fontWeight = if (activeTab == 0) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 14.sp,
-                                color = if (selectedTab == 0) LedgerBrandGreen else FlatTextSecondary,
+                                color = if (activeTab == 0) LedgerBrandGreen else FlatTextSecondary,
                                 maxLines = 1
                             )
                             Surface(
@@ -286,28 +305,34 @@ fun LedgerScreen(
                     }
                 )
                 Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
+                    selected = activeTab == 1,
+                    onClick = {
+                        selectedTab = 1
+                        scope.launch { pagerState.animateScrollToPage(1) }
+                    },
                     text = {
                         Text(
                             text = tr("Sales ledger", "बिक्री खाता"),
-                            fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.SemiBold,
+                            fontWeight = if (activeTab == 1) FontWeight.Bold else FontWeight.SemiBold,
                             fontSize = 14.sp,
-                            color = if (selectedTab == 1) LedgerBrandGreen else FlatTextSecondary,
+                            color = if (activeTab == 1) LedgerBrandGreen else FlatTextSecondary,
                             maxLines = 1
                         )
                     }
                 )
                 if (canAccessCollections) {
                     Tab(
-                        selected = selectedTab == 2,
-                        onClick = { selectedTab = 2 },
+                        selected = activeTab == 2,
+                        onClick = {
+                            selectedTab = 2
+                            scope.launch { pagerState.animateScrollToPage(2) }
+                        },
                         text = {
                             Text(
                                 text = tr("Repayments", "वसूली"),
-                                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.SemiBold,
+                                fontWeight = if (activeTab == 2) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 14.sp,
-                                color = if (selectedTab == 2) LedgerBrandGreen else FlatTextSecondary,
+                                color = if (activeTab == 2) LedgerBrandGreen else FlatTextSecondary,
                                 maxLines = 1
                             )
                         }
@@ -336,7 +361,12 @@ fun LedgerScreen(
                         sales = sales,
                         products = products,
                         customers = customers,
-                        canViewCustomerFull = canViewCustomerFull
+                        editedSaleIds = remember(auditLogs) {
+                            auditLogs.filter { it.actionType == "EDIT" }.map { it.saleId }.toSet()
+                        },
+                        canViewCustomerFull = canViewCustomerFull,
+                        onInspectBill = { sale -> selectedSaleForInspector = sale },
+                        onNavigateToBills = onNavigateToBills
                     )
                     2 -> if (canAccessCollections) {
                         PaymentsTab(
@@ -349,10 +379,10 @@ fun LedgerScreen(
         }
 
         // Extended Floating Action Button ("+ Customer", "+ New Bill", or "+ Repayment")
-        if (selectedTab == 0 || selectedTab == 1 || (selectedTab == 2 && canAccessCollections)) {
+        if (activeTab == 0 || activeTab == 1 || (activeTab == 2 && canAccessCollections)) {
             Surface(
                 onClick = {
-                    when (selectedTab) {
+                    when (activeTab) {
                         0 -> showAddCustomerDialog = true
                         1 -> onNavigateToNewBill()
                         2 -> if (canAccessCollections) showRecordPaymentDialog = true
@@ -375,7 +405,7 @@ fun LedgerScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = when (selectedTab) {
+                        contentDescription = when (activeTab) {
                             0 -> "Add Customer"
                             1 -> "New Bill"
                             else -> "Record Repayment"
@@ -384,7 +414,7 @@ fun LedgerScreen(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = when (selectedTab) {
+                        text = when (activeTab) {
                             0 -> tr("Customer", "ग्राहक")
                             1 -> tr("New bill", "नया बिल")
                             else -> tr("Repayment", "वसूली")
@@ -417,14 +447,15 @@ fun LedgerScreen(
             customers = customers,
             currentUserId = currentUser?.id ?: "",
             onDismiss = { showRecordPaymentDialog = false },
-            onPaymentRecorded = { custId, amt, note ->
+            onPaymentRecorded = { custId, amt, note, customDateMillis ->
                 scope.launch {
                     repository.recordPayment(
                         customerId = custId,
                         amount = amt,
                         note = note,
                         collectedByUserId = currentUser?.id ?: "",
-                        actorRole = currentUser?.role
+                        actorRole = currentUser?.role,
+                        customDateMillis = customDateMillis
                     )
                     showRecordPaymentDialog = false
                 }
@@ -702,31 +733,6 @@ fun CustomersTab(
                         )
                     }
                 }
-
-                // "Import" pill
-                Surface(
-                    onClick = onImportCustomers,
-                    shape = RoundedCornerShape(50),
-                    color = FlatDarkInput,
-                    border = BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier
-                        .height(36.dp)
-                        .testTag("ledger_import_customers_btn")
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    ) {
-                        Text(
-                            text = tr("Import", "इम्पोर्ट"),
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = LedgerBrandGreen,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -998,18 +1004,22 @@ fun SalesTab(
     sales: List<SaleEntry>,
     products: List<Product>,
     customers: List<Customer>,
-    canViewCustomerFull: Boolean = true
+    editedSaleIds: Set<String> = emptySet(),
+    canViewCustomerFull: Boolean = true,
+    onInspectBill: (SaleEntry) -> Unit = {},
+    onNavigateToBills: () -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf(SalesFilterType.ALL) }
     var searchQuery by remember { mutableStateOf("") }
-    var selectedBillForDetail by remember { mutableStateOf<com.example.model.GroupedSaleBill?>(null) }
 
+    val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
     val productMap = remember(products) { products.associateBy { it.id } }
     val customerMap = remember(customers) { customers.associateBy { it.id } }
+    val billNoMap = remember(sales) { buildConsolidatedBillNoMap(sales) }
 
     val allGroupedBills = remember(sales) {
         com.example.model.groupSalesIntoBills(
-            sales.filter { !it.isDeleted && it.billStatus != "CANCELLED" },
+            sales.filter { !it.isDeleted },
             descending = true
         )
     }
@@ -1019,10 +1029,11 @@ fun SalesTab(
             .filter { bill ->
                 val matchesFilter = when (selectedFilter) {
                     SalesFilterType.ALL -> true
-                    SalesFilterType.UDHARI -> bill.udhariAmount > BigDecimal.ZERO
-                    SalesFilterType.PAID -> bill.udhariAmount <= BigDecimal.ZERO
+                    SalesFilterType.UDHARI -> bill.udhariAmount > BigDecimal.ZERO && !bill.isCancelled
+                    SalesFilterType.PAID -> bill.udhariAmount <= BigDecimal.ZERO && !bill.isCancelled
                 }
                 val custName = customerMap[bill.customerId]?.name.orEmpty()
+                val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
                 val q = searchQuery.trim()
                 val anyProdMatches = bill.items.any { item ->
                     productMap[item.productId]?.feedName.orEmpty().contains(q, ignoreCase = true)
@@ -1030,6 +1041,7 @@ fun SalesTab(
                 val matchesSearch = q.isEmpty() ||
                     custName.contains(q, ignoreCase = true) ||
                     anyProdMatches ||
+                    shortNo.contains(q, ignoreCase = true) ||
                     bill.billNumber.contains(q, ignoreCase = true)
                 matchesFilter && matchesSearch
             }
@@ -1040,51 +1052,77 @@ fun SalesTab(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Filter Pills: All | Udhari | Paid
+        // Filter Pills: All | Udhari | Paid + "All Bills →" link
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val filterOptions = listOf(
-                SalesFilterType.ALL to tr("All", "सभी"),
-                SalesFilterType.UDHARI to tr("Udhari", "उधारी"),
-                SalesFilterType.PAID to tr("Paid", "भुगतान")
-            )
-            filterOptions.forEach { (type, label) ->
-                val isSelected = selectedFilter == type
-                val chipBg by animateColorAsState(
-                    targetValue = if (isSelected) LedgerBrandGreen else FlatDarkCard,
-                    animationSpec = tween(durationMillis = 150),
-                    label = "salesFilterBg_${type.name}"
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val filterOptions = listOf(
+                    SalesFilterType.ALL to tr("All", "सभी"),
+                    SalesFilterType.UDHARI to tr("Udhari", "उधारी"),
+                    SalesFilterType.PAID to tr("Paid", "भुगतान")
                 )
-                val chipFg by animateColorAsState(
-                    targetValue = if (isSelected) Color.White else FlatTextPrimary,
-                    animationSpec = tween(durationMillis = 150),
-                    label = "salesFilterFg_${type.name}"
-                )
-                Surface(
-                    onClick = { selectedFilter = type },
-                    shape = RoundedCornerShape(50),
-                    color = chipBg,
-                    border = if (isSelected) null else BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier
-                        .defaultMinSize(minHeight = 36.dp)
-                        .testTag("sales_filter_${type.name.lowercase()}")
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
+                filterOptions.forEach { (type, label) ->
+                    val isSelected = selectedFilter == type
+                    val chipBg by animateColorAsState(
+                        targetValue = if (isSelected) LedgerBrandGreen else FlatDarkCard,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "salesFilterBg_${type.name}"
+                    )
+                    val chipFg by animateColorAsState(
+                        targetValue = if (isSelected) Color.White else FlatTextPrimary,
+                        animationSpec = tween(durationMillis = 150),
+                        label = "salesFilterFg_${type.name}"
+                    )
+                    Surface(
+                        onClick = { selectedFilter = type },
+                        shape = RoundedCornerShape(50),
+                        color = chipBg,
+                        border = if (isSelected) null else BorderStroke(1.dp, FlatDarkBorder),
+                        modifier = Modifier
+                            .defaultMinSize(minHeight = 36.dp)
+                            .testTag("sales_filter_${type.name.lowercase()}")
                     ) {
-                        Text(
-                            text = label,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = chipFg
-                        )
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = chipFg
+                            )
+                        }
                     }
+                }
+            }
+
+            Surface(
+                onClick = onNavigateToBills,
+                shape = RoundedCornerShape(50),
+                color = LedgerMintBg,
+                modifier = Modifier
+                    .defaultMinSize(minHeight = 34.dp)
+                    .testTag("sales_ledger_open_all_bills_btn")
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = tr("All Bills →", "सभी बिल →"),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LedgerBrandGreen
+                    )
                 }
             }
         }
@@ -1095,7 +1133,7 @@ fun SalesTab(
             onValueChange = { searchQuery = it },
             placeholder = {
                 Text(
-                    text = tr("Search customer, item...", "ग्राहक या सामान खोजें..."),
+                    text = tr("Search bill no., customer, item...", "बिल नंबर, ग्राहक या सामान खोजें..."),
                     color = FlatTextMuted,
                     fontSize = 14.sp
                 )
@@ -1159,207 +1197,23 @@ fun SalesTab(
                         )
                     }
                     items(sectionBills, key = { it.id }) { bill ->
-                        val primarySale = bill.primarySale
-                        val prod = productMap[primarySale.productId]
-                        val cust = customerMap[bill.customerId]
-                        val itemQtyDescription = remember(bill, prod) {
-                            val feedName = prod?.feedName ?: "Feed"
-                            val firstDesc = if (prod != null && !prod.isLooseOnly && prod.kgPerBag > BigDecimal.ZERO &&
-                                primarySale.quantityKg >= prod.kgPerBag &&
-                                primarySale.quantityKg.remainder(prod.kgPerBag).compareTo(BigDecimal.ZERO) == 0
-                            ) {
-                                val bags = primarySale.quantityKg.divideToIntegralValue(prod.kgPerBag).toInt()
-                                "$feedName × $bags ${if (bags == 1) "bag" else "bags"}"
-                            } else {
-                                "$feedName · ${CurrencyUtils.formatWeightKg(primarySale.quantityKg)}"
-                            }
-                            if (bill.extraItemCount > 0) "$firstDesc +${bill.extraItemCount}" else firstDesc
-                        }
-
-                        val hasUdhari = bill.udhariAmount > BigDecimal.ZERO
-                        val isPartialUdhari = hasUdhari && bill.paidAmount > BigDecimal.ZERO
-                        val (pillText, pillBg, pillColor) = when {
-                            isPartialUdhari -> Triple(tr("Part udhari", "आंशिक उधारी"), LedgerCrimsonSoftBg, LedgerCrimson)
-                            hasUdhari -> Triple(tr("Udhari", "उधारी"), LedgerCrimsonSoftBg, LedgerCrimson)
-                            else -> Triple(tr("Paid · Cash", "भुगतान · नकद"), LedgerMintBg, LedgerBrandGreen)
-                        }
-
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(18.dp))
-                                .clickable { selectedBillForDetail = bill }
-                                .testTag("sale_ledger_item_${bill.id}"),
-                            shape = RoundedCornerShape(18.dp),
-                            color = FlatDarkCard,
-                            border = BorderStroke(1.dp, FlatDarkBorder)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // Left: Customer Name + Item & Quantity
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = cust?.name ?: tr("Walk-in Cash", "नकद ग्राहक"),
-                                        fontSize = 15.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = FlatTextPrimary,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Text(
-                                        text = itemQtyDescription,
-                                        fontSize = 13.sp,
-                                        color = FlatTextSecondary,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                // Right: Total Amount + Concentric Status Pill
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = CurrencyUtils.formatInr(bill.totalSalePrice),
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            fontFeatureSettings = "tnum"
-                                        ),
-                                        color = FlatTextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = pillBg
-                                    ) {
-                                        Text(
-                                            text = pillText,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = pillColor,
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                                        )
-                                    }
-                                }
-                            }
+                        val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                        val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                        Box(modifier = Modifier.testTag("sale_ledger_item_${bill.id}")) {
+                            BillSummaryCard(
+                                bill = bill,
+                                shortBillNo = shortNo,
+                                customer = customerMap[bill.customerId],
+                                product = productMap[bill.primarySale.productId],
+                                timeFormatted = timeFormat.format(Date(bill.date)),
+                                isEdited = isEdited,
+                                onClick = { onInspectBill(bill.primarySale) }
+                            )
                         }
                     }
                 }
             }
         }
-    }
-
-    // Bill Detail Dialog (Shows Bill No. and all items when clicked on a bill card)
-    selectedBillForDetail?.let { bill ->
-        val cust = customerMap[bill.customerId]
-        val billNo = "#${bill.billNumber.ifBlank { bill.id.takeLast(4).uppercase(Locale.getDefault()) }}"
-        val dateTimeFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
-
-        AlertDialog(
-            onDismissRequest = { selectedBillForDetail = null },
-            containerColor = FlatDarkCard,
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "${tr("Bill", "बिल")} $billNo",
-                        fontWeight = FontWeight.Bold,
-                        color = FlatTextPrimary
-                    )
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = if (bill.udhariAmount > BigDecimal.ZERO) LedgerCrimsonSoftBg else LedgerMintBg
-                    ) {
-                        Text(
-                            text = if (bill.udhariAmount > BigDecimal.ZERO) {
-                                if (bill.paidAmount > BigDecimal.ZERO) tr("Part udhari", "आंशिक उधारी") else tr("Udhari", "उधारी")
-                            } else {
-                                tr("Paid", "भुगतान")
-                            },
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (bill.udhariAmount > BigDecimal.ZERO) LedgerCrimson else LedgerBrandGreen,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(tr("Bill Number:", "बिल नंबर:"), color = FlatTextSecondary, fontSize = 13.sp)
-                        Text(billNo, fontWeight = FontWeight.Bold, color = FlatTextPrimary, fontSize = 13.5.sp)
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(tr("Customer:", "ग्राहक:"), color = FlatTextSecondary, fontSize = 13.sp)
-                        Text(cust?.name ?: tr("Walk-in Cash", "नकद ग्राहक"), fontWeight = FontWeight.Bold, color = FlatTextPrimary, fontSize = 13.5.sp)
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(tr("Date & Time:", "दिनांक और समय:"), color = FlatTextSecondary, fontSize = 13.sp)
-                        Text(dateTimeFormat.format(Date(bill.date)), color = FlatTextPrimary, fontSize = 13.sp)
-                    }
-                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(FlatDarkBorder))
-                    bill.items.forEach { itemSale ->
-                        val p = productMap[itemSale.productId]
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = p?.feedName ?: "Feed",
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = FlatTextPrimary,
-                                    fontSize = 13.5.sp
-                                )
-                                Text(
-                                    text = "${CurrencyUtils.formatWeightKg(itemSale.quantityKg)} @ ${CurrencyUtils.formatInr(itemSale.pricePerKgAtSale, true)}/kg",
-                                    color = FlatTextSecondary,
-                                    fontSize = 12.sp
-                                )
-                            }
-                            Text(
-                                text = CurrencyUtils.formatInr(itemSale.totalSalePrice),
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextPrimary,
-                                fontSize = 13.5.sp
-                            )
-                        }
-                    }
-                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(FlatDarkBorder))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(tr("Total Bill:", "कुल बिल:"), color = FlatTextSecondary, fontWeight = FontWeight.SemiBold)
-                        Text(CurrencyUtils.formatInr(bill.totalSalePrice), fontWeight = FontWeight.Bold, color = FlatTextPrimary)
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(tr("Paid Amount:", "जमा राशि:"), color = FlatTextSecondary)
-                        Text(CurrencyUtils.formatInr(bill.paidAmount), fontWeight = FontWeight.Bold, color = LedgerBrandGreen)
-                    }
-                    if (canViewCustomerFull) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(tr("Udhari Due:", "बाक़ी उधारी:"), color = FlatTextSecondary)
-                            Text(CurrencyUtils.formatInr(bill.udhariAmount), fontWeight = FontWeight.Bold, color = if (bill.udhariAmount > BigDecimal.ZERO) LedgerCrimson else FlatTextSecondary)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { selectedBillForDetail = null }) {
-                    Text(tr("Close", "बंद करें"), color = LedgerBrandGreen, fontWeight = FontWeight.Bold)
-                }
-            }
-        )
     }
 }
 
@@ -1713,13 +1567,19 @@ fun RecordPaymentDialog(
     customers: List<Customer>,
     currentUserId: String,
     onDismiss: () -> Unit,
-    onPaymentRecorded: (customerId: String, amount: BigDecimal, note: String) -> Unit
+    onPaymentRecorded: (customerId: String, amount: BigDecimal, note: String, customDateMillis: Long?) -> Unit
 ) {
+    val context = LocalContext.current
     var selectedCustomer by remember { mutableStateOf(if (customers.size == 1) customers.first() else null) }
     var amountInput by remember { mutableStateOf("") }
     var noteInput by remember { mutableStateOf("") }
+    var customDateMillis by remember { mutableStateOf<Long?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var customerDropdownExpanded by remember { mutableStateOf(false) }
+
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+    val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val activeTimestamp = customDateMillis ?: System.currentTimeMillis()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1820,6 +1680,100 @@ fun RecordPaymentDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = tr("Payment Timing", "भुगतान का समय"),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FlatTextSecondary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (customDateMillis != null) {
+                        Text(
+                            text = tr("Reset to Now", "अभी का समय"),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = LedgerBrandGreen,
+                            modifier = Modifier.clickable { customDateMillis = null }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                            DatePickerDialog(
+                                pickerThemedContext(context),
+                                { _, y, m, d ->
+                                    val updated = Calendar.getInstance().apply {
+                                        timeInMillis = activeTimestamp
+                                        set(Calendar.YEAR, y)
+                                        set(Calendar.MONTH, m)
+                                        set(Calendar.DAY_OF_MONTH, d)
+                                    }
+                                    customDateMillis = updated.timeInMillis
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("repayment_custom_date_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, FlatDarkInputBorder)
+                    ) {
+                        Text(
+                            text = dateFormatter.format(Date(activeTimestamp)),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = FlatTextPrimary
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                            TimePickerDialog(
+                                pickerThemedContext(context),
+                                { _, hourOfDay, minute ->
+                                    val updated = Calendar.getInstance().apply {
+                                        timeInMillis = activeTimestamp
+                                        set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                        set(Calendar.MINUTE, minute)
+                                        set(Calendar.SECOND, 0)
+                                    }
+                                    customDateMillis = updated.timeInMillis
+                                },
+                                cal.get(Calendar.HOUR_OF_DAY),
+                                cal.get(Calendar.MINUTE),
+                                false
+                            ).show()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("repayment_custom_time_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, FlatDarkInputBorder)
+                    ) {
+                        Text(
+                            text = timeFormatter.format(Date(activeTimestamp)),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = FlatTextPrimary
+                        )
+                    }
+                }
+
                 if (error != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
@@ -1842,7 +1796,7 @@ fun RecordPaymentDialog(
                         error = "Please enter a valid amount"
                         return@Button
                     }
-                    onPaymentRecorded(selectedCustomer!!.id, amt, noteInput.trim())
+                    onPaymentRecorded(selectedCustomer!!.id, amt, noteInput.trim(), customDateMillis)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = CGreenPrimary,

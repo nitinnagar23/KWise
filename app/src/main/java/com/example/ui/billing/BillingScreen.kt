@@ -4,6 +4,7 @@ import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.kw
 import android.app.Activity
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import android.speech.RecognizerIntent
 import android.widget.Toast
@@ -41,6 +42,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CalendarToday
@@ -174,6 +176,7 @@ fun BillingScreen(
     val paidAmountStr by billingViewModel.paidAmountStr.collectAsState()
     val selectedPayMode by billingViewModel.selectedPayMode.collectAsState()
     val promiseDateMillis by billingViewModel.promiseDateMillis.collectAsState()
+    val customBillDateMillis by billingViewModel.customBillDateMillis.collectAsState()
     val generatedBill by billingViewModel.generatedBill.collectAsState()
     val cartLines = billingViewModel.cartLines
 
@@ -326,7 +329,8 @@ fun BillingScreen(
                     items = validItems,
                     paidAmount = if (isWalkInCashCustomer) grandTotal else paidAmount,
                     soldByUserId = currentUser?.id ?: "admin",
-                    performedByRole = currentUser?.role
+                    performedByRole = currentUser?.role,
+                    customDateMillis = customBillDateMillis
                 )
                 billingViewModel.setGeneratedBill(billData)
             } catch (e: Exception) {
@@ -933,6 +937,150 @@ fun BillingScreen(
                                                 selectedLabelColor = BillBrandGreen
                                             ),
                                             modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(color = FlatDarkBorder)
+
+                        // BILL TIMING (DATE & TIME) SELECTOR
+                        val billDateFmt = remember { SimpleDateFormat("d MMM yyyy", Locale.getDefault()) }
+                        val billTimeFmt = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+                        val effectiveMillis = customBillDateMillis ?: System.currentTimeMillis()
+                        val isCustomTiming = customBillDateMillis != null
+
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = tr("BILL TIMING (DATE & TIME)", "बिल का समय और तारीख"),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextSecondary,
+                                    letterSpacing = 0.5.sp
+                                )
+                                if (isCustomTiming) {
+                                    Surface(
+                                        onClick = { billingViewModel.setCustomBillDateMillis(null) },
+                                        shape = RoundedCornerShape(50),
+                                        color = BillMintPillBg,
+                                        modifier = Modifier.testTag("bill_timing_reset_now_btn")
+                                    ) {
+                                        Text(
+                                            text = tr("Reset to Now", "अभी का समय"),
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = BillBrandGreen,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        text = tr("Now · Current time", "अभी का समय"),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = BillBrandGreen
+                                    )
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Surface(
+                                    onClick = {
+                                        val cal = Calendar.getInstance().apply { timeInMillis = effectiveMillis }
+                                        DatePickerDialog(
+                                            pickerThemedContext(context),
+                                            { _, year, month, dayOfMonth ->
+                                                cal.set(Calendar.YEAR, year)
+                                                cal.set(Calendar.MONTH, month)
+                                                cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                                                billingViewModel.setCustomBillDateMillis(cal.timeInMillis)
+                                            },
+                                            cal.get(Calendar.YEAR),
+                                            cal.get(Calendar.MONTH),
+                                            cal.get(Calendar.DAY_OF_MONTH)
+                                        ).show()
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isCustomTiming) BillMintPillBg else FlatDarkBg,
+                                    border = BorderStroke(1.dp, if (isCustomTiming) BillBrandGreen else FlatDarkBorder),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .testTag("bill_custom_date_btn")
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarToday,
+                                            contentDescription = null,
+                                            tint = BillBrandGreen,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = billDateFmt.format(Date(effectiveMillis)),
+                                            fontSize = 13.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = FlatTextPrimary
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    onClick = {
+                                        val cal = Calendar.getInstance().apply { timeInMillis = effectiveMillis }
+                                        TimePickerDialog(
+                                            pickerThemedContext(context),
+                                            { _, hourOfDay, minute ->
+                                                cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                                cal.set(Calendar.MINUTE, minute)
+                                                cal.set(Calendar.SECOND, 0)
+                                                billingViewModel.setCustomBillDateMillis(cal.timeInMillis)
+                                            },
+                                            cal.get(Calendar.HOUR_OF_DAY),
+                                            cal.get(Calendar.MINUTE),
+                                            false
+                                        ).show()
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isCustomTiming) BillMintPillBg else FlatDarkBg,
+                                    border = BorderStroke(1.dp, if (isCustomTiming) BillBrandGreen else FlatDarkBorder),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp)
+                                        .testTag("bill_custom_time_btn")
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = BillBrandGreen,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = billTimeFmt.format(Date(effectiveMillis)),
+                                            fontSize = 13.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = FlatTextPrimary
                                         )
                                     }
                                 }

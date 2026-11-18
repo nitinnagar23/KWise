@@ -670,26 +670,21 @@ fun StaffManagementScreen(
                 pageCount = { tabs.size }
             )
 
-            LaunchedEffect(selectedTab) {
-                val target = selectedTab.coerceIn(0, tabs.size - 1)
-                if (pagerState.currentPage != target) {
-                    pagerState.scrollToPage(target)
-                }
-            }
-
-            LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
-                if (!pagerState.isScrollInProgress && selectedTab != pagerState.currentPage) {
+            LaunchedEffect(pagerState.currentPage) {
+                if (selectedTab != pagerState.currentPage) {
                     selectedTab = pagerState.currentPage
                 }
             }
 
+            val activeTab = pagerState.currentPage.coerceIn(0, tabs.size - 1)
+
             TabRow(
-                selectedTabIndex = selectedTab,
+                selectedTabIndex = activeTab,
                 containerColor = FlatDarkBg,
                 contentColor = StaffBrandGreen,
                 indicator = { tabPositions ->
                     TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[activeTab]),
                         color = StaffBrandGreen,
                         height = 2.5.dp
                     )
@@ -704,10 +699,13 @@ fun StaffManagementScreen(
                 }
             ) {
                 tabs.forEach { (idx, title, tag) ->
-                    val isSelected = selectedTab == idx
+                    val isSelected = activeTab == idx
                     Tab(
                         selected = isSelected,
-                        onClick = { selectedTab = idx },
+                        onClick = {
+                            selectedTab = idx
+                            scope.launch { pagerState.animateScrollToPage(idx) }
+                        },
                         modifier = Modifier.testTag(tag),
                         text = {
                             Text(

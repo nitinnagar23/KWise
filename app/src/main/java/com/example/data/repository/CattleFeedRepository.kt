@@ -345,6 +345,20 @@ class CattleFeedRepository(private val context: Context) {
         triggerAutoSync()
     }
 
+    private suspend fun canonicalizeVillageName(rawVillage: String): String {
+        val normalized = rawVillage.trim().replace(Regex("\\s+"), " ")
+        if (normalized.isEmpty()) return ""
+        val existingVillages = try {
+            customerDao.getDistinctSavedVillages()
+        } catch (_: Throwable) {
+            emptyList()
+        }
+        val matched = existingVillages
+            .map { it.trim().replace(Regex("\\s+"), " ") }
+            .firstOrNull { it.equals(normalized, ignoreCase = true) }
+        return matched ?: normalized
+    }
+
     suspend fun saveCustomer(
         customer: Customer,
         actor: User? = null,
@@ -373,7 +387,14 @@ class CattleFeedRepository(private val context: Context) {
                 }
             }
         }
-        customerDao.insertCustomer(customer.copy(syncStatus = SyncStatus.PENDING, updatedAt = System.currentTimeMillis()))
+        val canonicalVillage = canonicalizeVillageName(customer.village)
+        customerDao.insertCustomer(
+            customer.copy(
+                village = canonicalVillage,
+                syncStatus = SyncStatus.PENDING,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
         if (existing != null && existing.creditLimit.compareTo(customer.creditLimit) != 0) {
             val actorUser = currentActor ?: User(id = "admin", name = "Admin", role = role ?: Role.ADMINISTRATOR, pinHash = "")
             billAuditLogDao.insertAuditLog(
@@ -413,10 +434,11 @@ class CattleFeedRepository(private val context: Context) {
                 throw SecurityException("Only Admin can modify customer credit limit")
             }
         }
+        val canonicalVillage = canonicalizeVillageName(village)
         val updated = existing.copy(
             name = name.trim(),
             phone = phone.trim(),
-            village = village.trim(),
+            village = canonicalVillage,
             creditLimit = if (creditLimit != null && (currentActor == null || can(currentActor.role, Permission.EDIT_CREDIT_LIMIT))) {
                 creditLimit
             } else {
@@ -468,7 +490,8 @@ class CattleFeedRepository(private val context: Context) {
         customLoosePricePerKg: BigDecimal? = null,
         paidAmount: BigDecimal,
         soldByUserId: String,
-        paymentMode: String = "CASH"
+        paymentMode: String = "CASH",
+        customDateMillis: Long? = null
     ): Pair<SaleEntry, BillData> = withContext(Dispatchers.IO) {
         val result = recordMultiItemSale(
             customerId = customerId,
@@ -483,7 +506,8 @@ class CattleFeedRepository(private val context: Context) {
             ),
             paidAmount = paidAmount,
             soldByUserId = soldByUserId,
-            paymentMode = paymentMode
+            paymentMode = paymentMode,
+            customDateMillis = customDateMillis
         )
         Pair(result.first.first(), result.second)
     }
@@ -503,7 +527,8 @@ class CattleFeedRepository(private val context: Context) {
         paidAmount: BigDecimal,
         soldByUserId: String,
         performedByRole: Role? = null,
-        paymentMode: String = "CASH"
+        paymentMode: String = "CASH",
+        customDateMillis: Long? = null
     ): Pair<List<SaleEntry>, BillData> = withContext(Dispatchers.IO) {
         if (items.isEmpty()) {
             throw IllegalArgumentException("At least one item is required to record a sale")
@@ -523,7 +548,7 @@ class CattleFeedRepository(private val context: Context) {
         val result = db.withTransaction {
             val customer = customerDao.getCustomerById(customerId)
                 ?: throw IllegalArgumentException("Customer not found")
-            val now = System.currentTimeMillis()
+            val now = customDateMillis ?: System.currentTimeMillis()
 
             // First pass: validate inputs and aggregate requested weight per product across all lines
             val requestedKgByProduct = mutableMapOf<String, BigDecimal>()
@@ -760,7 +785,8 @@ class CattleFeedRepository(private val context: Context) {
         collectedByUserId: String,
         actorRole: Role? = null,
         performedByRole: Role? = null,
-        paymentMode: String = "CASH"
+        paymentMode: String = "CASH",
+        customDateMillis: Long? = null
     ): PaymentEntry = withContext(Dispatchers.IO) {
         if (amount <= BigDecimal.ZERO) {
             throw IllegalArgumentException("Payment amount must be greater than zero")
@@ -778,7 +804,7 @@ class CattleFeedRepository(private val context: Context) {
         }
         val payment = PaymentEntry(
             id = UUID.randomUUID().toString(),
-            date = System.currentTimeMillis(),
+            date = customDateMillis ?: System.currentTimeMillis(),
             customerId = customerId,
             amount = amount.setScale(CurrencyUtils.MONEY_SCALE, CurrencyUtils.ROUNDING),
             note = note.trim(),

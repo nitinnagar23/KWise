@@ -1,5 +1,11 @@
 package com.example.ui.ledger
 
+import com.example.ui.bills.BillSummaryCard
+import com.example.ui.bills.UnifiedBillInspectorOverlay
+import com.example.model.SaleEntry
+import com.example.model.buildConsolidatedBillNoMap
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.KwSurface
 import com.example.ui.theme.kw
@@ -119,7 +125,8 @@ fun CustomerDetailScreen(
     repository: CattleFeedRepository,
     currentUser: User?,
     onBack: () -> Unit,
-    onNavigateToNewBill: () -> Unit = {}
+    onNavigateToNewBill: () -> Unit = {},
+    onNavigateToBills: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -129,6 +136,7 @@ fun CustomerDetailScreen(
     val sales by repository.allSales.collectAsState(initial = emptyList())
     val payments by repository.allPayments.collectAsState(initial = emptyList())
     val products by repository.allProducts.collectAsState(initial = emptyList())
+    val auditLogs by repository.allBillAuditLogs.collectAsState(initial = emptyList())
     val settings by repository.settingsFlow.collectAsState(initial = null)
 
     if (customer == null) {
@@ -158,6 +166,10 @@ fun CustomerDetailScreen(
         payments.filter { it.customerId == customerId && !it.isDeleted }
             .sortedByDescending { it.date }
     }
+    val editedSaleIds = remember(auditLogs) {
+        auditLogs.filter { it.actionType == "EDIT" }.map { it.saleId }.toSet()
+    }
+    val billNoMap = remember(sales) { buildConsolidatedBillNoMap(sales) }
 
     val ledgerRowsAsc = remember(customer, customerSales, customerPayments) {
         buildCustomerLedgerRows(customer, customerSales, customerPayments)
@@ -179,6 +191,18 @@ fun CustomerDetailScreen(
     var activeOverlay by remember { mutableStateOf(CustomerDetailOverlay.NONE) }
     var lastRecordedReceipt by remember { mutableStateOf<RecordedRepaymentReceipt?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var selectedSaleForInspector by remember { mutableStateOf<SaleEntry?>(null) }
+
+    if (selectedSaleForInspector != null) {
+        UnifiedBillInspectorOverlay(
+            primarySale = selectedSaleForInspector!!,
+            repository = repository,
+            currentUser = currentUser,
+            onClose = { selectedSaleForInspector = null },
+            onOpenAllBills = onNavigateToBills
+        )
+        return
+    }
 
     val shopName = settings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store"
     val shopUpi = settings?.shopUpiId.orEmpty()
@@ -210,7 +234,8 @@ fun CustomerDetailScreen(
                             note = taggedNote,
                             paymentMode = mode,
                             collectedByUserId = currentUser?.id.orEmpty(),
-                            actorRole = currentUser?.role
+                            actorRole = currentUser?.role,
+                            customDateMillis = dateMillis
                         )
                         if (newPromiseMillis != null || afterBal.compareTo(BigDecimal.ZERO) <= 0) {
                             val updatedCust = customer.copy(
@@ -849,10 +874,27 @@ fun CustomerDetailScreen(
                     }
 
                     item {
+                        var horizontalDragAccum by remember { mutableStateOf(0f) }
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
+                                .padding(horizontal = 16.dp)
+                                .pointerInput(selectedTab) {
+                                    detectHorizontalDragGestures(
+                                        onDragStart = { horizontalDragAccum = 0f },
+                                        onHorizontalDrag = { _, dragAmount ->
+                                            horizontalDragAccum += dragAmount
+                                        },
+                                        onDragEnd = {
+                                            if (horizontalDragAccum < -90f && selectedTab < 2) {
+                                                selectedTab += 1
+                                            } else if (horizontalDragAccum > 90f && selectedTab > 0) {
+                                                selectedTab -= 1
+                                            }
+                                            horizontalDragAccum = 0f
+                                        }
+                                    )
+                                },
                             shape = RoundedCornerShape(18.dp),
                             color = KwSurface,
                             border = BorderStroke(1.dp, DetailCardBorder)
@@ -873,9 +915,20 @@ fun CustomerDetailScreen(
                             } else {
                                 Column(modifier = Modifier.fillMaxWidth()) {
                                     ledgerRowsDesc.forEachIndexed { idx, row ->
+                                        val linkedSale = remember(row.id, customerSales) {
+                                            if (row.isBill) {
+                                                val saleId = row.id.removePrefix("sale_")
+                                                customerSales.find { it.id == saleId }
+                                            } else null
+                                        }
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
+                                                .then(
+                                                    if (linkedSale != null) {
+                                                        Modifier.clickable { selectedSaleForInspector = linkedSale }
+                                                    } else Modifier
+                                                )
                                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
@@ -938,27 +991,45 @@ fun CustomerDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            listOf(
-                                CustomerBillFilter.ALL to tr("All", "सभी"),
-                                CustomerBillFilter.UDHARI to tr("Udhari", "उधारी"),
-                                CustomerBillFilter.PAID to tr("Paid", "भुगतान किया")
-                            ).forEach { (filter, label) ->
-                                val selected = selectedBillFilter == filter
-                                Surface(
-                                    onClick = { selectedBillFilter = filter },
-                                    shape = RoundedCornerShape(50),
-                                    color = if (selected) DetailBrandGreen else kw(0xFFEEF2F6)
-                                ) {
-                                    Text(
-                                        text = label,
-                                        fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (selected) Color.White else DetailNavyText,
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                                    )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf(
+                                    CustomerBillFilter.ALL to tr("All", "सभी"),
+                                    CustomerBillFilter.UDHARI to tr("Udhari", "उधारी"),
+                                    CustomerBillFilter.PAID to tr("Paid", "भुगतान किया")
+                                ).forEach { (filter, label) ->
+                                    val selected = selectedBillFilter == filter
+                                    Surface(
+                                        onClick = { selectedBillFilter = filter },
+                                        shape = RoundedCornerShape(50),
+                                        color = if (selected) DetailBrandGreen else kw(0xFFEEF2F6)
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 13.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (selected) Color.White else DetailNavyText,
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                        )
+                                    }
                                 }
+                            }
+
+                            Surface(
+                                onClick = onNavigateToBills,
+                                shape = RoundedCornerShape(50),
+                                color = DetailSoftGreen,
+                                modifier = Modifier.testTag("customer_bills_open_all_bills_btn")
+                            ) {
+                                Text(
+                                    text = tr("All Bills →", "सभी बिल →"),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DetailBrandGreen,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+                                )
                             }
                         }
                     }
@@ -991,96 +1062,24 @@ fun CustomerDetailScreen(
                         }
                     } else {
                         items(filteredBills, key = { it.id }) { bill ->
-                            val primarySale = bill.primarySale
-                            val prod = productMap[primarySale.productId]
-                            val billCode = bill.billNumber.ifBlank {
-                                bill.id.filter { it.isDigit() }.takeLast(4).padStart(4, '0').ifBlank { "1042" }
+                            val shortNo = bill.billNumber.ifBlank {
+                                billNoMap[bill.id] ?: bill.id.filter { it.isDigit() }.takeLast(4).padStart(4, '0').ifBlank { "1042" }
                             }
-                            val due = bill.udhariAmount
-                            val qtySummary = remember(bill, prod) {
-                                val feedName = prod?.feedName ?: "Cattle Feed"
-                                val bagKg = prod?.kgPerBag ?: BigDecimal("50")
-                                val firstLine = if (bagKg > BigDecimal.ONE && primarySale.quantityKg >= bagKg) {
-                                    val bags = primarySale.quantityKg.divide(bagKg, 0, RoundingMode.DOWN).toInt()
-                                    "$feedName × $bags ${if (bags == 1) "bag" else "bags"}"
-                                } else {
-                                    "$feedName · ${CurrencyUtils.formatWeightKg(primarySale.quantityKg)}"
-                                }
-                                if (bill.extraItemCount > 0) "$firstLine +${bill.extraItemCount}" else firstLine
-                            }
-
-                            val (badgeText, badgeBg, badgeFg) = when {
-                                due > BigDecimal.ZERO && bill.paidAmount > BigDecimal.ZERO ->
-                                    Triple("Part udhari · due ${CurrencyUtils.formatInr(due)}", DetailSoftRed, DetailCrimsonRed)
-                                due > BigDecimal.ZERO && customer.totalUdhari <= BigDecimal.ZERO -> {
-                                    val settledDate = customerPayments.firstOrNull()?.date ?: bill.date
-                                    Triple("Settled ${shortDateFmt.format(Date(settledDate))}", DetailSoftGreen, DetailBrandGreen)
-                                }
-                                due > BigDecimal.ZERO ->
-                                    Triple("Udhari", DetailSoftRed, DetailCrimsonRed)
-                                else ->
-                                    Triple("Paid · Cash", DetailSoftGreen, DetailBrandGreen)
-                            }
-
-                            Surface(
+                            val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 5.dp),
-                                shape = RoundedCornerShape(18.dp),
-                                color = KwSurface,
-                                border = BorderStroke(1.dp, DetailCardBorder)
+                                    .padding(horizontal = 16.dp, vertical = 4.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "Bill #$billCode",
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = DetailNavyText
-                                        )
-                                        Spacer(modifier = Modifier.height(3.dp))
-                                        Text(
-                                            text = "${shortDateFmt.format(Date(bill.date))} · $qtySummary",
-                                            fontSize = 13.5.sp,
-                                            color = DetailSubtleText
-                                        )
-                                    }
-
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = CurrencyUtils.formatInr(bill.totalSalePrice),
-                                            fontSize = 16.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = DetailNavyText
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Surface(
-                                            shape = RoundedCornerShape(50),
-                                            color = badgeBg
-                                        ) {
-                                            Text(
-                                                text = badgeText,
-                                                fontSize = 11.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = badgeFg,
-                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                            )
-                                        }
-                                    }
-
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                        contentDescription = null,
-                                        tint = DetailSubtleText,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                                BillSummaryCard(
+                                    bill = bill,
+                                    shortBillNo = shortNo,
+                                    customer = customer,
+                                    product = productMap[bill.primarySale.productId],
+                                    timeFormatted = dateTimeFmt.format(Date(bill.date)),
+                                    isEdited = isEdited,
+                                    onClick = { selectedSaleForInspector = bill.primarySale }
+                                )
                             }
                         }
                     }

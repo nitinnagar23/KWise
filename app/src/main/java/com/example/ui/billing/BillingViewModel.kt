@@ -34,6 +34,9 @@ class BillingViewModel : ViewModel() {
     private val _promiseDateMillis = MutableStateFlow<Long?>(null)
     val promiseDateMillis: StateFlow<Long?> = _promiseDateMillis.asStateFlow()
 
+    private val _customBillDateMillis = MutableStateFlow<Long?>(null)
+    val customBillDateMillis: StateFlow<Long?> = _customBillDateMillis.asStateFlow()
+
     private val _generatedBill = MutableStateFlow<BillData?>(null)
     val generatedBill: StateFlow<BillData?> = _generatedBill.asStateFlow()
 
@@ -77,6 +80,10 @@ class BillingViewModel : ViewModel() {
 
     fun setPromiseDate(millis: Long?) {
         _promiseDateMillis.value = millis
+    }
+
+    fun setCustomBillDateMillis(millis: Long?) {
+        _customBillDateMillis.value = millis
     }
 
     fun setGeneratedBill(bill: BillData?) {

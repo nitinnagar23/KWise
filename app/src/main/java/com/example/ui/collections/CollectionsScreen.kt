@@ -116,20 +116,14 @@ fun CollectionsScreen(
         pageCount = { allTabs.size }
     )
 
-    LaunchedEffect(selectedTab) {
-        if (pagerState.currentPage != selectedTab.ordinal) {
-            pagerState.scrollToPage(selectedTab.ordinal)
+    LaunchedEffect(pagerState.currentPage) {
+        val targetTab = allTabs.getOrElse(pagerState.currentPage) { CollectionsTab.PENDING }
+        if (selectedTab != targetTab) {
+            selectedTab = targetTab
         }
     }
 
-    LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
-        if (!pagerState.isScrollInProgress) {
-            val targetTab = allTabs.getOrElse(pagerState.currentPage) { CollectionsTab.PENDING }
-            if (selectedTab != targetTab) {
-                selectedTab = targetTab
-            }
-        }
-    }
+    val activeTab = allTabs.getOrElse(pagerState.currentPage) { selectedTab }
 
     // ONLY mask total Overdue, total due today, and total coming up (and NO eye icon)
     var maskTotalOverdue by remember { mutableStateOf(true) }
@@ -369,8 +363,11 @@ fun CollectionsScreen(
                     count = pendingCustomers.size,
                     badgeBg = ColCrimsonSoftBg,
                     badgeTextColor = ColCrimson,
-                    selected = selectedTab == CollectionsTab.PENDING,
-                    onClick = { selectedTab = CollectionsTab.PENDING },
+                    selected = activeTab == CollectionsTab.PENDING,
+                    onClick = {
+                        selectedTab = CollectionsTab.PENDING
+                        scope.launch { pagerState.animateScrollToPage(CollectionsTab.PENDING.ordinal) }
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .testTag("tab_pending")
@@ -380,8 +377,11 @@ fun CollectionsScreen(
                     count = todayCustomers.size,
                     badgeBg = ColAmberSoftBg,
                     badgeTextColor = ColAmberText,
-                    selected = selectedTab == CollectionsTab.TODAY,
-                    onClick = { selectedTab = CollectionsTab.TODAY },
+                    selected = activeTab == CollectionsTab.TODAY,
+                    onClick = {
+                        selectedTab = CollectionsTab.TODAY
+                        scope.launch { pagerState.animateScrollToPage(CollectionsTab.TODAY.ordinal) }
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .testTag("tab_today")
@@ -391,8 +391,11 @@ fun CollectionsScreen(
                     count = upcomingCustomers.size,
                     badgeBg = ColBlueSoftBg,
                     badgeTextColor = ColBlueBadgeText,
-                    selected = selectedTab == CollectionsTab.UPCOMING,
-                    onClick = { selectedTab = CollectionsTab.UPCOMING },
+                    selected = activeTab == CollectionsTab.UPCOMING,
+                    onClick = {
+                        selectedTab = CollectionsTab.UPCOMING
+                        scope.launch { pagerState.animateScrollToPage(CollectionsTab.UPCOMING.ordinal) }
+                    },
                     modifier = Modifier
                         .weight(1.1f)
                         .testTag("tab_upcoming")
@@ -402,8 +405,11 @@ fun CollectionsScreen(
                     count = noDateCustomers.size,
                     badgeBg = ColNoDatePillBg,
                     badgeTextColor = ColNoDatePillText,
-                    selected = selectedTab == CollectionsTab.NO_DATE,
-                    onClick = { selectedTab = CollectionsTab.NO_DATE },
+                    selected = activeTab == CollectionsTab.NO_DATE,
+                    onClick = {
+                        selectedTab = CollectionsTab.NO_DATE
+                        scope.launch { pagerState.animateScrollToPage(CollectionsTab.NO_DATE.ordinal) }
+                    },
                     modifier = Modifier
                         .weight(1.05f)
                         .testTag("tab_no_date")
@@ -757,7 +763,7 @@ fun CollectionsScreen(
         CollectPaymentDialog(
             customer = target,
             onDismiss = { customerForCollect = null },
-            onConfirmCollect = { amount, note ->
+            onConfirmCollect = { amount, note, customDateMillis ->
                 scope.launch {
                     try {
                         repository.recordPayment(
@@ -765,7 +771,8 @@ fun CollectionsScreen(
                             amount = amount,
                             note = note,
                             collectedByUserId = currentUser?.id ?: "",
-                            actorRole = currentUser?.role
+                            actorRole = currentUser?.role,
+                            customDateMillis = customDateMillis
                         )
                         Toast.makeText(context, paymentCollectedMsg, Toast.LENGTH_SHORT).show()
                     } catch (_: Throwable) {}

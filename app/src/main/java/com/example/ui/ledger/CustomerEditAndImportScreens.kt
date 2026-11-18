@@ -1,5 +1,6 @@
 package com.example.ui.ledger
 
+import java.util.Locale
 import com.example.ui.theme.KwSurface
 import com.example.ui.theme.kw
 import android.Manifest
@@ -174,6 +175,49 @@ fun AddOrEditCustomerScreen(
 
     val currentUdhari = existingCustomer?.totalUdhari ?: BigDecimal.ZERO
     val phoneTags = listOf("Self", "Father", "Home", "Work", "WhatsApp", "Other")
+
+    val existingCustomersFlow = remember {
+        try {
+            com.example.PashuAaharApp.instance.repository.allCustomers
+        } catch (_: Throwable) {
+            kotlinx.coroutines.flow.flowOf(emptyList())
+        }
+    }
+    val existingCustomers by androidx.compose.runtime.produceState(
+        initialValue = emptyList<Customer>(),
+        key1 = existingCustomersFlow
+    ) {
+        existingCustomersFlow.collect { value = it }
+    }
+
+    val savedVillageEntries = remember(existingCustomers) {
+        val grouped = LinkedHashMap<String, Pair<String, Int>>()
+        existingCustomers
+            .filter { !it.isDeleted }
+            .forEach { c ->
+                val clean = c.village.trim().replace(Regex("\\s+"), " ")
+                if (clean.isNotBlank() && !clean.equals("Walk-in", ignoreCase = true) && !clean.equals("Counter Cash", ignoreCase = true)) {
+                    val key = clean.lowercase(Locale.ROOT)
+                    val prev = grouped[key]
+                    if (prev == null) {
+                        grouped[key] = clean to 1
+                    } else {
+                        grouped[key] = prev.first to (prev.second + 1)
+                    }
+                }
+            }
+        grouped.values.sortedByDescending { it.second }
+    }
+
+    val displayedSavedVillages = remember(savedVillageEntries, villageInput) {
+        val query = villageInput.trim()
+        if (query.isEmpty() || savedVillageEntries.any { it.first.equals(query, ignoreCase = true) }) {
+            savedVillageEntries
+        } else {
+            val matching = savedVillageEntries.filter { it.first.contains(query, ignoreCase = true) }
+            if (matching.isNotEmpty()) matching else savedVillageEntries
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -430,14 +474,83 @@ fun AddOrEditCustomerScreen(
                 }
             }
 
-            // VILLAGE / AREA
-            CustomerFormInputSection(
-                label = tr("VILLAGE / AREA", "गाँव / क्षेत्र"),
-                value = villageInput,
-                onValueChange = { villageInput = it },
-                placeholder = tr("Enter village or area", "गाँव या क्षेत्र लिखें"),
-                testTag = "customer_form_village_input"
-            )
+            // VILLAGE / AREA (with Currently Saved Villages chips to prevent duplicate names)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CustomerFormInputSection(
+                    label = tr("VILLAGE / AREA", "गाँव / क्षेत्र"),
+                    value = villageInput,
+                    onValueChange = { villageInput = it },
+                    placeholder = tr("Enter or select saved village / area", "गाँव या क्षेत्र लिखें या नीचे से चुनें"),
+                    testTag = "customer_form_village_input"
+                )
+
+                if (displayedSavedVillages.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = tr(
+                                "CURRENTLY SAVED VILLAGES (TAP TO AVOID DUPLICATE SPELLINGS)",
+                                "सेव किए गए गाँव (डुप्लीकेट नाम से बचने के लिए टैप करें)"
+                            ),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = EditSubtleText,
+                            letterSpacing = 0.4.sp
+                        )
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("customer_form_saved_villages_row"),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            displayedSavedVillages.forEach { (savedVillage, count) ->
+                                val isSelected = villageInput.trim().replace(Regex("\\s+"), " ")
+                                    .equals(savedVillage, ignoreCase = true)
+                                Surface(
+                                    onClick = { villageInput = savedVillage },
+                                    shape = RoundedCornerShape(50),
+                                    color = if (isSelected) EditBrandGreen else KwSurface,
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) EditBrandGreen else EditCardBorder
+                                    ),
+                                    modifier = Modifier.testTag(
+                                        "saved_village_chip_${savedVillage.lowercase(Locale.ROOT).replace(" ", "_")}"
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = savedVillage,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) Color.White else EditNavyText
+                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = if (isSelected) Color.White.copy(alpha = 0.22f) else kw(0xFFEEF2F6)
+                                        ) {
+                                            Text(
+                                                text = count.toString(),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color.White else EditSubtleText,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // Credit Limit Card
             Surface(
@@ -777,6 +890,10 @@ fun AddOrEditCustomerScreen(
                             promisedAmount = existingCustomer?.getPromisedAmount(),
                             openingUdhari = existingCustomer?.getOpeningUdhari() ?: BigDecimal.ZERO
                         )
+                        val normalizedInputVillage = villageInput.trim().replace(Regex("\\s+"), " ")
+                        val canonicalVillage = savedVillageEntries
+                            .firstOrNull { it.first.equals(normalizedInputVillage, ignoreCase = true) }
+                            ?.first ?: normalizedInputVillage
                         val saved = (existingCustomer ?: Customer(
                             id = UUID.randomUUID().toString(),
                             name = trimmedName,
@@ -786,7 +903,7 @@ fun AddOrEditCustomerScreen(
                             fatherName = fatherNameInput.trim(),
                             phone = primaryPhone,
                             phonesJson = metaJson,
-                            village = villageInput.trim(),
+                            village = canonicalVillage,
                             creditLimit = effectiveLimit,
                             updatedAt = System.currentTimeMillis(),
                             syncStatus = SyncStatus.PENDING

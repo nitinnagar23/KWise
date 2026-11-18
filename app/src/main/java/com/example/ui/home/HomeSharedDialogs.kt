@@ -299,25 +299,32 @@ fun QuickAddCustomerDialog(
         existingCustomersFlow.collect { value = it }
     }
 
-    val allVillageHints = remember(existingCustomers) {
-        val fromCustomers = existingCustomers
-            .map { it.village.trim() }
-            .filter { it.isNotBlank() }
-            .groupingBy { it }
-            .eachCount()
-            .entries
-            .sortedByDescending { it.value }
-            .map { it.key }
-        fromCustomers.distinctBy { it.lowercase() }
+    val savedVillageEntries = remember(existingCustomers) {
+        val grouped = LinkedHashMap<String, Pair<String, Int>>()
+        existingCustomers
+            .filter { !it.isDeleted }
+            .forEach { c ->
+                val clean = c.village.trim().replace(Regex("\\s+"), " ")
+                if (clean.isNotBlank() && !clean.equals("Walk-in", ignoreCase = true) && !clean.equals("Counter Cash", ignoreCase = true)) {
+                    val key = clean.lowercase()
+                    val prev = grouped[key]
+                    if (prev == null) {
+                        grouped[key] = clean to 1
+                    } else {
+                        grouped[key] = prev.first to (prev.second + 1)
+                    }
+                }
+            }
+        grouped.values.sortedByDescending { it.second }
     }
 
-    val filteredVillageHints = remember(allVillageHints, village) {
+    val filteredVillageHints = remember(savedVillageEntries, village) {
         val query = village.trim()
-        if (query.isEmpty() || allVillageHints.any { it.equals(query, ignoreCase = true) }) {
-            allVillageHints.take(8)
+        if (query.isEmpty() || savedVillageEntries.any { it.first.equals(query, ignoreCase = true) }) {
+            savedVillageEntries
         } else {
-            val matching = allVillageHints.filter { it.contains(query, ignoreCase = true) }
-            if (matching.isNotEmpty()) matching.take(8) else allVillageHints.take(6)
+            val matching = savedVillageEntries.filter { it.first.contains(query, ignoreCase = true) }
+            if (matching.isNotEmpty()) matching else savedVillageEntries
         }
     }
 
@@ -685,6 +692,15 @@ fun QuickAddCustomerDialog(
                         )
 
                         if (filteredVillageHints.isNotEmpty()) {
+                            Text(
+                                text = tr(
+                                    "Currently saved villages (tap to avoid duplicate names):",
+                                    "सेव किए गए गाँव (डुप्लीकेट नाम से बचने के लिए चुनें):"
+                                ),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = FlatTextSecondary
+                            )
                             FlowRow(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -693,8 +709,9 @@ fun QuickAddCustomerDialog(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                filteredVillageHints.forEach { hintVillage ->
-                                    val isSelectedVillage = village.trim().equals(hintVillage, ignoreCase = true)
+                                filteredVillageHints.forEach { (hintVillage, count) ->
+                                    val isSelectedVillage = village.trim().replace(Regex("\\s+"), " ")
+                                        .equals(hintVillage, ignoreCase = true)
                                     Surface(
                                         onClick = { village = hintVillage },
                                         shape = RoundedCornerShape(50),
@@ -705,13 +722,24 @@ fun QuickAddCustomerDialog(
                                         ),
                                         modifier = Modifier.testTag("village_hint_${hintVillage.lowercase().replace(" ", "_")}")
                                     ) {
-                                        Text(
-                                            text = hintVillage,
-                                            fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = if (isSelectedVillage) Color.White else FlatTextPrimary,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                        )
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                        ) {
+                                            Text(
+                                                text = hintVillage,
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (isSelectedVillage) Color.White else FlatTextPrimary
+                                            )
+                                            Text(
+                                                text = "($count)",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelectedVillage) Color.White.copy(alpha = 0.85f) else FlatTextSecondary
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -789,13 +817,18 @@ fun QuickAddCustomerDialog(
                             val primaryPhone = validPhones.firstOrNull()?.number ?: ""
                             val serializedPhones = Customer.serializeTaggedPhones(validPhones)
 
+                            val normalizedVillage = village.trim().replace(Regex("\\s+"), " ")
+                            val canonicalVillage = savedVillageEntries
+                                .firstOrNull { it.first.equals(normalizedVillage, ignoreCase = true) }
+                                ?.first ?: normalizedVillage
+
                             onCustomerAdded(
                                 Customer(
                                     name = trimmedName,
                                     fatherName = fatherName.trim(),
                                     phone = primaryPhone,
                                     phonesJson = serializedPhones,
-                                    village = village.trim(),
+                                    village = canonicalVillage,
                                     creditLimit = limit,
                                     createdByUserId = currentUserId
                                 )

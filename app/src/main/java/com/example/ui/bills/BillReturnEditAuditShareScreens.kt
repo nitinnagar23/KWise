@@ -2711,36 +2711,8 @@ fun BillShareScreen(
     val context = LocalContext.current
     BackHandler { onBack() }
 
-    var selectedTab by remember { mutableIntStateOf(2) } // 0 = PDF, 1 = Image, 2 = Link (matches Page 6 default)
-    val shortToken = remember(billData.billNumber, billData.date) {
-        val hash = abs((billData.billNumber + billData.date.toString()).hashCode()).toString(36).take(6)
-        hash.padStart(6, 'X')
-    }
-    var isLinkRevoked by remember { mutableStateOf(false) }
-    var tokenSuffix by remember { mutableIntStateOf(0) }
-    val activeLink = remember(shortToken, tokenSuffix) {
-        val code = if (tokenSuffix == 0) "Xk9fQ2" else "${shortToken.take(4)}$tokenSuffix"
-        "khatawise.app/b/$code"
-    }
-
-    val expiryOptions = listOf("24 hours", "7 days", "30 days", "Never")
-    var selectedExpiry by remember { mutableStateOf("7 days") }
-
-    var allowPdfDownload by remember { mutableStateOf(true) }
-    var showPayByUpiButton by remember { mutableStateOf(true) }
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = PDF, 1 = Image
     var showOutstandingBalance by remember { mutableStateOf(false) }
-
-    val expiresSubtitle = remember(selectedExpiry) {
-        val cal = Calendar.getInstance()
-        when (selectedExpiry) {
-            "24 hours" -> cal.add(Calendar.HOUR_OF_DAY, 24)
-            "7 days" -> cal.add(Calendar.DAY_OF_YEAR, 7)
-            "30 days" -> cal.add(Calendar.DAY_OF_YEAR, 30)
-            else -> return@remember "Link never expires"
-        }
-        val fmt = SimpleDateFormat("EEE d MMM, h:mm a", Locale.getDefault())
-        "Expires ${fmt.format(cal.time)}"
-    }
 
     val switchColors = SwitchDefaults.colors(
         checkedThumbColor = Color.White,
@@ -2749,9 +2721,6 @@ fun BillShareScreen(
         uncheckedTrackColor = kw(0xFFD1D5DB),
         uncheckedBorderColor = Color.Transparent
     )
-
-    val copiedToast = tr("Bill link copied to clipboard", "बिल लिंक कॉपी हो गया")
-    val revokedToast = tr("Bill link revoked", "बिल लिंक निष्क्रिय किया गया")
 
     Column(
         modifier = Modifier
@@ -2793,11 +2762,7 @@ fun BillShareScreen(
                     color = BNavyText
                 )
                 Text(
-                    text = when (selectedTab) {
-                        0 -> "Share as PDF"
-                        1 -> "Share as image"
-                        else -> "Share as link"
-                    },
+                    text = if (selectedTab == 0) "Share as PDF" else "Share as image",
                     fontSize = 13.sp,
                     color = BSubtleText
                 )
@@ -2811,7 +2776,7 @@ fun BillShareScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Segmented Toggle: PDF | Image | Link
+            // Segmented Toggle: PDF | Image
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -2823,13 +2788,14 @@ fun BillShareScreen(
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    listOf(0 to "PDF", 1 to "Image", 2 to "Link").forEach { (idx, label) ->
+                    listOf(0 to "PDF", 1 to "Image").forEach { (idx, label) ->
                         val active = selectedTab == idx
                         Surface(
                             onClick = { selectedTab = idx },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(40.dp),
+                                .height(40.dp)
+                                .testTag("bill_share_tab_${label.lowercase(Locale.ROOT)}"),
                             shape = RoundedCornerShape(10.dp),
                             color = if (active) BBrandGreen else Color.Transparent
                         ) {
@@ -2846,120 +2812,7 @@ fun BillShareScreen(
                 }
             }
 
-            if (selectedTab == 2) {
-                // BILL LINK Card
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    color = KwSurface,
-                    border = BorderStroke(1.dp, BCardBorder)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "BILL LINK",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = BSubtleText,
-                            letterSpacing = 0.6.sp
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                color = BPageBg
-                            ) {
-                                Text(
-                                    text = if (isLinkRevoked) "Link revoked" else activeLink,
-                                    fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isLinkRevoked) BCrimsonRed else BNavyText,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
-                                )
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    if (isLinkRevoked) {
-                                        isLinkRevoked = false
-                                        tokenSuffix++
-                                    } else {
-                                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                        cm?.setPrimaryClip(ClipData.newPlainText("Bill Link", "https://$activeLink"))
-                                        Toast.makeText(context, copiedToast, Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.5.dp, BBrandGreen),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = BBrandGreen),
-                                modifier = Modifier.height(44.dp)
-                            ) {
-                                Text(
-                                    text = if (isLinkRevoked) "New link" else "Copy",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-
-                        Text(
-                            text = "Anyone with this link can view this bill. No login needed.",
-                            fontSize = 12.5.sp,
-                            color = BSubtleText
-                        )
-                    }
-                }
-
-                // LINK EXPIRES
-                Text(
-                    text = "LINK EXPIRES",
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BSubtleText,
-                    letterSpacing = 0.6.sp
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    expiryOptions.forEach { opt ->
-                        val active = selectedExpiry == opt
-                        Surface(
-                            onClick = { selectedExpiry = opt },
-                            shape = RoundedCornerShape(50),
-                            color = if (active) BBrandGreen else BChipIdleBg
-                        ) {
-                            Text(
-                                text = opt,
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (active) Color.White else BNavyText,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-                }
-
-                Text(
-                    text = expiresSubtitle,
-                    fontSize = 13.sp,
-                    color = BSubtleText
-                )
-            }
-
-            // Options Switches Card
+            // Options Switches Card (Show outstanding balance)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -2972,60 +2825,6 @@ fun BillShareScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Allow PDF download",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = BNavyText
-                            )
-                            Text(
-                                text = "Customer can save the bill",
-                                fontSize = 12.5.sp,
-                                color = BSubtleText
-                            )
-                        }
-                        Switch(
-                            checked = allowPdfDownload,
-                            onCheckedChange = { allowPdfDownload = it },
-                            colors = switchColors
-                        )
-                    }
-
-                    HorizontalDivider(color = kw(0xFFF1F5F9))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Show Pay by UPI button",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = BNavyText
-                            )
-                            Text(
-                                text = "Opens their UPI app for ${CurrencyUtils.formatInr(billData.udhariAmount)}",
-                                fontSize = 12.5.sp,
-                                color = BSubtleText
-                            )
-                        }
-                        Switch(
-                            checked = showPayByUpiButton,
-                            onCheckedChange = { showPayByUpiButton = it },
-                            colors = switchColors
-                        )
-                    }
-
-                    HorizontalDivider(color = kw(0xFFF1F5F9))
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -3113,98 +2912,6 @@ fun BillShareScreen(
                             color = BCrimsonRed
                         )
                     }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        if (showPayByUpiButton) {
-                            Button(
-                                onClick = {},
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = BBrandGreen,
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(44.dp)
-                            ) {
-                                Text(
-                                    text = "Pay ${CurrencyUtils.formatInr(billData.udhariAmount)}",
-                                    fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-
-                        if (allowPdfDownload) {
-                            OutlinedButton(
-                                onClick = {
-                                    shareBillAsPdfOrText(context, billData, shopName, shopUpiId, whatsappDirect = false)
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.5.dp, BBrandGreen),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = BBrandGreen),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(44.dp)
-                            ) {
-                                Text(
-                                    text = "Download PDF",
-                                    fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (selectedTab == 2) {
-                // Viewed status & Revoke link card
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    color = KwSurface,
-                    border = BorderStroke(1.dp, BCardBorder)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = if (isLinkRevoked) "Link revoked" else "Viewed 2 times",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = BNavyText
-                            )
-                            Text(
-                                text = if (isLinkRevoked) "Customers can no longer open this link" else "Last: Today, 6:10 PM",
-                                fontSize = 12.5.sp,
-                                color = BSubtleText
-                            )
-                        }
-
-                        Text(
-                            text = if (isLinkRevoked) "Restore link" else "Revoke link",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isLinkRevoked) BBrandGreen else BCrimsonRed,
-                            modifier = Modifier.clickable {
-                                isLinkRevoked = !isLinkRevoked
-                                if (isLinkRevoked) {
-                                    Toast.makeText(context, revokedToast, Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        )
-                    }
                 }
             }
 
@@ -3226,23 +2933,7 @@ fun BillShareScreen(
                     onClick = {
                         when (selectedTab) {
                             0 -> shareBillAsPdfOrText(context, billData, shopName, shopUpiId, whatsappDirect = true)
-                            1 -> BillGenerator.shareTextBill(context, billData)
-                            else -> {
-                                val msg = buildString {
-                                    append("*${shopName.ifBlank { "KhataWise Store" }}* — Bill #${billData.billNumber}\n")
-                                    append("Total: ${CurrencyUtils.formatInr(billData.subtotal)}\n")
-                                    append("Paid: ${CurrencyUtils.formatInr(billData.paidAmount)} · Due: ${CurrencyUtils.formatInr(billData.udhariAmount)}\n")
-                                    if (showOutstandingBalance) {
-                                        append("Total Udhari: ${CurrencyUtils.formatInr(billData.newTotalUdhari)}\n")
-                                    }
-                                    append("View bill: https://$activeLink")
-                                }
-                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, msg)
-                                }
-                                context.startActivity(Intent.createChooser(intent, "Send on WhatsApp"))
-                            }
+                            else -> BillGenerator.shareTextBill(context, billData)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(

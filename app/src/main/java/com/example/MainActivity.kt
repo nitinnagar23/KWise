@@ -314,57 +314,10 @@ class MainActivity : FragmentActivity() {
                                 }
                             }
                         ) { innerPadding ->
-                            val bottomRoutes = remember {
-                                listOf(
-                                    Screen.Home.route,
-                                    Screen.Ledger.route,
-                                    Screen.Estimate.route,
-                                    Screen.Settings.route
-                                )
-                            }
-                            var accumulatedHorizontalDrag by remember(currentRoute) { androidx.compose.runtime.mutableFloatStateOf(0f) }
-
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
-                                    .let { baseModifier ->
-                                        if (currentRoute in bottomRoutes) {
-                                            baseModifier.pointerInput(currentRoute) {
-                                                detectHorizontalDragGestures(
-                                                    onDragStart = { accumulatedHorizontalDrag = 0f },
-                                                    onHorizontalDrag = { _, dragAmount ->
-                                                        accumulatedHorizontalDrag += dragAmount
-                                                    },
-                                                    onDragEnd = {
-                                                        val thresholdPx = 110.dp.toPx()
-                                                        val currentIndex = bottomRoutes.indexOf(currentRoute)
-                                                        if (currentIndex != -1) {
-                                                            val targetIndex = when {
-                                                                accumulatedHorizontalDrag < -thresholdPx -> (currentIndex + 1).coerceAtMost(bottomRoutes.lastIndex)
-                                                                accumulatedHorizontalDrag > thresholdPx -> (currentIndex - 1).coerceAtLeast(0)
-                                                                else -> currentIndex
-                                                            }
-                                                            if (targetIndex != currentIndex) {
-                                                                val nextRoute = bottomRoutes[targetIndex]
-                                                                navController.navigate(nextRoute) {
-                                                                    popUpTo(navController.graph.findStartDestination().id) {
-                                                                        saveState = true
-                                                                    }
-                                                                    launchSingleTop = true
-                                                                    restoreState = true
-                                                                }
-                                                            }
-                                                        }
-                                                        accumulatedHorizontalDrag = 0f
-                                                    },
-                                                    onDragCancel = { accumulatedHorizontalDrag = 0f }
-                                                )
-                                            }
-                                        } else {
-                                            baseModifier
-                                        }
-                                    }
                             ) {
                                 NavHost(
                                     navController = navController,
@@ -416,6 +369,9 @@ class MainActivity : FragmentActivity() {
                                             },
                                             onNavigateToNewBill = {
                                                 navController.navigate(Screen.NewBill.route)
+                                            },
+                                            onNavigateToBills = {
+                                                navController.navigate(Screen.Bills.route)
                                             }
                                         )
                                     }
@@ -537,7 +493,8 @@ class MainActivity : FragmentActivity() {
                                             repository = repository,
                                             currentUser = activeUser,
                                             onBack = { navController.popBackStack() },
-                                            onNavigateToNewBill = { navController.navigate(Screen.NewBill.route) }
+                                            onNavigateToNewBill = { navController.navigate(Screen.NewBill.route) },
+                                            onNavigateToBills = { navController.navigate(Screen.Bills.route) }
                                         )
                                     }
                                 }
