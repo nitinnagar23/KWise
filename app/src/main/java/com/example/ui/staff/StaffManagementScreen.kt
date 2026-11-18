@@ -35,6 +35,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -640,8 +641,11 @@ fun StaffManagementScreen(
                 Column {
                     Text(
                         text = tr("Staff & Devices", "स्टाफ और डिवाइस"),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp
+                        ),
                         color = FlatTextPrimary
                     )
                     Text(
@@ -1124,8 +1128,11 @@ private fun RoleCountSummaryCard(
         ) {
             Text(
                 text = count.toString(),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFeatureSettings = "tnum"
+                ),
                 color = textColor
             )
             Spacer(modifier = Modifier.height(2.dp))

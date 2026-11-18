@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -351,17 +353,17 @@ fun BillingScreen(
                 ) {
                     Surface(
                         onClick = onBack,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(13.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(44.dp)
                             .testTag("new_bill_back_btn")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = tr("Back", "वापस"),
                                 tint = FlatTextPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -370,9 +372,12 @@ fun BillingScreen(
                     Column {
                         Text(
                             text = tr("New sale bill", "नया बिक्री बिल"),
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            style = TextStyle(
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.25).sp,
+                                color = FlatTextPrimary
+                            )
                         )
                         Text(
                             text = tr("Quick chips · Voice · Credit guard", "तेज़ चिप्स · बोलकर लिखें · उधारी जांच"),
@@ -395,17 +400,17 @@ fun BillingScreen(
                             Toast.makeText(context, "Voice input is not supported on this device", Toast.LENGTH_SHORT).show()
                         }
                     },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(13.dp),
                     color = FlatDarkCard,
                     border = BorderStroke(1.dp, FlatDarkBorder),
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .testTag("voice_bill_input_btn")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.Mic,
-                            contentDescription = "Voice Input",
+                            contentDescription = tr("Voice bill input", "बोलकर बिल दर्ज करें"),
                             tint = FlatTextPrimary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -442,9 +447,12 @@ fun BillingScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = CurrencyUtils.formatInr(grandTotal),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextPrimary
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextPrimary,
+                                    fontFeatureSettings = "tnum"
+                                )
                             )
                         }
 
@@ -495,7 +503,8 @@ fun BillingScreen(
                                     textStyle = TextStyle(
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = FlatTextPrimary
+                                        color = FlatTextPrimary,
+                                        fontFeatureSettings = "tnum"
                                     ),
                                     cursorBrush = SolidColor(BillBrandGreen),
                                     modifier = Modifier
@@ -520,9 +529,12 @@ fun BillingScreen(
                             val effectiveUdhari = if (isWalkInCashCustomer) BigDecimal.ZERO else udhariDue
                             Text(
                                 text = CurrencyUtils.formatInr(effectiveUdhari),
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (effectiveUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (effectiveUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary,
+                                    fontFeatureSettings = "tnum"
+                                )
                             )
                         }
                     }
@@ -626,7 +638,28 @@ fun BillingScreen(
                             }
                         }
 
-                        // Segmented Toggle: Walk-in Cash | Customer
+                        // Segmented Toggle: Walk-in Cash | Customer (Concentric radius: 14dp outer - 4dp pad = 10dp inner)
+                        val walkInPillBg by animateColorAsState(
+                            targetValue = if (isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "walkInPillBg"
+                        )
+                        val walkInPillFg by animateColorAsState(
+                            targetValue = if (isWalkInCashCustomer) Color.White else FlatTextSecondary,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "walkInPillFg"
+                        )
+                        val customerPillBg by animateColorAsState(
+                            targetValue = if (!isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "customerPillBg"
+                        )
+                        val customerPillFg by animateColorAsState(
+                            targetValue = if (!isWalkInCashCustomer) Color.White else FlatTextSecondary,
+                            animationSpec = tween(durationMillis = 150),
+                            label = "customerPillFg"
+                        )
+
                         Surface(
                             shape = RoundedCornerShape(14.dp),
                             color = FlatDarkBg,
@@ -641,9 +674,10 @@ fun BillingScreen(
                                 Surface(
                                     onClick = { billingViewModel.toggleWalkInCash(true) },
                                     shape = RoundedCornerShape(10.dp),
-                                    color = if (isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
+                                    color = walkInPillBg,
                                     modifier = Modifier
                                         .weight(1f)
+                                        .defaultMinSize(minHeight = 40.dp)
                                         .testTag("walk_in_cash_chip")
                                 ) {
                                     Box(
@@ -654,7 +688,7 @@ fun BillingScreen(
                                             text = tr("Walk-in Cash", "नकद ग्राहक"),
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (isWalkInCashCustomer) Color.White else FlatTextSecondary
+                                            color = walkInPillFg
                                         )
                                     }
                                 }
@@ -662,9 +696,10 @@ fun BillingScreen(
                                 Surface(
                                     onClick = { billingViewModel.toggleWalkInCash(false) },
                                     shape = RoundedCornerShape(10.dp),
-                                    color = if (!isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
+                                    color = customerPillBg,
                                     modifier = Modifier
                                         .weight(1f)
+                                        .defaultMinSize(minHeight = 40.dp)
                                         .testTag("customer_mode_chip")
                                 ) {
                                     Box(
@@ -675,7 +710,7 @@ fun BillingScreen(
                                             text = tr("Customer", "खाता ग्राहक"),
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (!isWalkInCashCustomer) Color.White else FlatTextSecondary
+                                            color = customerPillFg
                                         )
                                     }
                                 }
@@ -1200,7 +1235,7 @@ fun BillingScreen(
                                                 },
                                                 shape = RoundedCornerShape(10.dp),
                                                 color = FlatDarkInput,
-                                                modifier = Modifier.size(38.dp)
+                                                modifier = Modifier.size(40.dp)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(
@@ -1214,11 +1249,14 @@ fun BillingScreen(
 
                                             Text(
                                                 text = qtyDisplayText,
-                                                fontSize = 14.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = FlatTextPrimary,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier.widthIn(min = 54.dp)
+                                                style = TextStyle(
+                                                    fontSize = 14.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = FlatTextPrimary,
+                                                    textAlign = TextAlign.Center,
+                                                    fontFeatureSettings = "tnum"
+                                                ),
+                                                modifier = Modifier.widthIn(min = 56.dp)
                                             )
 
                                             Surface(
@@ -1234,7 +1272,7 @@ fun BillingScreen(
                                                 },
                                                 shape = RoundedCornerShape(10.dp),
                                                 color = BillBrandGreen,
-                                                modifier = Modifier.size(38.dp)
+                                                modifier = Modifier.size(40.dp)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(
@@ -1249,14 +1287,17 @@ fun BillingScreen(
 
                                         Spacer(modifier = Modifier.width(10.dp))
 
-                                        // Right: Line Total
+                                        // Right: Line Total with tabular numerals
                                         Text(
                                             text = CurrencyUtils.formatInr(lineTotal),
-                                            fontSize = 15.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = FlatTextPrimary,
-                                            textAlign = TextAlign.End,
-                                            modifier = Modifier.widthIn(min = 66.dp)
+                                            style = TextStyle(
+                                                fontSize = 15.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = FlatTextPrimary,
+                                                textAlign = TextAlign.End,
+                                                fontFeatureSettings = "tnum"
+                                            ),
+                                            modifier = Modifier.widthIn(min = 68.dp)
                                         )
                                     }
 

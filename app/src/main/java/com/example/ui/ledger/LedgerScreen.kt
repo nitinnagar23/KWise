@@ -5,6 +5,8 @@ import com.example.ui.theme.kw
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -475,22 +478,29 @@ fun CustomersTab(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (hideTotalUdhari) "₹ ••••" else CurrencyUtils.formatInr(totalOutstandingUdhari),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp,
+                                fontFeatureSettings = "tnum"
+                            ),
                             color = LedgerCrimson,
                             modifier = Modifier.testTag("total_market_udhari_text")
                         )
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(50),
+                        shape = RoundedCornerShape(10.dp),
                         color = LedgerCrimsonSoftBg
                     ) {
                         Text(
                             text = "$dueAccountsCount ${tr("accounts due", "खाते बाकी")}",
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFeatureSettings = "tnum"
+                            ),
                             color = LedgerCrimson,
-                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                     }
@@ -553,56 +563,93 @@ fun CustomersTab(
             ) {
                 // "All" pill
                 val isAll = filterTab == CustomerFilterTab.ALL
+                val allPillBg by animateColorAsState(
+                    targetValue = if (isAll) LedgerBrandGreen else FlatDarkCard,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "allPillBg"
+                )
+                val allPillFg by animateColorAsState(
+                    targetValue = if (isAll) Color.White else FlatTextPrimary,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "allPillFg"
+                )
                 Surface(
                     onClick = { filterTab = CustomerFilterTab.ALL },
                     shape = RoundedCornerShape(50),
-                    color = if (isAll) LedgerBrandGreen else FlatDarkCard,
-                    border = if (isAll) null else BorderStroke(1.dp, FlatDarkBorder)
+                    color = allPillBg,
+                    border = if (isAll) null else BorderStroke(1.dp, FlatDarkBorder),
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
-                    Text(
-                        text = tr("All", "सभी"),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isAll) Color.White else FlatTextPrimary,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                        Text(
+                            text = tr("All", "सभी"),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = allPillFg
+                        )
+                    }
                 }
 
                 // "Udhari only" pill
                 val isUdhariOnly = filterTab == CustomerFilterTab.UDHARI_ONLY
+                val udhariPillBg by animateColorAsState(
+                    targetValue = if (isUdhariOnly) LedgerCrimson else LedgerCrimsonSoftBg,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "udhariPillBg"
+                )
+                val udhariPillFg by animateColorAsState(
+                    targetValue = if (isUdhariOnly) Color.White else LedgerCrimson,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "udhariPillFg"
+                )
                 Surface(
                     onClick = {
                         filterTab = if (isUdhariOnly) CustomerFilterTab.ALL else CustomerFilterTab.UDHARI_ONLY
                     },
                     shape = RoundedCornerShape(50),
-                    color = if (isUdhariOnly) LedgerCrimson else LedgerCrimsonSoftBg,
-                    modifier = Modifier.testTag("filter_udhari_checkbox")
+                    color = udhariPillBg,
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 36.dp)
+                        .testTag("filter_udhari_checkbox")
                 ) {
-                    Text(
-                        text = tr("Udhari only", "केवल उधारी"),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isUdhariOnly) Color.White else LedgerCrimson,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                        Text(
+                            text = tr("Udhari only", "केवल उधारी"),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = udhariPillFg
+                        )
+                    }
                 }
 
                 // "Clear" pill
                 val isClearOnly = filterTab == CustomerFilterTab.CLEAR
+                val clearPillBg by animateColorAsState(
+                    targetValue = if (isClearOnly) LedgerBrandGreen else LedgerMintBg,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "clearPillBg"
+                )
+                val clearPillFg by animateColorAsState(
+                    targetValue = if (isClearOnly) Color.White else LedgerBrandGreen,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "clearPillFg"
+                )
                 Surface(
                     onClick = {
                         filterTab = if (isClearOnly) CustomerFilterTab.ALL else CustomerFilterTab.CLEAR
                     },
                     shape = RoundedCornerShape(50),
-                    color = if (isClearOnly) LedgerBrandGreen else LedgerMintBg
+                    color = clearPillBg,
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
-                    Text(
-                        text = tr("Clear", "क्लियर"),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isClearOnly) Color.White else LedgerBrandGreen,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)) {
+                        Text(
+                            text = tr("Clear", "क्लियर"),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = clearPillFg
+                        )
+                    }
                 }
             }
 
@@ -615,15 +662,18 @@ fun CustomersTab(
                     shape = RoundedCornerShape(50),
                     color = FlatDarkInput,
                     border = BorderStroke(1.dp, FlatDarkBorder),
-                    modifier = Modifier.testTag("ledger_import_customers_btn")
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = 36.dp)
+                        .testTag("ledger_import_customers_btn")
                 ) {
-                    Text(
-                        text = tr("Import", "इम्पोर्ट"),
-                        fontSize = 12.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = LedgerBrandGreen,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)) {
+                        Text(
+                            text = tr("Import", "इम्पोर्ट"),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = LedgerBrandGreen
+                        )
+                    }
                 }
 
                 // Sort pill button
@@ -631,7 +681,8 @@ fun CustomersTab(
                     onClick = { sortByUdhariDesc = !sortByUdhariDesc },
                     shape = RoundedCornerShape(50),
                     color = FlatDarkInput,
-                    border = BorderStroke(1.dp, FlatDarkBorder)
+                    border = BorderStroke(1.dp, FlatDarkBorder),
+                    modifier = Modifier.defaultMinSize(minHeight = 36.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
@@ -814,7 +865,7 @@ fun CustomerCardItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Per-Customer Amount (NEVER hidden for Admin/Manager) + Status Pill
+            // Per-Customer Amount (NEVER hidden for Admin/Manager) + Concentric Status Pill
             Column(horizontalAlignment = Alignment.End) {
                 if (canViewCustomerFull) {
                     Text(
@@ -823,14 +874,17 @@ fun CustomerCardItem(
                         } else {
                             CurrencyUtils.formatInr(customer.totalUdhari)
                         },
-                        fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 15.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = FlatTextPrimary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
                 Surface(
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(8.dp),
                     color = badgeBg
                 ) {
                     Text(
@@ -839,8 +893,11 @@ fun CustomerCardItem(
                         } else {
                             badgeText
                         },
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFeatureSettings = "tnum"
+                        ),
                         color = badgeTextColor,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                     )

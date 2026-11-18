@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -208,7 +210,29 @@ internal fun StaffDevicesTabContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Segmented Role Switcher: Cashier | Manager
+                // Segmented Role Switcher: Cashier | Manager (Concentric radius: 14dp outer - 4dp pad = 10dp inner)
+                val isCashier = selectedRole == "CASHIER"
+                val cashierBg by animateColorAsState(
+                    targetValue = if (isCashier) StaffBrandGreen else Color.Transparent,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "cashierBg"
+                )
+                val cashierFg by animateColorAsState(
+                    targetValue = if (isCashier) Color.White else FlatTextSecondary,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "cashierFg"
+                )
+                val managerBg by animateColorAsState(
+                    targetValue = if (!isCashier) StaffBrandGreen else Color.Transparent,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "managerBg"
+                )
+                val managerFg by animateColorAsState(
+                    targetValue = if (!isCashier) Color.White else FlatTextSecondary,
+                    animationSpec = tween(durationMillis = 150),
+                    label = "managerFg"
+                )
+
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -220,11 +244,10 @@ internal fun StaffDevicesTabContent(
                             .padding(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val isCashier = selectedRole == "CASHIER"
                         Surface(
                             onClick = { onSelectRole("CASHIER") },
-                            shape = RoundedCornerShape(11.dp),
-                            color = if (isCashier) StaffBrandGreen else Color.Transparent,
+                            shape = RoundedCornerShape(10.dp),
+                            color = cashierBg,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp)
@@ -234,15 +257,15 @@ internal fun StaffDevicesTabContent(
                                     text = tr("Cashier", "कैशियर"),
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isCashier) Color.White else FlatTextSecondary
+                                    color = cashierFg
                                 )
                             }
                         }
 
                         Surface(
                             onClick = { onSelectRole("MANAGER") },
-                            shape = RoundedCornerShape(11.dp),
-                            color = if (!isCashier) StaffBrandGreen else Color.Transparent,
+                            shape = RoundedCornerShape(10.dp),
+                            color = managerBg,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp)
@@ -252,7 +275,7 @@ internal fun StaffDevicesTabContent(
                                     text = tr("Manager", "मैनेजर"),
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (!isCashier) Color.White else FlatTextSecondary
+                                    color = managerFg
                                 )
                             }
                         }
@@ -261,7 +284,7 @@ internal fun StaffDevicesTabContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 8 Individual Digit Boxes
+                // 8 Individual Digit Boxes with Tabular Numerals
                 val cleanDigits = pairingCode.padEnd(8, '–').take(8)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -281,9 +304,12 @@ internal fun StaffDevicesTabContent(
                         ) {
                             Text(
                                 text = ch,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = StaffBrandGreen
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StaffBrandGreen,
+                                    fontFeatureSettings = "tnum"
+                                )
                             )
                         }
                     }
@@ -291,7 +317,7 @@ internal fun StaffDevicesTabContent(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Progress bar + countdown
+                // Progress bar + countdown (with tabular numerals so the timer never shifts horizontally)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -315,9 +341,12 @@ internal fun StaffDevicesTabContent(
 
                     Text(
                         text = "${tr("Expires in", "समाप्त होगा")} $formattedCountdown",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = StaffAmberPillText
+                        style = TextStyle(
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = StaffAmberPillText,
+                            fontFeatureSettings = "tnum"
+                        )
                     )
                 }
 

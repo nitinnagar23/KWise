@@ -218,7 +218,10 @@ fun HomeScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = settings?.shopName?.ifBlank { "KhataWise Store" } ?: "KhataWise Store",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 23.sp),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 23.sp,
+                            letterSpacing = (-0.3).sp
+                        ),
                         fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         maxLines = 1,
@@ -248,7 +251,7 @@ fun HomeScreen(
                         val rolePillFg = if (isLightTheme) kw(0xFF1E4D8C) else Color(0xFF93C5FD)
 
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = rolePillBg
                         ) {
                             Text(
@@ -275,7 +278,7 @@ fun HomeScreen(
                 ) {
                     Surface(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .clickable { showGlobalSearch = true }
                             .testTag("home_search_btn"),
@@ -286,9 +289,9 @@ fun HomeScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = tr("Search", "खोजें"),
+                                contentDescription = tr("Search customers, bills, and stock", "ग्राहक, बिल और स्टॉक खोजें"),
                                 tint = FlatTextPrimary,
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
@@ -433,7 +436,10 @@ fun HomeScreen(
             ) {
                 Text(
                     text = tr("Today's Sales", "आज की बिक्री"),
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 19.sp,
+                        letterSpacing = (-0.2).sp
+                    ),
                     fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
@@ -445,7 +451,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .clickable { onNavigateToLedger() }
-                        .padding(horizontal = 4.dp, vertical = 4.dp)
+                        .padding(horizontal = 6.dp, vertical = 6.dp)
                 )
             }
         }
@@ -571,10 +577,13 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.End,
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                // Always show per-customer transaction amount clearly (never hidden)
+                                // Always show per-customer transaction amount clearly with tabular figures
                                 Text(
                                     text = CurrencyUtils.formatInr(bill.totalSalePrice),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontSize = 16.sp,
+                                        fontFeatureSettings = "tnum"
+                                    ),
                                     fontWeight = FontWeight.Bold,
                                     color = FlatTextPrimary
                                 )

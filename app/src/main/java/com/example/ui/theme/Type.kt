@@ -11,104 +11,121 @@ import androidx.compose.ui.unit.sp
 // FontFamily(Font(R.font.inter_regular, FontWeight.Normal), ...). Falls back to the system sans-serif until then.
 val KhataFontFamily: FontFamily = FontFamily.SansSerif
 
+const val TabularNumsFeature = "tnum"
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 44.sp,
         lineHeight = 52.sp,
-        letterSpacing = 0.sp
+        letterSpacing = (-0.5).sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     displayMedium = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 36.sp,
         lineHeight = 44.sp,
-        letterSpacing = 0.sp
+        letterSpacing = (-0.4).sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     headlineLarge = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
-        letterSpacing = 0.sp
+        letterSpacing = (-0.35).sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     headlineMedium = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
-        letterSpacing = 0.sp
+        letterSpacing = (-0.3).sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     headlineSmall = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
         lineHeight = 32.sp,
-        letterSpacing = 0.sp
+        letterSpacing = (-0.25).sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     titleLarge = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
         lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        letterSpacing = (-0.2).sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     titleMedium = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 17.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
+        letterSpacing = 0.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     titleSmall = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        lineHeight = 21.sp,
+        letterSpacing = 0.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     bodyLarge = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.15.sp
+        letterSpacing = 0.1.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     bodyMedium = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        letterSpacing = 0.25.sp
+        letterSpacing = 0.15.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     bodySmall = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
+        lineHeight = 17.sp,
+        letterSpacing = 0.2.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     labelLarge = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        letterSpacing = 0.1.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     labelMedium = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 13.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.2.sp
+        lineHeight = 18.sp,
+        letterSpacing = 0.15.sp,
+        fontFeatureSettings = TabularNumsFeature
     ),
     labelSmall = TextStyle(
         fontFamily = KhataFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 11.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.2.sp
+        letterSpacing = 0.2.sp,
+        fontFeatureSettings = TabularNumsFeature
     )
 )
+
 

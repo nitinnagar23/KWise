@@ -694,7 +694,10 @@ fun SettingsScreen(
                 }
                 Text(
                     text = "KhataWise",
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 19.sp,
+                        letterSpacing = (-0.25).sp
+                    ),
                     fontWeight = FontWeight.Bold,
                     color = FlatTextPrimary
                 )
@@ -707,7 +710,7 @@ fun SettingsScreen(
                 // Search Button (opens full-screen Global Search)
                 Surface(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
                         .clickable {
                             currentSubScreen = SettingsSubScreen.GLOBAL_SEARCH
@@ -720,7 +723,7 @@ fun SettingsScreen(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = tr("Search", "खोजें"),
+                            contentDescription = tr("Search settings and hub", "सेटिंग्स और हब खोजें"),
                             tint = FlatTextPrimary,
                             modifier = Modifier.size(19.dp)
                         )
@@ -730,13 +733,13 @@ fun SettingsScreen(
                 // Notification Bell with Red Unread Badge
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(44.dp)
                         .clickable { currentSubScreen = SettingsSubScreen.NOTIFICATIONS }
                         .testTag("settings_notifications_bell_btn"),
                     contentAlignment = Alignment.Center
                 ) {
                     Surface(
-                        modifier = Modifier.size(38.dp),
+                        modifier = Modifier.size(42.dp),
                         shape = CircleShape,
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder)
@@ -761,8 +764,11 @@ fun SettingsScreen(
                         ) {
                             Text(
                                 text = unreadNotificationsCount.toString(),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFeatureSettings = "tnum"
+                                ),
                                 color = Color.White,
                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                             )
@@ -888,7 +894,7 @@ fun SettingsScreen(
                     if (canManageShopProfile) {
                         Surface(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable { currentSubScreen = SettingsSubScreen.STORE_PROFILE }
                                 .testTag("btn_edit_shop_profile"),
@@ -899,7 +905,7 @@ fun SettingsScreen(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit Store Profile",
+                                    contentDescription = tr("Edit store profile", "दुकान प्रोफ़ाइल संपादित करें"),
                                     tint = FlatTextPrimary,
                                     modifier = Modifier.size(18.dp)
                                 )
@@ -976,10 +982,10 @@ fun SettingsScreen(
                         Card(
                             modifier = Modifier
                                 .weight(1f)
-                                .defaultMinSize(minHeight = 68.dp)
+                                .defaultMinSize(minHeight = 70.dp)
                                 .clickable { tile.onClick() }
                                 .testTag(extraTestTag),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(18.dp),
                             colors = CardDefaults.cardColors(containerColor = FlatDarkCard),
                             border = BorderStroke(1.dp, FlatDarkBorder)
                         ) {
@@ -1018,7 +1024,10 @@ fun SettingsScreen(
                                         Spacer(modifier = Modifier.height(1.dp))
                                         Text(
                                             text = tile.subtitle,
-                                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontSize = 11.5.sp,
+                                                fontFeatureSettings = "tnum"
+                                            ),
                                             color = FlatTextSecondary,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
@@ -1039,12 +1048,15 @@ fun SettingsScreen(
                                         modifier = Modifier
                                             .align(Alignment.TopEnd)
                                             .padding(top = 6.dp, end = 6.dp),
-                                        shape = RoundedCornerShape(10.dp),
+                                        shape = RoundedCornerShape(8.dp),
                                         color = badgeBg
                                     ) {
                                         Text(
                                             text = tile.badge,
-                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 11.sp,
+                                                fontFeatureSettings = "tnum"
+                                            ),
                                             fontWeight = FontWeight.Bold,
                                             color = badgeFg,
                                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
