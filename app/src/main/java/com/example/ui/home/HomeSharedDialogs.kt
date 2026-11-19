@@ -1,9 +1,11 @@
 package com.example.ui.home
 
 import com.example.ui.theme.kw
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,13 +34,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -275,16 +281,40 @@ fun QuickAddCustomerDialog(
     onDismiss: () -> Unit,
     onCustomerAdded: (Customer) -> Unit
 ) {
+    val isDark = com.example.ui.theme.KwThemeState.isDark
+    val dupBannerBg = if (isDark) Color(0xFF2D240F) else Color(0xFFFFFBEB)
+    val dupBannerBorder = if (isDark) Color(0xFF5C4718) else Color(0xFFFDE68A)
+    val dupBannerText = if (isDark) Color(0xFFF5BE4F) else Color(0xFFB45309)
+
     var name by remember { mutableStateOf("") }
     var fatherName by remember { mutableStateOf("") }
     val phoneEntries = remember {
         mutableStateListOf(TaggedMobileNumber(number = "", tag = "Self"))
     }
     var village by remember { mutableStateOf("") }
-    var creditLimitInput by remember { mutableStateOf("0") }
+    var selectedLimitPreset by remember { mutableStateOf("10000") }
+    var creditLimitInput by remember { mutableStateOf("") }
+    var autoBlockAtLimit by remember { mutableStateOf(true) }
+    var reminderChannel by remember { mutableStateOf("WhatsApp") }
+    var notesInput by remember { mutableStateOf("") }
+    var showMoreDetails by remember { mutableStateOf(false) }
+
     val canEditCreditLimit = can(currentUserRole, Permission.EDIT_CREDIT_LIMIT)
+    val effectiveLimit = remember(selectedLimitPreset, creditLimitInput, canEditCreditLimit) {
+        if (!canEditCreditLimit) {
+            BigDecimal.ZERO
+        } else {
+            when (selectedLimitPreset) {
+                "NO_LIMIT" -> BigDecimal.ZERO
+                "5000" -> BigDecimal("5000")
+                "10000" -> BigDecimal("10000")
+                else -> creditLimitInput.trim().toBigDecimalOrNull()?.max(BigDecimal.ZERO) ?: BigDecimal.ZERO
+            }
+        }
+    }
 
     val availableTags = listOf("Self", "Father", "Home", "Work", "WhatsApp", "Other")
+    val nextTagSuggestions = listOf("Father", "Home", "Work", "Other")
 
     val existingCustomersFlow = remember {
         try {
@@ -329,6 +359,50 @@ fun QuickAddCustomerDialog(
         }
     }
 
+    val similarCustomers = remember(existingCustomers, name, village) {
+        val qName = name.trim().replace(Regex("\\s+"), " ")
+        val qVillage = village.trim().replace(Regex("\\s+"), " ")
+        if (qName.length < 2) {
+            emptyList()
+        } else {
+            val nameMatches = existingCustomers.filter { !it.isDeleted }.filter { c ->
+                val cName = c.name.trim()
+                cName.equals(qName, ignoreCase = true) ||
+                    cName.startsWith("$qName ", ignoreCase = true) ||
+                    qName.startsWith("$cName ", ignoreCase = true)
+            }
+            if (qVillage.isNotBlank()) {
+                val sameVillage = nameMatches.filter { c ->
+                    c.village.trim().equals(qVillage, ignoreCase = true) ||
+                        c.village.trim().contains(qVillage, ignoreCase = true)
+                }
+                if (sameVillage.isNotEmpty()) sameVillage else nameMatches
+            } else {
+                nameMatches
+            }
+        }
+    }
+
+    val similarSummaryBanner = remember(similarCustomers, fatherName) {
+        if (similarCustomers.isEmpty()) {
+            null
+        } else {
+            val first = similarCustomers.first()
+            val firstIdentity = buildString {
+                append(first.name.trim())
+                if (first.fatherName.isNotBlank()) append(" s/o ${first.fatherName.trim()}")
+                if (first.village.isNotBlank()) append(", ${first.village.trim()}")
+            }
+            val count = similarCustomers.size
+            val base = if (count == 1) {
+                "1 similar customer: $firstIdentity"
+            } else {
+                "$count similar customers: $firstIdentity +${count - 1} more"
+            }
+            if (fatherName.isBlank()) "$base · Add father's name?" else base
+        }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -336,7 +410,7 @@ fun QuickAddCustomerDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
+                .padding(horizontal = 14.dp, vertical = 18.dp),
             shape = RoundedCornerShape(24.dp),
             color = FlatDarkCard,
             border = BorderStroke(1.dp, FlatDarkBorder),
@@ -345,7 +419,7 @@ fun QuickAddCustomerDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
+                    .padding(horizontal = 18.dp, vertical = 16.dp)
             ) {
                 // Header: Title + X button
                 Row(
@@ -354,7 +428,7 @@ fun QuickAddCustomerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = tr("Add new customer", "नया ग्राहक जोड़ें"),
+                        text = tr("Add customer", "नया ग्राहक जोड़ें"),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary
@@ -384,285 +458,253 @@ fun QuickAddCustomerDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 460.dp)
+                        .heightIn(max = 500.dp)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 1. CUSTOMER NAME *
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = tr("CUSTOMER NAME *", "ग्राहक का नाम *"),
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextSecondary,
-                            letterSpacing = 0.5.sp
-                        )
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            placeholder = {
-                                Text(
-                                    tr("Customer name", "ग्राहक का नाम"),
-                                    color = FlatTextMuted,
-                                    fontSize = 14.5.sp
-                                )
-                            },
-                            singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = FlatDarkCard,
-                                unfocusedContainerColor = FlatDarkCard,
-                                focusedBorderColor = DialogBrandGreen,
-                                unfocusedBorderColor = FlatDarkBorder,
-                                focusedTextColor = FlatTextPrimary,
-                                unfocusedTextColor = FlatTextPrimary
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("add_customer_name_input")
-                        )
-                    }
-
-                    // 2. FATHER'S NAME
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = tr("FATHER'S NAME", "पिता का नाम"),
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextSecondary,
-                            letterSpacing = 0.5.sp
-                        )
-                        OutlinedTextField(
-                            value = fatherName,
-                            onValueChange = { fatherName = it },
-                            placeholder = {
-                                Text(
-                                    tr("Father's name (optional)", "पिता का नाम (वैकल्पिक)"),
-                                    color = FlatTextMuted,
-                                    fontSize = 14.5.sp
-                                )
-                            },
-                            singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = FlatDarkCard,
-                                unfocusedContainerColor = FlatDarkCard,
-                                focusedBorderColor = DialogBrandGreen,
-                                unfocusedBorderColor = FlatDarkBorder,
-                                focusedTextColor = FlatTextPrimary,
-                                unfocusedTextColor = FlatTextPrimary
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("add_customer_father_input")
-                        )
-                    }
-
-                    // 3. MOBILE NUMBERS with Tag chips
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    // 1. CUSTOMER NAME * + FATHER'S NAME (side by side)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Text(
-                                text = tr("MOBILE NUMBERS", "मोबाइल नंबर"),
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.5.sp
-                            )
-                            Text(
-                                text = "${phoneEntries.size} ${tr("added", "जोड़े गए")}",
-                                fontSize = 12.sp,
+                                text = tr("Customer name *", "ग्राहक का नाम *"),
+                                fontSize = 12.5.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = FlatTextSecondary
+                                color = FlatTextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            OutlinedTextField(
+                                value = name,
+                                onValueChange = { name = it },
+                                placeholder = {
+                                    Text(
+                                        tr("Customer name", "ग्राहक का नाम"),
+                                        color = FlatTextMuted,
+                                        fontSize = 14.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FlatDarkBg,
+                                    unfocusedContainerColor = FlatDarkBg,
+                                    focusedBorderColor = DialogBrandGreen,
+                                    unfocusedBorderColor = FlatDarkBorder,
+                                    focusedTextColor = FlatTextPrimary,
+                                    unfocusedTextColor = FlatTextPrimary
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("add_customer_name_input")
                             )
                         }
 
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Text(
+                                text = tr("Father's name", "पिता का नाम"),
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = FlatTextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            OutlinedTextField(
+                                value = fatherName,
+                                onValueChange = { fatherName = it },
+                                placeholder = {
+                                    Text(
+                                        tr("Father's name", "पिता का नाम"),
+                                        color = FlatTextMuted,
+                                        fontSize = 14.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = FlatDarkBg,
+                                    unfocusedContainerColor = FlatDarkBg,
+                                    focusedBorderColor = DialogBrandGreen,
+                                    unfocusedBorderColor = if (similarCustomers.isNotEmpty() && fatherName.isBlank()) dupBannerBorder else FlatDarkBorder,
+                                    focusedTextColor = FlatTextPrimary,
+                                    unfocusedTextColor = FlatTextPrimary
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("add_customer_father_input")
+                            )
+                        }
+                    }
+
+                    // 2. MOBILE (+ compact Tag dropdown pill & "+ Add another number")
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = tr("Mobile", "मोबाइल"),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = FlatTextSecondary
+                        )
+
                         phoneEntries.forEachIndexed { idx, entry ->
-                            Surface(
+                            var tagExpanded by remember(idx, phoneEntries.size) { mutableStateOf(false) }
+
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                color = FlatDarkBg,
-                                border = BorderStroke(1.dp, FlatDarkBorder)
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                Box {
+                                    Surface(
+                                        onClick = { tagExpanded = true },
+                                        shape = RoundedCornerShape(50),
+                                        color = if (idx == 0) DialogBrandGreen else FlatDarkInput,
+                                        border = if (idx == 0) null else BorderStroke(1.dp, FlatDarkBorder),
+                                        modifier = Modifier
+                                            .height(48.dp)
+                                            .testTag("phone_${idx}_tag_dropdown")
                                     ) {
-                                        OutlinedTextField(
-                                            value = entry.number,
-                                            onValueChange = { raw ->
-                                                val cleaned = raw.filter { c -> c.isDigit() || c == '+' || c == ' ' }.take(15)
-                                                phoneEntries[idx] = entry.copy(number = cleaned)
-                                            },
-                                            placeholder = {
-                                                Text(
-                                                    "Mobile number",
-                                                    color = FlatTextMuted,
-                                                    fontSize = 14.5.sp
-                                                )
-                                            },
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                            singleLine = true,
-                                            shape = RoundedCornerShape(12.dp),
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedContainerColor = FlatDarkCard,
-                                                unfocusedContainerColor = FlatDarkCard,
-                                                focusedBorderColor = DialogBrandGreen,
-                                                unfocusedBorderColor = FlatDarkBorder,
-                                                focusedTextColor = FlatTextPrimary,
-                                                unfocusedTextColor = FlatTextPrimary
-                                            ),
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .testTag("add_customer_phone_input_$idx")
-                                        )
-
-                                        if (phoneEntries.size > 1) {
-                                            Surface(
-                                                onClick = { phoneEntries.removeAt(idx) },
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = FlatDarkCard,
-                                                border = BorderStroke(1.dp, FlatDarkBorder),
-                                                modifier = Modifier
-                                                    .size(44.dp)
-                                                    .testTag("remove_phone_btn_$idx")
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Close,
-                                                        contentDescription = tr("Remove number", "नंबर हटाएं"),
-                                                        tint = FlatTextSecondary,
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                }
-                                            }
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Text(
+                                                text = entry.tag.ifBlank { "Self" },
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (idx == 0) Color.White else FlatTextPrimary,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = null,
+                                                tint = if (idx == 0) Color.White else FlatTextSecondary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
                                         }
                                     }
 
-                                    // Tag row + Primary badge on first phone
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Text(
-                                            text = tr("Tag", "टैग"),
-                                            fontSize = 12.sp,
-                                            color = FlatTextSecondary,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        if (idx == 0) {
-                                            Surface(
-                                                shape = RoundedCornerShape(50),
-                                                color = DialogMintBadgeBg
-                                            ) {
-                                                Text(
-                                                    text = tr("Primary", "मुख्य"),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = DialogBrandGreen,
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    DropdownMenu(
+                                        expanded = tagExpanded,
+                                        onDismissRequest = { tagExpanded = false }
                                     ) {
                                         availableTags.forEach { tagOption ->
-                                            val isSelectedTag = entry.tag.equals(tagOption, ignoreCase = true)
-                                            Surface(
+                                            DropdownMenuItem(
+                                                text = { Text(tagOption) },
                                                 onClick = {
                                                     phoneEntries[idx] = entry.copy(tag = tagOption)
-                                                },
-                                                shape = RoundedCornerShape(50),
-                                                color = if (isSelectedTag) DialogBrandGreen else FlatDarkInput,
-                                                modifier = Modifier.testTag("phone_${idx}_tag_${tagOption.lowercase()}")
-                                            ) {
-                                                Text(
-                                                    text = tagOption,
-                                                    fontSize = 12.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (isSelectedTag) Color.White else FlatTextPrimary,
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                                )
-                                            }
+                                                    tagExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                OutlinedTextField(
+                                    value = entry.number,
+                                    onValueChange = { raw ->
+                                        val cleaned = raw.filter { c -> c.isDigit() || c == '+' || c == ' ' }.take(15)
+                                        phoneEntries[idx] = entry.copy(number = cleaned)
+                                    },
+                                    placeholder = {
+                                        Text(
+                                            "+91 98765 43210",
+                                            color = FlatTextMuted,
+                                            fontSize = 14.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = FlatDarkBg,
+                                        unfocusedContainerColor = FlatDarkBg,
+                                        focusedBorderColor = DialogBrandGreen,
+                                        unfocusedBorderColor = FlatDarkBorder,
+                                        focusedTextColor = FlatTextPrimary,
+                                        unfocusedTextColor = FlatTextPrimary
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("add_customer_phone_input_$idx")
+                                )
+
+                                if (phoneEntries.size > 1 && idx > 0) {
+                                    Surface(
+                                        onClick = { phoneEntries.removeAt(idx) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = FlatDarkInput,
+                                        border = BorderStroke(1.dp, FlatDarkBorder),
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .testTag("remove_phone_btn_$idx")
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = tr("Remove number", "नंबर हटाएं"),
+                                                tint = FlatTextSecondary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
                                         }
                                     }
                                 }
                             }
                         }
 
-                        // Dashed "+ Add another number" button
-                        Box(
+                        Text(
+                            text = tr(
+                                "+ Add another number (Father, Home, Work...)",
+                                "+ एक और नंबर जोड़ें (पिता, घर, काम...)"
+                            ),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = DialogBrandGreen,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(46.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .drawBehind {
-                                    drawRoundRect(
-                                        color = DialogBrandGreen,
-                                        style = Stroke(
-                                            width = 1.5.dp.toPx(),
-                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f), 0f)
-                                        ),
-                                        cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx())
-                                    )
-                                }
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    val nextDefaultTag = if (phoneEntries.size == 1) "Father" else "Other"
-                                    phoneEntries.add(TaggedMobileNumber(number = "", tag = nextDefaultTag))
+                                    val nextTag = nextTagSuggestions.getOrElse((phoneEntries.size - 1).coerceAtLeast(0)) { "Other" }
+                                    phoneEntries.add(TaggedMobileNumber(number = "", tag = nextTag))
                                 }
-                                .testTag("add_another_phone_btn"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "+ ${tr("Add another number", "एक और नंबर जोड़ें")}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DialogBrandGreen
-                            )
-                        }
+                                .padding(vertical = 2.dp)
+                                .testTag("add_another_phone_btn")
+                        )
                     }
 
-                    // 4. VILLAGE / AREA (with Village Hints + Free Typing)
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = tr("VILLAGE / AREA", "गाँव / क्षेत्र"),
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.5.sp
-                            )
-                            Text(
-                                text = tr("Type or tap a village hint", "टाइप करें या गाँव चुनें"),
-                                fontSize = 11.sp,
-                                color = FlatTextMuted
-                            )
-                        }
+                    // 3. VILLAGE / AREA (+ Saved chips + Similar customer duplicate check)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = tr("Village / area", "गाँव / क्षेत्र"),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = FlatTextSecondary
+                        )
                         OutlinedTextField(
                             value = village,
                             onValueChange = { village = it },
                             placeholder = {
                                 Text(
-                                    tr("Type village / area name...", "गाँव / क्षेत्र का नाम लिखें..."),
+                                    tr("Enter or select saved village", "गाँव / क्षेत्र का नाम लिखें"),
                                     color = FlatTextMuted,
-                                    fontSize = 14.5.sp
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             },
                             trailingIcon = {
@@ -680,8 +722,8 @@ fun QuickAddCustomerDialog(
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = FlatDarkCard,
-                                unfocusedContainerColor = FlatDarkCard,
+                                focusedContainerColor = FlatDarkBg,
+                                unfocusedContainerColor = FlatDarkBg,
                                 focusedBorderColor = DialogBrandGreen,
                                 unfocusedBorderColor = FlatDarkBorder,
                                 focusedTextColor = FlatTextPrimary,
@@ -693,23 +735,19 @@ fun QuickAddCustomerDialog(
                         )
 
                         if (filteredVillageHints.isNotEmpty()) {
-                            Text(
-                                text = tr(
-                                    "Currently saved villages (tap to avoid duplicate names):",
-                                    "सेव किए गए गाँव (डुप्लीकेट नाम से बचने के लिए चुनें):"
-                                ),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = FlatTextSecondary
-                            )
-                            FlowRow(
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 2.dp)
+                                    .horizontalScroll(rememberScrollState())
                                     .testTag("village_hints_row"),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                Text(
+                                    text = tr("Saved:", "सेव:"),
+                                    fontSize = 12.sp,
+                                    color = FlatTextSecondary
+                                )
                                 filteredVillageHints.forEach { (hintVillage, count) ->
                                     val isSelectedVillage = village.trim().replace(Regex("\\s+"), " ")
                                         .equals(hintVillage, ignoreCase = true)
@@ -723,81 +761,288 @@ fun QuickAddCustomerDialog(
                                         ),
                                         modifier = Modifier.testTag("village_hint_${hintVillage.lowercase().replace(" ", "_")}")
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                        Text(
+                                            text = "$hintVillage · $count",
+                                            fontSize = 12.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (isSelectedVillage) Color.White else FlatTextPrimary,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (similarSummaryBanner != null) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("quick_add_similar_duplicate_banner"),
+                                shape = RoundedCornerShape(12.dp),
+                                color = dupBannerBg,
+                                border = BorderStroke(1.dp, dupBannerBorder)
+                            ) {
+                                Text(
+                                    text = similarSummaryBanner,
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = dupBannerText,
+                                    lineHeight = 17.sp,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // 4. CREDIT LIMIT CARD (with Auto-block inside)
+                    if (canEditCreditLimit) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = FlatDarkBg,
+                            border = BorderStroke(1.dp, FlatDarkBorder)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    text = tr("Credit limit", "उधारी सीमा"),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextPrimary
+                                )
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    listOf(
+                                        "NO_LIMIT" to tr("No limit", "कोई सीमा नहीं"),
+                                        "5000" to "₹5,000",
+                                        "10000" to "₹10,000",
+                                        "CUSTOM" to tr("Custom", "कस्टम")
+                                    ).forEach { (key, label) ->
+                                        val selected = selectedLimitPreset == key
+                                        Surface(
+                                            onClick = { selectedLimitPreset = key },
+                                            shape = RoundedCornerShape(50),
+                                            color = if (selected) DialogBrandGreen else FlatDarkInput
                                         ) {
                                             Text(
-                                                text = hintVillage,
+                                                text = label,
                                                 fontSize = 12.5.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = if (isSelectedVillage) Color.White else FlatTextPrimary
-                                            )
-                                            Text(
-                                                text = "($count)",
-                                                fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = if (isSelectedVillage) Color.White.copy(alpha = 0.85f) else FlatTextSecondary
+                                                color = if (selected) Color.White else FlatTextPrimary,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                                             )
                                         }
                                     }
+                                }
+
+                                if (selectedLimitPreset == "CUSTOM") {
+                                    OutlinedTextField(
+                                        value = creditLimitInput,
+                                        onValueChange = { next ->
+                                            if (next.all { it.isDigit() }) creditLimitInput = next
+                                        },
+                                        placeholder = { Text("₹ 15000", color = FlatTextMuted) },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedContainerColor = FlatDarkCard,
+                                            unfocusedContainerColor = FlatDarkCard,
+                                            focusedBorderColor = DialogBrandGreen,
+                                            unfocusedBorderColor = FlatDarkBorder,
+                                            focusedTextColor = FlatTextPrimary,
+                                            unfocusedTextColor = FlatTextPrimary
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("add_customer_credit_limit_input")
+                                    )
+                                }
+
+                                HorizontalDivider(color = FlatDarkBorder)
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val autoLabel = if (effectiveLimit > BigDecimal.ZERO) {
+                                        tr(
+                                            "Auto-block at ${CurrencyUtils.formatInr(effectiveLimit)}",
+                                            "${CurrencyUtils.formatInr(effectiveLimit)} पर ऑटो-ब्लॉक"
+                                        )
+                                    } else {
+                                        tr("Auto-block at limit", "सीमा पर ऑटो-ब्लॉक")
+                                    }
+                                    Text(
+                                        text = autoLabel,
+                                        fontSize = 13.5.sp,
+                                        color = if (effectiveLimit > BigDecimal.ZERO) FlatTextPrimary else FlatTextSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = 8.dp)
+                                    )
+                                    Switch(
+                                        checked = autoBlockAtLimit && effectiveLimit > BigDecimal.ZERO,
+                                        enabled = effectiveLimit > BigDecimal.ZERO,
+                                        onCheckedChange = { autoBlockAtLimit = it },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = DialogBrandGreen,
+                                            uncheckedThumbColor = Color.White,
+                                            uncheckedTrackColor = kw(0xFFD1D5DB)
+                                        )
+                                    )
                                 }
                             }
                         }
                     }
 
-                    // 5. CREDIT LIMIT (₹, 0 = NO LIMIT)
-                    if (canEditCreditLimit) {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // 5. COLLAPSIBLE MORE DETAILS (Reminders · Notes)
+                    val dashedBorderColor = FlatDarkBorder
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .drawBehind {
+                                drawRoundRect(
+                                    color = dashedBorderColor,
+                                    style = Stroke(
+                                        width = 1.dp.toPx(),
+                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f)
+                                    ),
+                                    cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx())
+                                )
+                            }
+                            .clickable { showMoreDetails = !showMoreDetails }
+                            .padding(horizontal = 14.dp, vertical = 13.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = tr("CREDIT LIMIT (₹, 0 = NO LIMIT)", "उधारी सीमा (₹, 0 = कोई सीमा नहीं)"),
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.5.sp
+                                text = tr("More details", "अतिरिक्त विवरण"),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = FlatTextPrimary
                             )
+                            Text(
+                                text = tr(
+                                    "Reminders · Notes ${if (showMoreDetails) "▾" else "▸"}",
+                                    "रिमाइंडर · नोट्स ${if (showMoreDetails) "▾" else "▸"}"
+                                ),
+                                fontSize = 12.5.sp,
+                                color = FlatTextSecondary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(visible = showMoreDetails) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                color = FlatDarkInput,
+                                border = BorderStroke(1.dp, FlatDarkBorder)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(4.dp)
+                                ) {
+                                    listOf("WhatsApp", "SMS", "Both").forEach { ch ->
+                                        val selected = reminderChannel.equals(ch, ignoreCase = true)
+                                        Surface(
+                                            onClick = { reminderChannel = ch },
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(38.dp),
+                                            shape = RoundedCornerShape(9.dp),
+                                            color = if (selected) DialogBrandGreen else Color.Transparent
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    text = ch,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (selected) Color.White else FlatTextPrimary,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             OutlinedTextField(
-                                value = creditLimitInput,
-                                onValueChange = { creditLimitInput = it },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                value = notesInput,
+                                onValueChange = { notesInput = it },
+                                placeholder = {
+                                    Text(
+                                        tr("Notes (e.g. Pays after crop sale)", "नोट्स (जैसे फसल बिकने के बाद भुगतान)"),
+                                        color = FlatTextMuted,
+                                        fontSize = 13.5.sp
+                                    )
+                                },
                                 singleLine = true,
-                                shape = RoundedCornerShape(14.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = FlatDarkCard,
-                                    unfocusedContainerColor = FlatDarkCard,
+                                    focusedContainerColor = FlatDarkBg,
+                                    unfocusedContainerColor = FlatDarkBg,
                                     focusedBorderColor = DialogBrandGreen,
                                     unfocusedBorderColor = FlatDarkBorder,
                                     focusedTextColor = FlatTextPrimary,
                                     unfocusedTextColor = FlatTextPrimary
                                 ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("add_customer_credit_limit_input")
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Bottom Action Buttons: Cancel | Save Customer
+                // Bottom Action Buttons: Cancel | Save customer
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(
+                    TextButton(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(0.65f)
                             .testTag("cancel_add_customer_btn")
                     ) {
                         Text(
                             text = tr("Cancel", "रद्द करें"),
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp,
                             color = FlatTextPrimary,
                             maxLines = 1,
@@ -810,16 +1055,17 @@ fun QuickAddCustomerDialog(
                         onClick = {
                             val trimmedName = name.trim()
                             if (trimmedName.isBlank()) return@Button
-                            val limit = if (canEditCreditLimit) {
-                                creditLimitInput.trim().toBigDecimalOrNull() ?: BigDecimal.ZERO
-                            } else {
-                                BigDecimal.ZERO
-                            }
                             val validPhones = phoneEntries
                                 .map { it.copy(number = it.number.trim()) }
                                 .filter { it.number.isNotBlank() }
                             val primaryPhone = validPhones.firstOrNull()?.number ?: ""
-                            val serializedPhones = Customer.serializeTaggedPhones(validPhones)
+                            val metaJson = Customer.serializeCustomerMeta(
+                                phones = validPhones,
+                                autoBlockAtLimit = autoBlockAtLimit,
+                                blockUdhariNow = false,
+                                reminderChannel = reminderChannel,
+                                notes = notesInput.trim()
+                            )
 
                             val normalizedVillage = village.trim().replace(Regex("\\s+"), " ")
                             val canonicalVillage = savedVillageEntries
@@ -831,9 +1077,9 @@ fun QuickAddCustomerDialog(
                                     name = trimmedName,
                                     fatherName = fatherName.trim(),
                                     phone = primaryPhone,
-                                    phonesJson = serializedPhones,
+                                    phonesJson = metaJson,
                                     village = canonicalVillage,
-                                    creditLimit = limit,
+                                    creditLimit = effectiveLimit,
                                     createdByUserId = currentUserId
                                 )
                             )
@@ -846,13 +1092,13 @@ fun QuickAddCustomerDialog(
                             disabledContainerColor = DialogBrandGreen.copy(alpha = 0.4f),
                             disabledContentColor = Color.White.copy(alpha = 0.7f)
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 13.dp),
                         modifier = Modifier
-                            .weight(1.25f)
+                            .weight(1.5f)
                             .testTag("save_customer_btn")
                     ) {
                         Text(
-                            text = tr("Save customer", "सेव करें"),
+                            text = tr("Save customer", "ग्राहक सेव करें"),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
                             maxLines = 1,

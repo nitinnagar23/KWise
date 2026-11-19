@@ -13,10 +13,12 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -126,6 +128,14 @@ fun AddOrEditCustomerScreen(
     BackHandler { onCancel() }
 
     val isEdit = existingCustomer != null
+    val isDark = com.example.ui.theme.KwThemeState.isDark
+    val fieldBg = if (isDark) Color(0xFF182230) else KwSurface
+    val fieldBorder = if (isDark) Color(0xFF2A384B) else kw(0xFFCBD5E1)
+    val chipUnselectedBg = if (isDark) Color(0xFF212D3E) else kw(0xFFEEF2F6)
+    val dupBannerBg = if (isDark) Color(0xFF2D240F) else Color(0xFFFFFBEB)
+    val dupBannerBorder = if (isDark) Color(0xFF5C4718) else Color(0xFFFDE68A)
+    val dupBannerText = if (isDark) Color(0xFFF5BE4F) else Color(0xFFB45309)
+
     var nameInput by remember(existingCustomer) { mutableStateOf(existingCustomer?.name.orEmpty()) }
     var fatherNameInput by remember(existingCustomer) { mutableStateOf(existingCustomer?.fatherName.orEmpty()) }
     var villageInput by remember(existingCustomer) { mutableStateOf(existingCustomer?.village.orEmpty()) }
@@ -142,7 +152,6 @@ fun AddOrEditCustomerScreen(
             initialLimit.compareTo(BigDecimal.ZERO) == 0 -> "NO_LIMIT"
             initialLimit.compareTo(BigDecimal("5000")) == 0 -> "5000"
             initialLimit.compareTo(BigDecimal("10000")) == 0 -> "10000"
-            initialLimit.compareTo(BigDecimal("25000")) == 0 -> "25000"
             else -> "CUSTOM"
         }
         mutableStateOf(preset)
@@ -156,7 +165,6 @@ fun AddOrEditCustomerScreen(
             "NO_LIMIT" -> BigDecimal.ZERO
             "5000" -> BigDecimal("5000")
             "10000" -> BigDecimal("10000")
-            "25000" -> BigDecimal("25000")
             else -> customLimitInput.trim().toBigDecimalOrNull()?.max(BigDecimal.ZERO) ?: BigDecimal.ZERO
         }
     }
@@ -173,9 +181,19 @@ fun AddOrEditCustomerScreen(
     var notesInput by remember(existingCustomer) {
         mutableStateOf(existingCustomer?.getNotes().orEmpty())
     }
+    var showMoreDetails by remember(existingCustomer) {
+        mutableStateOf(
+            isEdit && (
+                (existingCustomer?.getBlockUdhariNow() == true) ||
+                    (existingCustomer?.getNotes()?.isNotBlank() == true) ||
+                    (existingCustomer?.getReminderChannel()?.equals("WhatsApp", ignoreCase = true) == false)
+                )
+        )
+    }
 
     val currentUdhari = existingCustomer?.totalUdhari ?: BigDecimal.ZERO
     val phoneTags = listOf("Self", "Father", "Home", "Work", "WhatsApp", "Other")
+    val nextTagSuggestions = listOf("Father", "Home", "Work", "Other")
 
     val existingCustomersFlow = remember {
         try {
@@ -220,6 +238,60 @@ fun AddOrEditCustomerScreen(
         }
     }
 
+    // Live similar / duplicate customer check once Name (+ Village) are filled
+    val similarCustomers = remember(existingCustomers, nameInput, villageInput, existingCustomer?.id) {
+        val qName = nameInput.trim().replace(Regex("\\s+"), " ")
+        val qVillage = villageInput.trim().replace(Regex("\\s+"), " ")
+        if (qName.length < 2) {
+            emptyList()
+        } else {
+            val activeOthers = existingCustomers.filter { !it.isDeleted && it.id != existingCustomer?.id }
+            val nameMatches = activeOthers.filter { c ->
+                val cName = c.name.trim()
+                cName.equals(qName, ignoreCase = true) ||
+                    cName.startsWith("$qName ", ignoreCase = true) ||
+                    qName.startsWith("$cName ", ignoreCase = true)
+            }
+            if (qVillage.isNotBlank()) {
+                val sameVillage = nameMatches.filter { c ->
+                    c.village.trim().equals(qVillage, ignoreCase = true) ||
+                        c.village.trim().contains(qVillage, ignoreCase = true)
+                }
+                if (sameVillage.isNotEmpty()) sameVillage else nameMatches
+            } else {
+                nameMatches
+            }
+        }
+    }
+
+    val similarSummaryBanner = remember(similarCustomers, nameInput, villageInput, fatherNameInput) {
+        if (similarCustomers.isEmpty()) {
+            null
+        } else {
+            val first = similarCustomers.first()
+            val firstIdentity = buildString {
+                append(first.name.trim())
+                if (first.fatherName.isNotBlank()) {
+                    append(" s/o ${first.fatherName.trim()}")
+                }
+                if (first.village.isNotBlank()) {
+                    append(", ${first.village.trim()}")
+                }
+            }
+            val count = similarCustomers.size
+            val base = if (count == 1) {
+                "1 similar customer: $firstIdentity"
+            } else {
+                "$count similar customers: $firstIdentity +${count - 1} more"
+            }
+            if (fatherNameInput.isBlank()) {
+                "$base · Add father's name?"
+            } else {
+                base
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -259,11 +331,13 @@ fun AddOrEditCustomerScreen(
                     fontWeight = FontWeight.Bold,
                     color = EditNavyText
                 )
-                if (nameInput.isNotBlank()) {
+                if (isEdit && nameInput.isNotBlank()) {
                     Text(
                         text = nameInput,
                         fontSize = 13.sp,
-                        color = EditSubtleText
+                        color = EditSubtleText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -276,284 +350,280 @@ fun AddOrEditCustomerScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // CUSTOMER NAME *
-            CustomerFormInputSection(
-                label = tr("CUSTOMER NAME *", "ग्राहक का नाम *"),
-                value = nameInput,
-                onValueChange = { nameInput = it },
-                placeholder = tr("Enter customer name", "ग्राहक का नाम लिखें"),
-                testTag = "customer_form_name_input"
-            )
+            // 1. NAME * + FATHER'S NAME (side by side with equal visual weight)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                CustomerFormInputSection(
+                    label = tr("Customer name *", "ग्राहक का नाम *"),
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    placeholder = tr("Customer name", "ग्राहक का नाम"),
+                    testTag = "customer_form_name_input",
+                    fieldBg = fieldBg,
+                    fieldBorder = fieldBorder,
+                    modifier = Modifier.weight(1f)
+                )
 
-            // FATHER'S NAME
-            CustomerFormInputSection(
-                label = tr("FATHER'S NAME", "पिता का नाम"),
-                value = fatherNameInput,
-                onValueChange = { fatherNameInput = it },
-                placeholder = tr("Father's name (optional)", "पिता का नाम (वैकल्पिक)"),
-                testTag = "customer_form_father_input"
-            )
-
-            // MOBILE NUMBERS
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = tr("MOBILE NUMBERS", "मोबाइल नंबर"),
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = EditSubtleText,
-                        letterSpacing = 0.6.sp
-                    )
-                    Text(
-                        text = "${mobileEntries.count { it.number.isNotBlank() }} ${tr("added", "जोड़े गए")}",
-                        fontSize = 12.5.sp,
-                        color = EditSubtleText
-                    )
-                }
-
-                mobileEntries.forEachIndexed { idx, entry ->
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        color = KwSurface,
-                        border = BorderStroke(1.dp, EditCardBorder)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Surface(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = KwSurface,
-                                    border = BorderStroke(1.dp, kw(0xFFCBD5E1))
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(horizontal = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "+91 ",
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = EditSubtleText
-                                        )
-                                        BasicTextField(
-                                            value = entry.number,
-                                            onValueChange = { next ->
-                                                val digits = next.filter { it.isDigit() || it == ' ' }.take(12)
-                                                mobileEntries[idx] = entry.copy(number = digits)
-                                            },
-                                            singleLine = true,
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                            textStyle = TextStyle(
-                                                fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = EditNavyText
-                                            ),
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .testTag("customer_phone_input_$idx")
-                                        )
-                                    }
-                                }
-
-                                if (mobileEntries.size > 1 && idx > 0) {
-                                    Surface(
-                                        onClick = { mobileEntries.removeAt(idx) },
-                                        modifier = Modifier.size(48.dp),
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = kw(0xFFF8FAFC),
-                                        border = BorderStroke(1.dp, EditCardBorder)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = "Remove number",
-                                                tint = EditNavyText,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = tr("Tag", "टैग"),
-                                    fontSize = 12.5.sp,
-                                    color = EditSubtleText
-                                )
-                                if (idx == 0) {
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = EditSoftGreen
-                                    ) {
-                                        Text(
-                                            text = tr("Primary", "मुख्य"),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = EditBrandGreen,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                phoneTags.forEach { tag ->
-                                    val selected = entry.tag.equals(tag, ignoreCase = true)
-                                    Surface(
-                                        onClick = { mobileEntries[idx] = entry.copy(tag = tag) },
-                                        shape = RoundedCornerShape(50),
-                                        color = if (selected) EditBrandGreen else kw(0xFFEEF2F6)
-                                    ) {
-                                        Text(
-                                            text = tag,
-                                            fontSize = 12.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (selected) Color.White else EditNavyText,
-                                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Dashed "+ Add another number" button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(KwSurface)
-                        .clickable {
-                            mobileEntries.add(TaggedMobileNumber("", "Father"))
-                        }
-                        .testTag("add_another_phone_btn"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        drawRoundRect(
-                            color = EditBrandGreen,
-                            cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
-                            style = Stroke(
-                                width = 1.5.dp.toPx(),
-                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 10f), 0f)
-                            )
-                        )
-                    }
-                    Text(
-                        text = tr("+ Add another number", "+ एक और नंबर जोड़ें"),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = EditBrandGreen
-                    )
-                }
+                CustomerFormInputSection(
+                    label = tr("Father's name", "पिता का नाम"),
+                    value = fatherNameInput,
+                    onValueChange = { fatherNameInput = it },
+                    placeholder = tr("Father's name", "पिता का नाम"),
+                    testTag = "customer_form_father_input",
+                    fieldBg = fieldBg,
+                    fieldBorder = if (similarCustomers.isNotEmpty() && fatherNameInput.isBlank()) dupBannerBorder else fieldBorder,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            // VILLAGE / AREA (with Currently Saved Villages chips to prevent duplicate names)
+            // 2. MOBILE (+ compact Tag dropdown pill & inline "+ Add another number")
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = tr("Mobile", "मोबाइल"),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = EditSubtleText
+                )
+
+                mobileEntries.forEachIndexed { idx, entry ->
+                    var tagMenuExpanded by remember(idx, mobileEntries.size) { mutableStateOf(false) }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Tag pill dropdown
+                        Box {
+                            Surface(
+                                onClick = { tagMenuExpanded = true },
+                                shape = RoundedCornerShape(50),
+                                color = if (idx == 0) EditBrandGreen else chipUnselectedBg,
+                                border = if (idx == 0) null else BorderStroke(1.dp, fieldBorder),
+                                modifier = Modifier
+                                    .height(48.dp)
+                                    .testTag("customer_phone_tag_dropdown_$idx")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        text = entry.tag.ifBlank { "Self" },
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (idx == 0) Color.White else EditNavyText,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = tr("Select phone tag", "फ़ोन टैग चुनें"),
+                                        tint = if (idx == 0) Color.White else EditSubtleText,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = tagMenuExpanded,
+                                onDismissRequest = { tagMenuExpanded = false }
+                            ) {
+                                phoneTags.forEach { tag ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = tag,
+                                                fontWeight = if (entry.tag.equals(tag, ignoreCase = true)) FontWeight.Bold else FontWeight.Medium
+                                            )
+                                        },
+                                        onClick = {
+                                            mobileEntries[idx] = entry.copy(tag = tag)
+                                            tagMenuExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Phone number box
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            color = fieldBg,
+                            border = BorderStroke(1.dp, fieldBorder)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "+91 ",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = EditSubtleText
+                                )
+                                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                    if (entry.number.isEmpty()) {
+                                        Text(
+                                            text = "98765 43210",
+                                            fontSize = 15.sp,
+                                            color = kw(0xFF94A3B8),
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    BasicTextField(
+                                        value = entry.number,
+                                        onValueChange = { next ->
+                                            val digits = next.filter { it.isDigit() || it == ' ' }.take(12)
+                                            mobileEntries[idx] = entry.copy(number = digits)
+                                        },
+                                        singleLine = true,
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                        textStyle = TextStyle(
+                                            fontSize = 15.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = EditNavyText
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag("customer_phone_input_$idx")
+                                    )
+                                }
+                            }
+                        }
+
+                        if (mobileEntries.size > 1 && idx > 0) {
+                            Surface(
+                                onClick = { mobileEntries.removeAt(idx) },
+                                modifier = Modifier.size(44.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                color = chipUnselectedBg,
+                                border = BorderStroke(1.dp, fieldBorder)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove number",
+                                        tint = EditSubtleText,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Inline green "+ Add another number (Father, Home, Work...)"
+                Text(
+                    text = tr(
+                        "+ Add another number (Father, Home, Work...)",
+                        "+ एक और नंबर जोड़ें (पिता, घर, काम...)"
+                    ),
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = EditBrandGreen,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            val nextTag = nextTagSuggestions.getOrElse((mobileEntries.size - 1).coerceAtLeast(0)) { "Other" }
+                            mobileEntries.add(TaggedMobileNumber("", nextTag))
+                        }
+                        .padding(vertical = 4.dp)
+                        .testTag("add_another_phone_btn")
+                )
+            }
+
+            // 3. VILLAGE / AREA (+ Saved chips + Duplicate check banner)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CustomerFormInputSection(
-                    label = tr("VILLAGE / AREA", "गाँव / क्षेत्र"),
+                    label = tr("Village / area", "गाँव / क्षेत्र"),
                     value = villageInput,
                     onValueChange = { villageInput = it },
-                    placeholder = tr("Enter or select saved village / area", "गाँव या क्षेत्र लिखें या नीचे से चुनें"),
-                    testTag = "customer_form_village_input"
+                    placeholder = tr("Enter or select saved village", "गाँव या क्षेत्र लिखें या नीचे से चुनें"),
+                    testTag = "customer_form_village_input",
+                    fieldBg = fieldBg,
+                    fieldBorder = fieldBorder
                 )
 
                 if (displayedSavedVillages.isNotEmpty()) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .testTag("customer_form_saved_villages_row"),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = tr(
-                                "CURRENTLY SAVED VILLAGES (TAP TO AVOID DUPLICATE SPELLINGS)",
-                                "सेव किए गए गाँव (डुप्लीकेट नाम से बचने के लिए टैप करें)"
-                            ),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = EditSubtleText,
-                            letterSpacing = 0.4.sp
+                            text = tr("Saved:", "सेव:"),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = EditSubtleText
                         )
-                        FlowRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("customer_form_saved_villages_row"),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            displayedSavedVillages.forEach { (savedVillage, count) ->
-                                val isSelected = villageInput.trim().replace(Regex("\\s+"), " ")
-                                    .equals(savedVillage, ignoreCase = true)
-                                Surface(
-                                    onClick = { villageInput = savedVillage },
-                                    shape = RoundedCornerShape(50),
-                                    color = if (isSelected) EditBrandGreen else KwSurface,
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (isSelected) EditBrandGreen else EditCardBorder
-                                    ),
-                                    modifier = Modifier.testTag(
-                                        "saved_village_chip_${savedVillage.lowercase(Locale.ROOT).replace(" ", "_")}"
-                                    )
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Text(
-                                            text = savedVillage,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (isSelected) Color.White else EditNavyText
-                                        )
-                                        Surface(
-                                            shape = RoundedCornerShape(50),
-                                            color = if (isSelected) Color.White.copy(alpha = 0.22f) else kw(0xFFEEF2F6)
-                                        ) {
-                                            Text(
-                                                text = count.toString(),
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isSelected) Color.White else EditSubtleText,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                                            )
-                                        }
-                                    }
-                                }
+                        displayedSavedVillages.forEach { (savedVillage, count) ->
+                            val isSelected = villageInput.trim().replace(Regex("\\s+"), " ")
+                                .equals(savedVillage, ignoreCase = true)
+                            Surface(
+                                onClick = { villageInput = savedVillage },
+                                shape = RoundedCornerShape(50),
+                                color = if (isSelected) EditBrandGreen else chipUnselectedBg,
+                                border = BorderStroke(
+                                    1.dp,
+                                    if (isSelected) EditBrandGreen else fieldBorder
+                                ),
+                                modifier = Modifier.testTag(
+                                    "saved_village_chip_${savedVillage.lowercase(Locale.ROOT).replace(" ", "_")}"
+                                )
+                            ) {
+                                Text(
+                                    text = "$savedVillage · $count",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isSelected) Color.White else EditNavyText,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
                             }
                         }
                     }
                 }
+
+                // Live Duplicate / Similar Customer Check Banner
+                if (similarSummaryBanner != null) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("customer_similar_duplicate_banner"),
+                        shape = RoundedCornerShape(12.dp),
+                        color = dupBannerBg,
+                        border = BorderStroke(1.dp, dupBannerBorder)
+                    ) {
+                        Text(
+                            text = similarSummaryBanner,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = dupBannerText,
+                            lineHeight = 18.sp,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                        )
+                    }
+                }
             }
 
-            // Credit Limit Card
+            // 4. CREDIT LIMIT CARD (with Auto-block inside)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -566,43 +636,40 @@ fun AddOrEditCustomerScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = tr("Credit limit", "उधारी सीमा"),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = EditNavyText
-                        )
-                        Text(
-                            text = tr("Most udhari this customer can have at one time", "यह ग्राहक एक बार में अधिकतम कितनी उधारी रख सकता है"),
-                            fontSize = 12.5.sp,
-                            color = EditSubtleText
-                        )
-                    }
+                    Text(
+                        text = tr("Credit limit", "उधारी सीमा"),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = EditNavyText
+                    )
 
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         listOf(
                             "NO_LIMIT" to tr("No limit", "कोई सीमा नहीं"),
                             "5000" to "₹5,000",
                             "10000" to "₹10,000",
-                            "25000" to "₹25,000",
                             "CUSTOM" to tr("Custom", "कस्टम")
                         ).forEach { (key, label) ->
                             val selected = selectedLimitPreset == key
                             Surface(
                                 onClick = { selectedLimitPreset = key },
                                 shape = RoundedCornerShape(50),
-                                color = if (selected) EditBrandGreen else kw(0xFFEEF2F6)
+                                color = if (selected) EditBrandGreen else chipUnselectedBg
                             ) {
                                 Text(
                                     text = label,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (selected) Color.White else EditNavyText,
-                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
                                 )
                             }
                         }
@@ -614,8 +681,8 @@ fun AddOrEditCustomerScreen(
                                 .fillMaxWidth()
                                 .height(46.dp),
                             shape = RoundedCornerShape(12.dp),
-                            color = kw(0xFFF8FAFC),
-                            border = BorderStroke(1.dp, kw(0xFFCBD5E1))
+                            color = fieldBg,
+                            border = BorderStroke(1.dp, fieldBorder)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -642,179 +709,230 @@ fun AddOrEditCustomerScreen(
                         }
                     }
 
-                    if (effectiveLimit > BigDecimal.ZERO) {
+                    if (isEdit && effectiveLimit > BigDecimal.ZERO) {
                         val ratio = (currentUdhari.toFloat() / effectiveLimit.toFloat()).coerceIn(0f, 1f)
                         val remaining = effectiveLimit.subtract(currentUdhari).max(BigDecimal.ZERO)
                         LinearProgressIndicator(
                             progress = { ratio },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(7.dp)
+                                .height(6.dp)
                                 .clip(RoundedCornerShape(50)),
                             color = if (ratio >= 1f) EditCrimsonRed else EditBrandGreen,
-                            trackColor = kw(0xFFE2E8F0),
+                            trackColor = chipUnselectedBg,
                             strokeCap = StrokeCap.Round
                         )
                         Text(
                             text = "${CurrencyUtils.formatInr(currentUdhari)} used · ${CurrencyUtils.formatInr(remaining)} left",
-                            fontSize = 12.5.sp,
+                            fontSize = 12.sp,
                             color = EditSubtleText
                         )
                     }
-                }
-            }
 
-            // Auto-block at limit Card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                color = KwSurface,
-                border = BorderStroke(1.dp, EditCardBorder)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                        Text(
-                            text = tr("Auto-block at limit", "सीमा पूरी होने पर ऑटो-ब्लॉक"),
-                            fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = EditNavyText
-                        )
-                        val limStr = if (effectiveLimit > BigDecimal.ZERO) CurrencyUtils.formatInr(effectiveLimit) else "limit"
-                        Text(
-                            text = tr(
-                                "New bills must be paid in full once $limStr is reached",
-                                "$limStr पूरी होने पर नए बिलों का पूरा भुगतान करना होगा"
-                            ),
-                            fontSize = 12.5.sp,
-                            color = EditSubtleText,
-                            lineHeight = 18.sp
-                        )
-                    }
-                    Switch(
-                        checked = autoBlockAtLimit,
-                        onCheckedChange = { autoBlockAtLimit = it },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = EditBrandGreen,
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = kw(0xFFD1D5DB)
-                        )
-                    )
-                }
-            }
+                    HorizontalDivider(color = EditCardBorder)
 
-            // Block udhari now Card (Soft Red)
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                color = EditSoftRed,
-                border = BorderStroke(1.dp, kw(0xFFFECDD3))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                        Text(
-                            text = tr("Block udhari now", "अभी उधारी बंद करें"),
-                            fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = EditCrimsonRed
-                        )
-                        Text(
-                            text = tr(
-                                "New bills must be paid in full. Existing udhari stays and can still be collected.",
-                                "नए बिलों का पूरा भुगतान करना होगा। पुरानी उधारी बनी रहेगी और वसूली जा सकेगी।"
-                            ),
-                            fontSize = 12.5.sp,
-                            color = EditSubtleText,
-                            lineHeight = 18.sp
-                        )
-                    }
-                    Switch(
-                        checked = blockUdhariNow,
-                        onCheckedChange = { blockUdhariNow = it },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = EditCrimsonRed,
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = kw(0xFFD1D5DB)
-                        )
-                    )
-                }
-            }
-
-            // REMINDERS
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = tr("REMINDERS", "रिमाइंडर"),
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = EditSubtleText,
-                    letterSpacing = 0.6.sp
-                )
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    color = kw(0xFFEEF2F6),
-                    border = BorderStroke(1.dp, EditCardBorder)
-                ) {
+                    // Auto-block row inside Credit limit card
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(4.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        listOf("WhatsApp", "SMS", "Both").forEach { ch ->
-                            val selected = reminderChannel.equals(ch, ignoreCase = true)
-                            Surface(
-                                onClick = { reminderChannel = ch },
+                        val autoBlockLabel = if (effectiveLimit > BigDecimal.ZERO) {
+                            tr(
+                                "Auto-block at ${CurrencyUtils.formatInr(effectiveLimit)}",
+                                "${CurrencyUtils.formatInr(effectiveLimit)} पर ऑटो-ब्लॉक"
+                            )
+                        } else {
+                            tr("Auto-block at limit", "सीमा पर ऑटो-ब्लॉक")
+                        }
+                        Text(
+                            text = autoBlockLabel,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (effectiveLimit > BigDecimal.ZERO) EditNavyText else EditSubtleText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 12.dp)
+                        )
+                        Switch(
+                            checked = autoBlockAtLimit && effectiveLimit > BigDecimal.ZERO,
+                            enabled = effectiveLimit > BigDecimal.ZERO,
+                            onCheckedChange = { autoBlockAtLimit = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = EditBrandGreen,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = kw(0xFFD1D5DB)
+                            )
+                        )
+                    }
+                }
+            }
+
+            // 5. COLLAPSIBLE MORE DETAILS (Reminders · Notes · Block udhari)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (showMoreDetails) KwSurface else Color.Transparent)
+                    .clickable { showMoreDetails = !showMoreDetails }
+                    .testTag("customer_more_details_toggle")
+            ) {
+                Canvas(modifier = Modifier.matchParentSize()) {
+                    drawRoundRect(
+                        color = fieldBorder,
+                        cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
+                        style = Stroke(
+                            width = 1.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f)
+                        )
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 15.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = tr("More details", "अतिरिक्त विवरण"),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = EditNavyText
+                    )
+                    Text(
+                        text = tr(
+                            "Reminders · Notes ${if (showMoreDetails) "▾" else "▸"}",
+                            "रिमाइंडर · नोट्स ${if (showMoreDetails) "▾" else "▸"}"
+                        ),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = EditSubtleText,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = showMoreDetails) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    // REMINDERS
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = tr("Reminders", "रिमाइंडर"),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = EditSubtleText
+                        )
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            color = chipUnselectedBg,
+                            border = BorderStroke(1.dp, EditCardBorder)
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .height(44.dp),
-                                shape = RoundedCornerShape(11.dp),
-                                color = if (selected) EditBrandGreen else Color.Transparent
+                                    .fillMaxWidth()
+                                    .padding(4.dp)
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = ch,
-                                        fontSize = 14.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (selected) Color.White else EditNavyText,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                                listOf("WhatsApp", "SMS", "Both").forEach { ch ->
+                                    val selected = reminderChannel.equals(ch, ignoreCase = true)
+                                    Surface(
+                                        onClick = { reminderChannel = ch },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(42.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (selected) EditBrandGreen else Color.Transparent
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = ch,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (selected) Color.White else EditNavyText,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+
+                    // NOTES
+                    CustomerFormInputSection(
+                        label = tr("Notes", "नोट्स"),
+                        value = notesInput,
+                        onValueChange = { notesInput = it },
+                        placeholder = tr("Pays after crop sale", "फसल बिकने के बाद भुगतान करता है"),
+                        testTag = "customer_form_notes_input",
+                        fieldBg = fieldBg,
+                        fieldBorder = fieldBorder
+                    )
+
+                    // Block udhari now Card (Soft Red)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = EditSoftRed,
+                        border = BorderStroke(1.dp, kw(0xFFFECDD3))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 12.dp)
+                            ) {
+                                Text(
+                                    text = tr("Block udhari now", "अभी उधारी बंद करें"),
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EditCrimsonRed
+                                )
+                                Text(
+                                    text = tr(
+                                        "New bills must be paid in full. Existing udhari stays collectable.",
+                                        "नए बिलों का पूरा भुगतान करना होगा। पुरानी उधारी वसूली जा सकेगी।"
+                                    ),
+                                    fontSize = 12.sp,
+                                    color = EditSubtleText,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                            Switch(
+                                checked = blockUdhariNow,
+                                onCheckedChange = { blockUdhariNow = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = EditCrimsonRed,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = kw(0xFFD1D5DB)
+                                )
+                            )
+                        }
+                    }
                 }
             }
-
-            // NOTES
-            CustomerFormInputSection(
-                label = tr("NOTES", "नोट्स"),
-                value = notesInput,
-                onValueChange = { notesInput = it },
-                placeholder = tr("Pays after crop sale", "फसल बिकने के बाद भुगतान करता है"),
-                testTag = "customer_form_notes_input"
-            )
 
             // Delete Customer Section (when editing)
             if (isEdit && onRequestDeleteCustomer != null) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     TextButton(
@@ -823,9 +941,12 @@ fun AddOrEditCustomerScreen(
                     ) {
                         Text(
                             text = tr("Delete customer", "ग्राहक हटाएं"),
-                            fontSize = 15.5.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = EditCrimsonRed
+                            color = EditCrimsonRed,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     if (currentUdhari > BigDecimal.ZERO) {
@@ -845,10 +966,10 @@ fun AddOrEditCustomerScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // Bottom Sticky Bar
+        // Bottom Sticky Bar (Cancel | Save customer)
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = KwSurface,
+            color = EditPageBg,
             border = BorderStroke(1.dp, EditCardBorder)
         ) {
             Row(
@@ -858,26 +979,23 @@ fun AddOrEditCustomerScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
+                TextButton(
                     onClick = onCancel,
                     shape = RoundedCornerShape(14.dp),
-                    color = KwSurface,
-                    border = BorderStroke(1.dp, kw(0xFFCBD5E1)),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.65f)
                         .height(50.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = tr("Cancel", "रद्द करें"),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = EditNavyText,
-                            maxLines = 1,
-                            softWrap = false,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        text = tr("Cancel", "रद्द करें"),
+                        fontSize = 15.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = EditNavyText,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Button(
@@ -920,14 +1038,16 @@ fun AddOrEditCustomerScreen(
                     enabled = nameInput.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = EditBrandGreen,
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        disabledContainerColor = EditBrandGreen.copy(alpha = 0.4f),
+                        disabledContentColor = Color.White.copy(alpha = 0.7f)
                     ),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
-                        .weight(1.4f)
+                        .weight(1.6f)
                         .height(50.dp)
                         .testTag("customer_form_save_btn"),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = if (isEdit) tr("Save changes", "बदलाव सेव करें") else tr("Save customer", "ग्राहक सेव करें"),
@@ -949,23 +1069,30 @@ private fun CustomerFormInputSection(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    testTag: String
+    testTag: String,
+    fieldBg: Color = KwSurface,
+    fieldBorder: Color = EditCardBorder,
+    modifier: Modifier = Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
         Text(
             text = label,
-            fontSize = 11.5.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
             color = EditSubtleText,
-            letterSpacing = 0.6.sp
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .height(48.dp),
             shape = RoundedCornerShape(14.dp),
-            color = KwSurface,
-            border = BorderStroke(1.dp, EditCardBorder)
+            color = fieldBg,
+            border = BorderStroke(1.dp, fieldBorder)
         ) {
             Box(
                 contentAlignment = Alignment.CenterStart,
@@ -974,8 +1101,10 @@ private fun CustomerFormInputSection(
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,
-                        fontSize = 15.sp,
-                        color = kw(0xFF94A3B8)
+                        fontSize = 14.5.sp,
+                        color = kw(0xFF94A3B8),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
                 BasicTextField(
@@ -983,8 +1112,8 @@ private fun CustomerFormInputSection(
                     onValueChange = onValueChange,
                     singleLine = true,
                     textStyle = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.5.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = EditNavyText
                     ),
                     modifier = Modifier
