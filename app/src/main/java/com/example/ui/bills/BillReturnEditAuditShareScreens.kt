@@ -756,7 +756,10 @@ fun BillReturnFlowScreen(
                             Text(
                                 text = tr("Continue", "आगे बढ़ें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1113,9 +1116,10 @@ fun BillReturnFlowScreen(
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = BNavyText),
                             modifier = Modifier
                                 .weight(0.38f)
-                                .height(52.dp)
+                                .height(52.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
-                            Text(tr("Back", "पीछे"), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(tr("Back", "पीछे"), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                         }
 
                         Button(
@@ -1171,9 +1175,10 @@ fun BillReturnFlowScreen(
                             modifier = Modifier
                                 .weight(0.62f)
                                 .height(52.dp)
-                                .testTag("confirm_return_btn")
+                                .testTag("confirm_return_btn"),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
-                            Text(tr("Confirm return", "वापसी पक्की करें"), fontWeight = FontWeight.Bold, fontSize = 15.5.sp)
+                            Text(tr("Confirm return", "वापसी पक्की करें"), fontWeight = FontWeight.Bold, fontSize = 15.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -1371,7 +1376,10 @@ fun BillReturnFlowScreen(
                     Text(
                         text = tr("Share credit note on WhatsApp", "व्हाट्सएप पर क्रेडिट नोट शेयर करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -2174,9 +2182,10 @@ fun EditBillFlowScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = BNavyText),
                     modifier = Modifier
                         .weight(0.38f)
-                        .height(52.dp)
+                        .height(52.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
-                    Text(tr("Cancel", "रद्द करें"), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(tr("Cancel", "रद्द करें"), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                 }
 
                 Button(
@@ -2235,9 +2244,10 @@ fun EditBillFlowScreen(
                     modifier = Modifier
                         .weight(0.62f)
                         .height(52.dp)
-                        .testTag("save_bill_changes_btn")
+                        .testTag("save_bill_changes_btn"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
-                    Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold, fontSize = 15.5.sp)
+                    Text(tr("Save changes", "बदलाव सेव करें"), fontWeight = FontWeight.Bold, fontSize = 15.5.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -2686,7 +2696,10 @@ fun AuditLogFullScreen(
                         Text(
                             text = tr("Load older entries", "पुराने लॉग लोड करें"),
                             fontSize = 14.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2804,7 +2817,10 @@ fun BillShareScreen(
                                     text = label,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (active) Color.White else BNavyText
+                                    color = if (active) Color.White else BNavyText,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -2944,12 +2960,16 @@ fun BillShareScreen(
                     modifier = Modifier
                         .weight(0.58f)
                         .height(52.dp)
-                        .testTag("bill_share_whatsapp_btn")
+                        .testTag("bill_share_whatsapp_btn"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Send on WhatsApp", "व्हाट्सएप पर भेजें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -2967,12 +2987,16 @@ fun BillShareScreen(
                     modifier = Modifier
                         .weight(0.42f)
                         .height(52.dp)
-                        .testTag("bill_share_generic_btn")
+                        .testTag("bill_share_generic_btn"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Share", "शेयर"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

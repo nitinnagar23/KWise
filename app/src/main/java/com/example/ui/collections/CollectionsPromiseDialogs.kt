@@ -525,7 +525,7 @@ internal fun SetPromiseDateDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("cancel_promise_btn")
@@ -534,7 +534,10 @@ internal fun SetPromiseDateDialog(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -554,7 +557,7 @@ internal fun SetPromiseDateDialog(
                             containerColor = ColBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1.3f)
                             .testTag("save_promise_btn")
@@ -562,7 +565,10 @@ internal fun SetPromiseDateDialog(
                         Text(
                             text = tr("Save promise", "वादा सेव करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -773,13 +779,17 @@ internal fun CollectPaymentDialog(
                             border = BorderStroke(1.dp, FlatDarkBorder),
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag("collect_payment_custom_date_btn")
+                                .testTag("collect_payment_custom_date_btn"),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = dateFormatter.format(Date(activeTimestamp)),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = FlatTextPrimary
+                                color = FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -806,13 +816,17 @@ internal fun CollectPaymentDialog(
                             border = BorderStroke(1.dp, FlatDarkBorder),
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag("collect_payment_custom_time_btn")
+                                .testTag("collect_payment_custom_time_btn"),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = timeFormatter.format(Date(activeTimestamp)),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = FlatTextPrimary
+                                color = FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -826,13 +840,16 @@ internal fun CollectPaymentDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
                             text = tr("Cancel", "रद्द करें"),
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -848,14 +865,17 @@ internal fun CollectPaymentDialog(
                             containerColor = ColBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1.3f)
                             .testTag("confirm_collect_payment_btn")
                     ) {
                         Text(
                             text = tr("Record payment", "भुगतान सेव करें"),
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

@@ -659,6 +659,7 @@ fun CustomerDetailScreen(
                                                 contentColor = Color.White
                                             ),
                                             shape = RoundedCornerShape(14.dp),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(48.dp)
@@ -666,9 +667,11 @@ fun CustomerDetailScreen(
                                         ) {
                                             Text(
                                                 text = tr("Collect udhari", "उधारी वसूलें"),
-                                                fontSize = 14.5.sp,
+                                                fontSize = 14.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                maxLines = 1
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
@@ -683,12 +686,18 @@ fun CustomerDetailScreen(
                                             .height(48.dp)
                                             .testTag("customer_new_bill_btn")
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.padding(horizontal = 10.dp)
+                                        ) {
                                             Text(
                                                 text = tr("New bill", "नया बिल"),
-                                                fontSize = 14.5.sp,
+                                                fontSize = 14.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = DetailBrandGreen
+                                                color = DetailBrandGreen,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
@@ -834,7 +843,10 @@ fun CustomerDetailScreen(
                                     text = label,
                                     fontSize = 14.5.sp,
                                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold,
-                                    color = if (active) DetailBrandGreen else DetailSubtleText
+                                    color = if (active) DetailBrandGreen else DetailSubtleText,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         )
@@ -1164,12 +1176,18 @@ fun CustomerDetailScreen(
                                                 .weight(1f)
                                                 .height(46.dp)
                                         ) {
-                                            Box(contentAlignment = Alignment.Center) {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier.padding(horizontal = 10.dp)
+                                            ) {
                                                 Text(
                                                     text = tr("Change date", "तारीख बदलें"),
-                                                    fontSize = 14.5.sp,
+                                                    fontSize = 14.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = DetailBrandGreen
+                                                    color = DetailBrandGreen,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
                                         }
@@ -1182,14 +1200,18 @@ fun CustomerDetailScreen(
                                                     contentColor = Color.White
                                                 ),
                                                 shape = RoundedCornerShape(14.dp),
+                                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .height(46.dp)
                                             ) {
                                                 Text(
                                                     text = tr("Collect now", "अभी वसूलें"),
-                                                    fontSize = 14.5.sp,
-                                                    fontWeight = FontWeight.Bold
+                                                    fontSize = 14.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
                                         }

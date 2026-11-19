@@ -1701,7 +1701,7 @@ private fun ExportBottomBar(
                 onClick = onExportCsv,
                 shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(1.dp, FlatDarkBorder),
-                contentPadding = PaddingValues(vertical = 14.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                 modifier = Modifier
                     .weight(1f)
                     .testTag("report_export_excel_csv_btn")
@@ -1710,7 +1710,10 @@ private fun ExportBottomBar(
                     text = "Excel / CSV",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = FlatTextPrimary
+                    color = FlatTextPrimary,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -1721,7 +1724,7 @@ private fun ExportBottomBar(
                     containerColor = RepExtraGreen,
                     contentColor = Color.White
                 ),
-                contentPadding = PaddingValues(vertical = 14.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                 modifier = Modifier
                     .weight(1f)
                     .testTag("report_export_pdf_btn")
@@ -1729,7 +1732,10 @@ private fun ExportBottomBar(
                 Text(
                     text = "PDF",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

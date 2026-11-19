@@ -99,6 +99,7 @@ import java.io.FileOutputStream
 import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.util.UUID
+import androidx.compose.foundation.layout.PaddingValues
 
 private val EditPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F7F9)
 private val EditCardBorder: Color get() = kw(0xFFE2E8F0)
@@ -787,7 +788,10 @@ fun AddOrEditCustomerScreen(
                                         text = ch,
                                         fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (selected) Color.White else EditNavyText
+                                        color = if (selected) Color.White else EditNavyText,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -868,7 +872,10 @@ fun AddOrEditCustomerScreen(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = EditNavyText
+                            color = EditNavyText,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -919,12 +926,16 @@ fun AddOrEditCustomerScreen(
                     modifier = Modifier
                         .weight(1.4f)
                         .height(50.dp)
-                        .testTag("customer_form_save_btn")
+                        .testTag("customer_form_save_btn"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = if (isEdit) tr("Save changes", "बदलाव सेव करें") else tr("Save customer", "ग्राहक सेव करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1342,7 +1353,10 @@ fun ImportCustomersFlowScreen(
                                         text = tr("Download sample template", "सैंपल टेम्पलेट डाउनलोड करें"),
                                         fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = EditBrandGreen
+                                        color = EditBrandGreen,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1650,7 +1664,10 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = "Add ${selectedContactIds.size} customers",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1970,7 +1987,10 @@ fun ImportCustomersFlowScreen(
                         Text(
                             text = "Import ${readyRows.size} customers",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2070,7 +2090,9 @@ fun ImportCustomersFlowScreen(
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = EditCrimsonRed,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

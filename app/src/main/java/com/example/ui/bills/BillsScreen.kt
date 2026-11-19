@@ -1366,7 +1366,10 @@ private fun BillDetailAndAuditScreen(
                         text = tr("Share", "शेयर"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = BillsGreen
+                        color = BillsGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1395,7 +1398,10 @@ private fun BillDetailAndAuditScreen(
                         text = tr("Edit", "बदलें"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = BillsGreen
+                        color = BillsGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1424,7 +1430,10 @@ private fun BillDetailAndAuditScreen(
                         text = tr("Return", "वापसी"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = BillsRed
+                        color = BillsRed,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

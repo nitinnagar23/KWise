@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -862,13 +863,16 @@ internal fun ReportsCustomerInsightsTab(
                                 containerColor = RepGreen,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            modifier = Modifier.height(38.dp)
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.defaultMinSize(minHeight = 40.dp)
                         ) {
                             Text(
                                 text = tr("Collect", "वसूली"),
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1078,6 +1082,7 @@ internal fun ReportsExportAndBackupScreen(
                                 .height(48.dp)
                                 .testTag("export_gst_csv_btn"),
                             shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = RepGreen,
                                 contentColor = Color.White
@@ -1091,8 +1096,11 @@ internal fun ReportsExportAndBackupScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Excel / CSV",
-                                fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1113,6 +1121,7 @@ internal fun ReportsExportAndBackupScreen(
                                 .height(48.dp)
                                 .testTag("export_gst_pdf_btn"),
                             shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             border = BorderStroke(1.5.dp, RepGreen),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = FlatDarkCard,
@@ -1128,9 +1137,12 @@ internal fun ReportsExportAndBackupScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "GST PDF",
-                                fontSize = 14.5.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = RepGreen
+                                color = RepGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1324,7 +1336,10 @@ internal fun ReportsExportAndBackupScreen(
                         Text(
                             text = tr("Back up now", "अभी बैकअप लें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 

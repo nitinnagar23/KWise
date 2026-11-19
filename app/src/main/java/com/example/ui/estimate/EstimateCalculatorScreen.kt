@@ -542,13 +542,16 @@ fun EstimateCalculatorScreen(
                                 .testTag("share_estimate_button"),
                             shape = RoundedCornerShape(14.dp),
                             border = BorderStroke(1.5.dp, EstimateBrandGreen),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = EstimateBrandGreen)
                         ) {
                             Text(
                                 text = tr("Share", "शेयर करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -560,6 +563,7 @@ fun EstimateCalculatorScreen(
                                 .height(50.dp)
                                 .testTag("make_sale_button"),
                             shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = EstimateBrandGreen,
                                 contentColor = Color.White
@@ -569,7 +573,9 @@ fun EstimateCalculatorScreen(
                                 text = tr("Make sale", "बिक्री बनाएं"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1684,7 +1690,9 @@ fun EstimateCalculatorScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FilterChip(
@@ -1693,13 +1701,29 @@ fun EstimateCalculatorScreen(
                                     useWalkInCustomer = true
                                     paymentType = "CASH"
                                 },
-                                label = { Text(tr("Walk-in Customer", "वॉक-इन ग्राहक"), fontWeight = FontWeight.Bold) },
+                                label = {
+                                    Text(
+                                        text = tr("Walk-in Customer", "वॉक-इन ग्राहक"),
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
                                 modifier = Modifier.testTag("walk_in_customer_chip")
                             )
                             FilterChip(
                                 selected = !useWalkInCustomer,
                                 onClick = { useWalkInCustomer = false },
-                                label = { Text(tr("Select customer", "ग्राहक चुनें"), fontWeight = FontWeight.Bold) },
+                                label = {
+                                    Text(
+                                        text = tr("Select customer", "ग्राहक चुनें"),
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                },
                                 modifier = Modifier.testTag("select_customer_chip")
                             )
                         }
@@ -1965,7 +1989,9 @@ private fun SalePaymentQuickChip(
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isSelected) color else FlatTextSecondary,
                 fontWeight = FontWeight.Bold,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

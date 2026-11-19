@@ -267,7 +267,7 @@ internal fun ReorderListScreen(
                                 containerColor = FlatDarkCard,
                                 contentColor = InvBrandGreen
                             ),
-                            contentPadding = PaddingValues(vertical = 14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("reorder_make_purchase_bills_btn")
@@ -276,7 +276,10 @@ internal fun ReorderListScreen(
                                 text = tr("Make purchase bills", "खरीद बिल बनाएं"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = InvBrandGreen
+                                color = InvBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -288,7 +291,7 @@ internal fun ReorderListScreen(
                                 containerColor = InvBrandGreen,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(vertical = 14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("reorder_share_with_suppliers_btn")
@@ -296,7 +299,10 @@ internal fun ReorderListScreen(
                             Text(
                                 text = tr("Share with suppliers", "सप्लायर को भेजें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -743,7 +749,7 @@ internal fun ShareReorderListScreen(
                         onClick = onDone,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("share_reorder_done_btn")
@@ -752,7 +758,10 @@ internal fun ShareReorderListScreen(
                             text = tr("Done", "हो गया"),
                             fontSize = 15.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -840,7 +849,10 @@ internal fun ShareReorderListScreen(
                                         text = label,
                                         fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (selected) Color.White else FlatTextPrimary
+                                        color = if (selected) Color.White else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -920,7 +932,7 @@ internal fun ShareReorderListScreen(
                                         containerColor = InvBrandGreen,
                                         contentColor = Color.White
                                     ),
-                                    contentPadding = PaddingValues(vertical = 12.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
                                     modifier = Modifier
                                         .weight(1.1f)
                                         .testTag("send_whatsapp_$supplierName")
@@ -928,7 +940,10 @@ internal fun ShareReorderListScreen(
                                     Text(
                                         text = tr("Send on WhatsApp", "WhatsApp पर भेजें"),
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
 
@@ -940,7 +955,7 @@ internal fun ShareReorderListScreen(
                                         containerColor = FlatDarkCard,
                                         contentColor = InvBrandGreen
                                     ),
-                                    contentPadding = PaddingValues(vertical = 12.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
                                     modifier = Modifier
                                         .weight(1f)
                                         .testTag("edit_reorder_msg_$supplierName")
@@ -949,7 +964,10 @@ internal fun ShareReorderListScreen(
                                         text = tr("Edit", "बदलें"),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = InvBrandGreen
+                                        color = InvBrandGreen,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1302,7 +1320,7 @@ internal fun BarcodeScannerScreen(
                                 containerColor = InvBrandGreen,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(vertical = 13.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                             modifier = Modifier
                                 .weight(1.1f)
                                 .testTag("scanner_add_to_bill_btn")
@@ -1310,7 +1328,10 @@ internal fun BarcodeScannerScreen(
                             Text(
                                 text = tr("Add to bill", "बिल में जोड़ें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1326,7 +1347,7 @@ internal fun BarcodeScannerScreen(
                                 containerColor = FlatDarkCard,
                                 contentColor = InvBrandGreen
                             ),
-                            contentPadding = PaddingValues(vertical = 13.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("scanner_stock_in_btn")
@@ -1335,7 +1356,10 @@ internal fun BarcodeScannerScreen(
                                 text = tr("Stock in", "स्टॉक इन"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = InvBrandGreen
+                                color = InvBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1351,7 +1375,7 @@ internal fun BarcodeScannerScreen(
                                 containerColor = FlatDarkCard,
                                 contentColor = InvBrandGreen
                             ),
-                            contentPadding = PaddingValues(vertical = 13.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("scanner_view_item_btn")
@@ -1360,7 +1384,10 @@ internal fun BarcodeScannerScreen(
                                 text = tr("View", "देखें"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = InvBrandGreen
+                                color = InvBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1461,7 +1488,7 @@ internal fun BarcodeScannerScreen(
                             containerColor = InvBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("scanner_add_as_new_item_btn")
@@ -1469,7 +1496,10 @@ internal fun BarcodeScannerScreen(
                         Text(
                             text = tr("Add as new item", "नए आइटम के रूप में जोड़ें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1481,7 +1511,7 @@ internal fun BarcodeScannerScreen(
                             containerColor = FlatDarkCard,
                             contentColor = InvBrandGreen
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("scanner_link_existing_item_btn")
@@ -1490,7 +1520,10 @@ internal fun BarcodeScannerScreen(
                             text = tr("Link to an existing item", "मौजूदा आइटम से जोड़ें"),
                             fontSize = 15.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = InvBrandGreen
+                            color = InvBrandGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1646,7 +1679,9 @@ private fun ScannerMetricBox(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -2204,7 +2239,7 @@ internal fun InventoryCategoriesScreen(
                             containerColor = InvBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 15.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 15.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("categories_add_btn")
@@ -2212,7 +2247,10 @@ internal fun InventoryCategoriesScreen(
                         Text(
                             text = tr("+ Add category", "+ श्रेणी जोड़ें"),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2550,7 +2588,7 @@ internal fun InventoryCategoriesScreen(
                         onClick = { showAddOrEditSheet = false },
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("add_category_cancel_btn")
@@ -2559,7 +2597,10 @@ internal fun InventoryCategoriesScreen(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -2597,7 +2638,7 @@ internal fun InventoryCategoriesScreen(
                             containerColor = InvBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1.35f)
                             .testTag("add_category_save_btn")
@@ -2605,7 +2646,10 @@ internal fun InventoryCategoriesScreen(
                         Text(
                             text = tr("Save category", "श्रेणी सेव करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

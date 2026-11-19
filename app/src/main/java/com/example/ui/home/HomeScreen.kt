@@ -387,13 +387,18 @@ fun HomeScreen(
                     shape = RoundedCornerShape(16.dp),
                     color = ratesBg
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    ) {
                         Text(
                             text = tr("Today's Rates", "आज का भाव"),
                             style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.5.sp),
                             fontWeight = FontWeight.Bold,
                             color = ratesFg,
-                            maxLines = 1
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -408,13 +413,18 @@ fun HomeScreen(
                     shape = RoundedCornerShape(16.dp),
                     color = customersBg
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    ) {
                         Text(
                             text = tr("Customers", "ग्राहक"),
                             style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.5.sp),
                             fontWeight = FontWeight.Bold,
                             color = customersFg,
-                            maxLines = 1
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -571,7 +581,11 @@ fun HomeScreen(
                                         collectAmountStr = cust.totalUdhari.stripTrailingZeros().toPlainString()
                                     },
                                     label = {
-                                        Text("${cust.name} (${CurrencyUtils.formatInr(cust.totalUdhari)})")
+                                        Text(
+                                            text = "${cust.name} (${CurrencyUtils.formatInr(cust.totalUdhari)})",
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
                                     },
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = CGreenContainer,
@@ -589,14 +603,28 @@ fun HomeScreen(
                                     onClick = {
                                         collectAmountStr = cust.totalUdhari.stripTrailingZeros().toPlainString()
                                     },
-                                    label = { Text(tr("Full due", "पूरा बाक़ी")) }
+                                    label = {
+                                        Text(
+                                            text = tr("Full due", "पूरा बाक़ी"),
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 )
                                 FilterChip(
                                     selected = false,
                                     onClick = {
                                         collectAmountStr = cust.totalUdhari.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP).toPlainString()
                                     },
-                                    label = { Text(tr("Half (50%)", "आधा (50%)")) }
+                                    label = {
+                                        Text(
+                                            text = tr("Half (50%)", "आधा (50%)"),
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -680,7 +708,10 @@ fun HomeScreen(
                                         text = dateFormatter.format(Date(activeTimestamp)),
                                         fontSize = 12.5.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = FlatTextPrimary
+                                        color = FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -719,7 +750,10 @@ fun HomeScreen(
                                         text = timeFormatter.format(Date(activeTimestamp)),
                                         fontSize = 12.5.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = FlatTextPrimary
+                                        color = FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }

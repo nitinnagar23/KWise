@@ -672,7 +672,10 @@ fun VoiceBillFlowScreen(
                                     "बिल में ${ activeItems.size } आइटम जोड़ें"
                                 ),
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -698,7 +701,10 @@ fun VoiceBillFlowScreen(
                             Text(
                                 text = tr("Speak again", "फिर से बोलें"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1668,7 +1674,10 @@ private fun DraftEstimateCard(
                                     text = tr("Open", "खोलें"),
                                     fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = VoiceGreen
+                                    color = VoiceGreen,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1688,7 +1697,10 @@ private fun DraftEstimateCard(
                                     text = tr("Share", "शेयर"),
                                     fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = FlatTextPrimary
+                                    color = FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1951,12 +1963,16 @@ fun SaveAsDraftBottomSheet(
                         .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, FlatDarkBorder),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FlatTextPrimary)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = FlatTextPrimary),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1972,12 +1988,16 @@ fun SaveAsDraftBottomSheet(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = VoiceGreen,
                         contentColor = Color.White
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Save draft", "ड्राफ्ट सेव करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

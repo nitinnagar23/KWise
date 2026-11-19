@@ -320,7 +320,7 @@ fun PurchasesScreen(
                     ) {
                         Icon(Icons.Default.Fingerprint, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Unlock ledger", fontWeight = FontWeight.Bold)
+                        Text("Unlock ledger", fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -653,7 +653,9 @@ fun PurchasesScreen(
                                     fontSize = 14.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isSelected) SupGreen else FlatTextSecondary,
-                                    maxLines = 1
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             },
                             modifier = Modifier.testTag(tag)
@@ -874,14 +876,18 @@ private fun SuppliersHomeTabView(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = SupGreen,
                                 contentColor = Color.White
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = tr("Purchase bill", "खरीद बिल"),
                                 fontSize = 14.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -896,13 +902,17 @@ private fun SuppliersHomeTabView(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = FlatDarkCard,
                                 contentColor = SupGreen
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = tr("Pay supplier", "भुगतान करें"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = SupGreen
+                                color = SupGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

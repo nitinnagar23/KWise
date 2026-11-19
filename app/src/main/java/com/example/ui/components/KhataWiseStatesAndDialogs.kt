@@ -79,6 +79,7 @@ import com.example.util.CurrencyUtils
 import com.example.util.tr
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
+import androidx.compose.foundation.layout.PaddingValues
 
 // Colors from KhataWise – Onboarding & states.pdf
 private val StateNavyText: Color get() = kw(0xFF0F1D2E)
@@ -880,12 +881,16 @@ fun EmptyCustomersStateCard(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .height(46.dp)
-                        .testTag("empty_add_customer_btn")
+                        .testTag("empty_add_customer_btn"),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = tr("+ Add customer", "+ ग्राहक जोड़ें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -907,7 +912,10 @@ fun EmptyCustomersStateCard(
                                 text = tr("Import", "संपर्क से जोड़ें"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StateBrandGreen
+                                color = StateBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -985,12 +993,16 @@ fun EmptyBillsTodayStateCard(
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .height(46.dp)
-                    .testTag("empty_new_bill_btn")
+                    .testTag("empty_new_bill_btn"),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = tr("+ New bill", "+ नया बिल"),
                     fontSize = 14.5.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1070,12 +1082,16 @@ fun EmptyStockListStateCard(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .height(46.dp)
-                        .testTag("empty_add_stock_item_btn")
+                        .testTag("empty_add_stock_item_btn"),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = tr("+ Add item", "+ आइटम जोड़ें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1097,7 +1113,10 @@ fun EmptyStockListStateCard(
                                 text = tr("Import Excel", "एक्सेल इम्पोर्ट"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StateBrandGreen
+                                color = StateBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1241,7 +1260,10 @@ fun NoSearchResultsStateCard(
                         text = tr("Clear search", "खोज साफ़ करें"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StateBrandGreen
+                        color = StateBrandGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1324,12 +1346,16 @@ fun NoInternetErrorCard(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Try again", "पुनः प्रयास करें"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1347,7 +1373,10 @@ fun NoInternetErrorCard(
                             text = tr("Continue offline", "ऑफ़लाइन जारी रखें"),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StateBrandGreen
+                            color = StateBrandGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1428,12 +1457,16 @@ fun CouldNotLoadErrorCard(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Retry", "पुनः प्रयास"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1451,7 +1484,10 @@ fun CouldNotLoadErrorCard(
                             text = tr("Report problem", "समस्या बताएं"),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StateBrandGreen
+                            color = StateBrandGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1594,7 +1630,10 @@ fun BillSyncConflictCard(
                 Text(
                     text = tr("Keep selected", "चुना हुआ रखें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1674,7 +1713,10 @@ fun ReportsAdminOnlyErrorCard(
                         text = tr("Request access", "एक्सेस का अनुरोध करें"),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StateBrandGreen
+                        color = StateBrandGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1753,7 +1795,10 @@ fun BackupCouldNotFinishCard(
                 Text(
                     text = tr("Allow Drive access", "Drive एक्सेस की अनुमति दें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1855,7 +1900,10 @@ fun DeleteCustomerConfirmationDialog(
                         Text(
                             text = tr("Collect udhari", "उधारी वसूल करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1933,7 +1981,10 @@ fun DeleteCustomerConfirmationDialog(
                                     text = tr("Cancel", "रद्द करें"),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = StateNavyText
+                                    color = StateNavyText,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1948,12 +1999,16 @@ fun DeleteCustomerConfirmationDialog(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp)
-                                .testTag("dialog_confirm_delete_customer_btn")
+                                .testTag("dialog_confirm_delete_customer_btn"),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = tr("Delete", "हटाएं"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2146,7 +2201,10 @@ fun DeleteBillConfirmationDialog(
                             text = tr("Return items instead", "इसके बजाय आइटम वापस (रिटर्न) करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StateBrandGreen
+                            color = StateBrandGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2169,7 +2227,10 @@ fun DeleteBillConfirmationDialog(
                     Text(
                         text = tr("Delete bill", "बिल हटाएं"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -2294,7 +2355,10 @@ fun DeleteInventoryItemConfirmationDialog(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StateNavyText
+                                color = StateNavyText,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2309,12 +2373,16 @@ fun DeleteInventoryItemConfirmationDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
-                            .testTag("dialog_confirm_delete_item_btn")
+                            .testTag("dialog_confirm_delete_item_btn"),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = tr("Delete", "हटाएं"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2411,7 +2479,10 @@ fun RemoveStaffConfirmationDialog(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StateNavyText
+                                color = StateNavyText,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2426,12 +2497,16 @@ fun RemoveStaffConfirmationDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
-                            .testTag("dialog_confirm_remove_staff_btn")
+                            .testTag("dialog_confirm_remove_staff_btn"),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = tr("Remove", "हटाएं"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2528,7 +2603,10 @@ fun UnpairDeviceConfirmationDialog(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StateNavyText
+                                color = StateNavyText,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2543,12 +2621,16 @@ fun UnpairDeviceConfirmationDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
-                            .testTag("dialog_confirm_unpair_btn")
+                            .testTag("dialog_confirm_unpair_btn"),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = tr("Unpair", "अनपेयर करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2666,7 +2748,10 @@ fun LogoutKhataWiseConfirmationDialog(
                     Text(
                         text = tr("Sync & log out", "सिंक करें और लॉग आउट करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -2839,7 +2924,10 @@ fun ResetAllShopDataConfirmationDialog(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StateNavyText
+                                color = StateNavyText,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2858,7 +2946,10 @@ fun ResetAllShopDataConfirmationDialog(
                                 text = tr("Reset", "रीसेट करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

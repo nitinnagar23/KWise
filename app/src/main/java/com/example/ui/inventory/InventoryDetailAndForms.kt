@@ -376,7 +376,7 @@ internal fun InventoryItemDetailView(
                         containerColor = InvBrandGreen,
                         contentColor = Color.White
                     ),
-                    contentPadding = PaddingValues(vertical = 13.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                     modifier = Modifier
                         .weight(1f)
                         .testTag("detail_stock_in_btn")
@@ -390,7 +390,10 @@ internal fun InventoryItemDetailView(
                     Text(
                         text = tr("Stock in", "स्टॉक जोड़ें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -402,7 +405,7 @@ internal fun InventoryItemDetailView(
                         containerColor = FlatDarkCard,
                         contentColor = InvBrandGreen
                     ),
-                    contentPadding = PaddingValues(vertical = 13.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                     modifier = Modifier
                         .weight(1f)
                         .testTag("detail_adjust_btn")
@@ -411,7 +414,10 @@ internal fun InventoryItemDetailView(
                         text = tr("Adjust", "समायोजन"),
                         fontSize = 15.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = InvBrandGreen
+                        color = InvBrandGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -763,7 +769,9 @@ private fun RatePillBox(
                 fontSize = 16.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = FlatTextPrimary,
-                maxLines = 1
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -987,7 +995,7 @@ internal fun InventoryAddOrEditItemView(
                         onClick = onBack,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("add_item_cancel_btn")
@@ -996,7 +1004,10 @@ internal fun InventoryAddOrEditItemView(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1047,7 +1058,7 @@ internal fun InventoryAddOrEditItemView(
                             containerColor = InvBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1.25f)
                             .testTag("add_item_save_btn")
@@ -1055,7 +1066,10 @@ internal fun InventoryAddOrEditItemView(
                         Text(
                             text = tr("Save item", "आइटम सेव करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1202,7 +1216,10 @@ internal fun InventoryAddOrEditItemView(
                                     text = tr("Loose kg only", "केवल खुला किलो"),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (looseSelected) Color.White else FlatTextPrimary
+                                    color = if (looseSelected) Color.White else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1223,7 +1240,10 @@ internal fun InventoryAddOrEditItemView(
                                     text = tr("Bag + loose kg", "बोरी + खुला किलो"),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (!looseSelected) Color.White else FlatTextPrimary
+                                    color = if (!looseSelected) Color.White else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1744,7 +1764,7 @@ internal fun InventoryUpdateStockView(
                                 disabledContainerColor = InvBrandGreen.copy(alpha = 0.4f),
                                 disabledContentColor = Color.White.copy(alpha = 0.7f)
                             ),
-                            contentPadding = PaddingValues(vertical = 15.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 15.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("update_stock_submit_btn")
@@ -1752,7 +1772,10 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = "Add $removeQtyDesc to stock",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     } else if (isCountCorrection) {
@@ -1773,7 +1796,7 @@ internal fun InventoryUpdateStockView(
                                 containerColor = InvBrandGreen,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(vertical = 15.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 15.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("save_count_submit_btn")
@@ -1781,7 +1804,10 @@ internal fun InventoryUpdateStockView(
                             Text(
                                 text = tr("Save count", "गिनती सेव करें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     } else {
@@ -1795,7 +1821,7 @@ internal fun InventoryUpdateStockView(
                                 onClick = onBack,
                                 shape = RoundedCornerShape(14.dp),
                                 border = BorderStroke(1.dp, FlatDarkBorder),
-                                contentPadding = PaddingValues(vertical = 14.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("adjust_stock_cancel_btn")
@@ -1804,7 +1830,10 @@ internal fun InventoryUpdateStockView(
                                     text = tr("Cancel", "रद्द करें"),
                                     fontSize = 15.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = FlatTextPrimary
+                                    color = FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -1828,7 +1857,7 @@ internal fun InventoryUpdateStockView(
                                     disabledContainerColor = InvRustButton.copy(alpha = 0.4f),
                                     disabledContentColor = Color.White.copy(alpha = 0.7f)
                                 ),
-                                contentPadding = PaddingValues(vertical = 14.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                                 modifier = Modifier
                                     .weight(1.35f)
                                     .testTag("update_stock_submit_btn")
@@ -1836,7 +1865,10 @@ internal fun InventoryUpdateStockView(
                                 Text(
                                     text = "Remove $removeQtyDesc",
                                     fontSize = 15.5.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1924,7 +1956,10 @@ internal fun InventoryUpdateStockView(
                                 text = tr("Stock in", "स्टॉक इन"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isStockIn) Color.White else FlatTextPrimary
+                                color = if (isStockIn) Color.White else FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1945,7 +1980,10 @@ internal fun InventoryUpdateStockView(
                                 text = tr("Adjust", "समायोजन"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (!isStockIn) Color.White else FlatTextPrimary
+                                color = if (!isStockIn) Color.White else FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2182,7 +2220,10 @@ internal fun InventoryUpdateStockView(
                                             text = tr(payMode.labelEn, payMode.labelHi),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (isSelected) Color.White else FlatTextPrimary
+                                            color = if (isSelected) Color.White else FlatTextPrimary,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }

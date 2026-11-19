@@ -80,6 +80,7 @@ import com.example.ui.theme.FlatTextSecondary
 import com.example.util.CurrencyUtils
 import com.example.util.tr
 import java.math.BigDecimal
+import androidx.compose.ui.text.style.TextOverflow
 
 private val DialogBrandGreen: Color get() = kw(0xFF0E6F43)
 private val DialogMintBadgeBg: Color get() = kw(0xFFE1F5EB)
@@ -789,7 +790,7 @@ fun QuickAddCustomerDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("cancel_add_customer_btn")
@@ -798,7 +799,10 @@ fun QuickAddCustomerDialog(
                             text = tr("Cancel", "रद्द करें"),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -842,7 +846,7 @@ fun QuickAddCustomerDialog(
                             disabledContainerColor = DialogBrandGreen.copy(alpha = 0.4f),
                             disabledContentColor = Color.White.copy(alpha = 0.7f)
                         ),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1.25f)
                             .testTag("save_customer_btn")
@@ -850,7 +854,10 @@ fun QuickAddCustomerDialog(
                         Text(
                             text = tr("Save customer", "सेव करें"),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            fontSize = 15.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

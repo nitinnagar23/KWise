@@ -604,7 +604,7 @@ fun BillingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 10.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 1 · CUSTOMER Card
@@ -686,13 +686,16 @@ fun BillingScreen(
                                 ) {
                                     Box(
                                         contentAlignment = Alignment.Center,
-                                        modifier = Modifier.padding(vertical = 10.dp)
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp)
                                     ) {
                                         Text(
                                             text = tr("Walk-in Cash", "नकद ग्राहक"),
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = walkInPillFg
+                                            color = walkInPillFg,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -708,13 +711,16 @@ fun BillingScreen(
                                 ) {
                                     Box(
                                         contentAlignment = Alignment.Center,
-                                        modifier = Modifier.padding(vertical = 10.dp)
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp)
                                     ) {
                                         Text(
                                             text = tr("Customer", "खाता ग्राहक"),
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = customerPillFg
+                                            color = customerPillFg,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -908,7 +914,12 @@ fun BillingScreen(
                                             },
                                             label = {
                                                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                                                    Text(cust.name, fontWeight = FontWeight.Bold)
+                                                    Text(
+                                                        text = cust.name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
                                                     if (canViewFullCustomer) {
                                                         Text(
                                                             text = if (cust.totalUdhari > BigDecimal.ZERO) {
@@ -917,7 +928,9 @@ fun BillingScreen(
                                                                 cust.village.ifBlank { "Clear" }
                                                             },
                                                             fontSize = 11.sp,
-                                                            color = if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary
+                                                            color = if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
                                                         )
                                                     } else {
                                                         Text(
@@ -927,7 +940,9 @@ fun BillingScreen(
                                                                 CustomerStatusChip.CLEAR -> BillBrandGreen
                                                                 CustomerStatusChip.HAS_UDHARI -> CAmber
                                                                 CustomerStatusChip.OVER_LIMIT -> BillCrimson
-                                                            }
+                                                            },
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
                                                         )
                                                     }
                                                 }
@@ -1034,7 +1049,10 @@ fun BillingScreen(
                                             text = billDateFmt.format(Date(effectiveMillis)),
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = FlatTextPrimary
+                                            color = FlatTextPrimary,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -1080,7 +1098,10 @@ fun BillingScreen(
                                             text = billTimeFmt.format(Date(effectiveMillis)),
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = FlatTextPrimary
+                                            color = FlatTextPrimary,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -1481,7 +1502,9 @@ fun BillingScreen(
                                                 }
 
                                                 Row(
-                                                    modifier = Modifier.fillMaxWidth(),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .horizontalScroll(rememberScrollState()),
                                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
@@ -1492,20 +1515,29 @@ fun BillingScreen(
                                                                 val nextVal = if (line.looseKgStr == kgPreset) "" else kgPreset
                                                                 cartLines[index] = line.copy(looseKgStr = nextVal)
                                                             },
-                                                            label = { Text("${kgPreset}kg", fontWeight = FontWeight.Bold) }
+                                                            label = {
+                                                                Text(
+                                                                    text = "${kgPreset}kg",
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    maxLines = 1,
+                                                                    softWrap = false,
+                                                                    overflow = TextOverflow.Ellipsis
+                                                                )
+                                                            }
                                                         )
                                                     }
-                                                    OutlinedTextField(
-                                                        value = line.looseKgStr,
-                                                        onValueChange = { v ->
-                                                            cartLines[index] = line.copy(looseKgStr = v)
-                                                        },
-                                                        label = { Text("Kg") },
-                                                        singleLine = true,
-                                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                                        modifier = Modifier.weight(1f)
-                                                    )
                                                 }
+
+                                                OutlinedTextField(
+                                                    value = line.looseKgStr,
+                                                    onValueChange = { v ->
+                                                        cartLines[index] = line.copy(looseKgStr = v)
+                                                    },
+                                                    label = { Text(tr("Loose Weight (Kg)", "खुला वज़न (किलो)")) },
+                                                    singleLine = true,
+                                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
 
                                                 if (canOverrideRate) {
                                                     Row(
@@ -1554,42 +1586,92 @@ fun BillingScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        FilterChip(
-                            selected = selectedPayMode == "FULL",
+                        Surface(
                             onClick = { billingViewModel.setPayMode("FULL", grandTotal) },
-                            label = { Text(tr("Full paid", "पूरा नकद"), fontWeight = FontWeight.Bold) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = BillMintPillBg,
-                                selectedLabelColor = BillBrandGreen
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selectedPayMode == "FULL") BillMintPillBg else FlatDarkCard,
+                            border = BorderStroke(
+                                width = if (selectedPayMode == "FULL") 1.5.dp else 1.dp,
+                                color = if (selectedPayMode == "FULL") BillBrandGreen else FlatDarkBorder
                             ),
                             modifier = Modifier
                                 .weight(1f)
+                                .defaultMinSize(minHeight = 40.dp)
                                 .testTag("pay_mode_full_chip")
-                        )
-                        FilterChip(
-                            selected = selectedPayMode == "HALF",
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 9.dp)
+                            ) {
+                                Text(
+                                    text = tr("Full paid", "पूरा नकद"),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (selectedPayMode == "FULL") BillBrandGreen else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Surface(
                             onClick = { billingViewModel.setPayMode("HALF", grandTotal) },
-                            label = { Text(tr("Half (50%)", "आधा जमा"), fontWeight = FontWeight.Bold) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = CAmberBg,
-                                selectedLabelColor = CAmber
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selectedPayMode == "HALF") CAmberBg else FlatDarkCard,
+                            border = BorderStroke(
+                                width = if (selectedPayMode == "HALF") 1.5.dp else 1.dp,
+                                color = if (selectedPayMode == "HALF") CAmber else FlatDarkBorder
                             ),
                             modifier = Modifier
                                 .weight(1f)
+                                .defaultMinSize(minHeight = 40.dp)
                                 .testTag("pay_mode_half_chip")
-                        )
-                        FilterChip(
-                            selected = selectedPayMode == "UDHARI",
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 9.dp)
+                            ) {
+                                Text(
+                                    text = tr("Half (50%)", "आधा जमा"),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (selectedPayMode == "HALF") CAmber else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Surface(
                             onClick = { billingViewModel.setPayMode("UDHARI", grandTotal) },
-                            label = { Text(tr("Full udhari", "पूरी उधारी"), fontWeight = FontWeight.Bold) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = BillCrimsonSoftBg,
-                                selectedLabelColor = BillCrimson
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (selectedPayMode == "UDHARI") BillCrimsonSoftBg else FlatDarkCard,
+                            border = BorderStroke(
+                                width = if (selectedPayMode == "UDHARI") 1.5.dp else 1.dp,
+                                color = if (selectedPayMode == "UDHARI") BillCrimson else FlatDarkBorder
                             ),
                             modifier = Modifier
                                 .weight(1f)
+                                .defaultMinSize(minHeight = 40.dp)
                                 .testTag("pay_mode_udhari_chip")
-                        )
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 9.dp)
+                            ) {
+                                Text(
+                                    text = tr("Full udhari", "पूरी उधारी"),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (selectedPayMode == "UDHARI") BillCrimson else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
 
                     if (udhariDue > BigDecimal.ZERO) {
@@ -1613,6 +1695,7 @@ fun BillingScreen(
                             },
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, CAmberBorder),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Default.CalendarToday, contentDescription = null, tint = CAmber, modifier = Modifier.size(16.dp))
@@ -1625,7 +1708,9 @@ fun BillingScreen(
                                 },
                                 color = CAmber,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
+                                fontSize = 13.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1810,19 +1895,34 @@ fun BillingScreen(
             confirmButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
-                        onClick = { BillGenerator.shareTextBill(context, bill) }
+                        onClick = { BillGenerator.shareTextBill(context, bill) },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = BillBrandGreen),
+                        border = BorderStroke(1.dp, BillBrandGreen)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("WhatsApp")
+                        Text(
+                            text = "WhatsApp",
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                     Button(
                         onClick = { BillGenerator.sharePictureBill(context, bill) },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = BillBrandGreen, contentColor = Color.White)
                     ) {
                         Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text(tr("Receipt image", "पर्ची फोटो"), fontWeight = FontWeight.Bold)
+                        Text(
+                            text = tr("Receipt", "पर्ची फोटो"),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             },
@@ -1833,7 +1933,12 @@ fun BillingScreen(
                         onBack()
                     }
                 ) {
-                    Text(tr("Done", "बंद करें"))
+                    Text(
+                        text = tr("Done", "बंद करें"),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         )

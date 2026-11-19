@@ -623,7 +623,10 @@ fun AddEditSupplierScreen(
                                     text = label,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else FlatTextPrimary
+                                    color = if (isSelected) Color.White else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -871,12 +874,16 @@ fun AddEditSupplierScreen(
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = FlatDarkCard,
                         contentColor = FlatTextPrimary
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -920,12 +927,16 @@ fun AddEditSupplierScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SupGreen,
                         contentColor = Color.White
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = if (isEditing) tr("Save changes", "बदलाव सेव करें") else tr("Save supplier", "सप्लायर सेव करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1323,7 +1334,9 @@ fun NewPurchaseBillScreen(
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = FlatTextPrimary,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1696,7 +1709,10 @@ fun NewPurchaseBillScreen(
                                         text = label,
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) Color.White else FlatTextPrimary
+                                        color = if (isSelected) Color.White else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1775,12 +1791,16 @@ fun NewPurchaseBillScreen(
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = FlatDarkCard,
                         contentColor = FlatTextPrimary
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1835,12 +1855,16 @@ fun NewPurchaseBillScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SupGreen,
                         contentColor = Color.White
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Save purchase bill", "खरीद बिल सेव करें"),
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -2176,7 +2200,10 @@ fun RecordSupplierPaymentDialog(
                                     text = label,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else FlatTextPrimary
+                                    color = if (isSelected) Color.White else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }

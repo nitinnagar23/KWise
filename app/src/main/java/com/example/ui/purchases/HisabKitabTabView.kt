@@ -958,14 +958,18 @@ fun SupplierKhataScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SupGreen,
                         contentColor = Color.White
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = tr("Purchase bill", "खरीद बिल"),
                         fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -980,13 +984,17 @@ fun SupplierKhataScreen(
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = FlatDarkCard,
                         contentColor = SupGreen
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tr("Pay supplier", "भुगतान करें"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = SupGreen
+                        color = SupGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

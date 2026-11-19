@@ -248,12 +248,16 @@ fun PaySupplierFlowScreen(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = FlatDarkCard,
                                 contentColor = FlatTextPrimary
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = tr("Cancel", "रद्द करें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -298,12 +302,16 @@ fun PaySupplierFlowScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = SupGreen,
                                 contentColor = Color.White
-                            )
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                         ) {
                             Text(
                                 text = "Pay ${CurrencyUtils.formatInr(enteredAmount)}",
                                 fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -598,7 +606,10 @@ fun PaySupplierFlowScreen(
                                             text = modeLabel,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (isSelected) Color.White else FlatTextPrimary
+                                            color = if (isSelected) Color.White else FlatTextPrimary,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -775,7 +786,10 @@ fun PaySupplierFlowScreen(
                                             text = label,
                                             fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (selected) Color.White else FlatTextPrimary
+                                            color = if (selected) Color.White else FlatTextPrimary,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -1207,7 +1221,10 @@ fun PaySupplierFlowScreen(
                 Text(
                     text = tr("Share payment slip", "भुगतान पर्ची शेयर करें"),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -1425,12 +1442,16 @@ fun SupplierStatementScreen(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = SupGreen,
                             contentColor = Color.White
-                        )
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = if (formatTab == 0) tr("Share PDF", "PDF शेयर करें") else tr("Share image", "इमेज शेयर करें"),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1460,13 +1481,17 @@ fun SupplierStatementScreen(
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = FlatDarkCard,
                             contentColor = SupGreen
-                        )
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = tr("Save", "सेव करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = SupGreen
+                            color = SupGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1597,7 +1622,10 @@ fun SupplierStatementScreen(
                                     text = label,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (selected) Color.White else FlatTextPrimary
+                                    color = if (selected) Color.White else FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }

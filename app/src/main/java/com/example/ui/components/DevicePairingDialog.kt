@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -198,24 +201,39 @@ fun DevicePairingDialog(
                 } else {
                     // Role selection chips (before claimed)
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         FilterChip(
                             selected = selectedRole == "CASHIER",
                             onClick = { selectedRole = "CASHIER" },
-                            label = { Text("Cashier (Sales Only)", maxLines = 1, softWrap = false) },
+                            label = {
+                                Text(
+                                    text = "Cashier (Sales Only)",
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = kw(0xFF06B6D4).copy(alpha = 0.2f),
                                 selectedLabelColor = kw(0xFF06B6D4)
                             )
                         )
-                        Spacer(Modifier.width(8.dp))
                         FilterChip(
                             selected = selectedRole == "MANAGER",
                             onClick = { selectedRole = "MANAGER" },
-                            label = { Text("Manager (Full Access)", maxLines = 1, softWrap = false) },
+                            label = {
+                                Text(
+                                    text = "Manager (Full Access)",
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = kw(0xFF10B981).copy(alpha = 0.2f),
                                 selectedLabelColor = kw(0xFF10B981)

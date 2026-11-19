@@ -809,7 +809,8 @@ private fun CollectionsTabItem(
                 fontSize = 14.sp,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 color = if (selected) ColBrandGreen else FlatTextSecondary,
-                maxLines = 1
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Surface(
                 shape = RoundedCornerShape(8.dp),
@@ -1073,9 +1074,12 @@ private fun CollectionCustomerCard(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = tr("Call", "कॉल"),
-                            fontSize = 14.sp,
+                            fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1095,7 +1099,9 @@ private fun CollectionCustomerCard(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.CalendarToday,
@@ -1103,12 +1109,15 @@ private fun CollectionCustomerCard(
                                 tint = ColBrandGreen,
                                 modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
                             Text(
                                 text = middleActionLabel,
-                                fontSize = 14.sp,
+                                fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = ColBrandGreen
+                                color = ColBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1125,20 +1134,25 @@ private fun CollectionCustomerCard(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.ChatBubbleOutline,
                                 contentDescription = null,
                                 tint = FlatTextPrimary,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
                             Text(
                                 text = middleActionLabel,
-                                fontSize = 14.sp,
+                                fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = FlatTextPrimary
+                                color = FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1152,7 +1166,7 @@ private fun CollectionCustomerCard(
                         containerColor = ColBrandGreen,
                         contentColor = Color.White
                     ),
-                    contentPadding = PaddingValues(0.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     modifier = Modifier
                         .weight(1f)
                         .height(42.dp)
@@ -1160,8 +1174,11 @@ private fun CollectionCustomerCard(
                 ) {
                     Text(
                         text = tr("Collect", "वसूलें"),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

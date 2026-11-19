@@ -78,6 +78,7 @@ import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.text.style.TextOverflow
 
 private val CbBrandGreen: Color get() = kw(0xFF0E6F43)
 private val CbMintBg: Color get() = kw(0xFFDDF3E8)
@@ -374,7 +375,7 @@ fun CloseDayScreen(
                         onClick = onBack,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("close_day_cancel_btn")
@@ -383,7 +384,10 @@ fun CloseDayScreen(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -413,7 +417,7 @@ fun CloseDayScreen(
                             containerColor = CbBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1.4f)
                             .testTag("close_day_confirm_btn")
@@ -421,7 +425,10 @@ fun CloseDayScreen(
                         Text(
                             text = tr("Close day", "दिन बंद करें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -981,7 +988,7 @@ fun DayClosedSummaryScreen(
                             },
                             shape = RoundedCornerShape(14.dp),
                             border = BorderStroke(1.dp, FlatDarkBorder),
-                            contentPadding = PaddingValues(vertical = 14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("day_closed_share_btn")
@@ -990,7 +997,10 @@ fun DayClosedSummaryScreen(
                                 text = tr("Share summary", "सारांश साझा करें"),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = FlatTextPrimary
+                                color = FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -1007,7 +1017,7 @@ fun DayClosedSummaryScreen(
                                 containerColor = CbBrandGreen,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(vertical = 14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("day_closed_reopen_btn")
@@ -1015,7 +1025,10 @@ fun DayClosedSummaryScreen(
                             Text(
                                 text = tr("Reopen day", "दिन फिर से खोलें"),
                                 fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -1344,7 +1357,7 @@ fun ExpenseCategoriesScreen(
                             containerColor = CbBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("expense_categories_add_btn")
@@ -1352,7 +1365,10 @@ fun ExpenseCategoriesScreen(
                         Text(
                             text = tr("+ Add category", "+ श्रेणी जोड़ें"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

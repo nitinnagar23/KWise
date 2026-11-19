@@ -79,6 +79,7 @@ import com.example.ui.theme.FlatTextSecondary
 import com.example.util.tr
 import java.security.SecureRandom
 import java.util.Locale
+import androidx.compose.foundation.layout.PaddingValues
 
 internal val StaffBrandGreen: Color get() = kw(0xFF0E6F43)
 internal val StaffMintSoft: Color get() = kw(0xFFDDF3E8)
@@ -181,7 +182,8 @@ internal fun StaffDevicesTabContent(
                             color = StaffBluePillText,
                             maxLines = 1,
                             softWrap = false,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -257,7 +259,10 @@ internal fun StaffDevicesTabContent(
                                     text = tr("Cashier", "कैशियर"),
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = cashierFg
+                                    color = cashierFg,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -275,7 +280,10 @@ internal fun StaffDevicesTabContent(
                                     text = tr("Manager", "मैनेजर"),
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = managerFg
+                                    color = managerFg,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -378,7 +386,10 @@ internal fun StaffDevicesTabContent(
                                 text = tr("Copy code", "कोड कॉपी करें"),
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StaffBrandGreen
+                                color = StaffBrandGreen,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -403,13 +414,16 @@ internal fun StaffDevicesTabContent(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = StaffBrandGreen,
                             contentColor = Color.White
-                        )
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = tr("Share on WhatsApp", "WhatsApp पर भेजें"),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            maxLines = 1
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -755,7 +769,8 @@ private fun RoleMatrixCell(status: String) {
                     color = StaffAmberPillText,
                     maxLines = 1,
                     softWrap = false,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1217,7 +1232,10 @@ internal fun StaffDetailsApprovalScreen(
                             text = if (staff.isPendingApproval) tr("Reject", "अस्वीकार करें") else tr("Remove", "हटाएं"),
                             fontSize = 15.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StaffCrimson
+                            color = StaffCrimson,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1236,12 +1254,16 @@ internal fun StaffDetailsApprovalScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = StaffBrandGreen,
                     contentColor = Color.White
-                )
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
             ) {
                 Text(
                     text = if (staff.isPendingApproval) tr("Approve & save", "मंज़ूरी दें और सेव करें") else tr("Approve & save", "सेव करें"),
                     fontSize = 15.5.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

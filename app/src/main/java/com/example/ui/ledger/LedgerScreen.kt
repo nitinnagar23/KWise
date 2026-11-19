@@ -284,7 +284,8 @@ fun LedgerScreen(
                                 fontWeight = if (activeTab == 0) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 14.sp,
                                 color = if (activeTab == 0) LedgerBrandGreen else FlatTextSecondary,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
@@ -316,7 +317,8 @@ fun LedgerScreen(
                             fontWeight = if (activeTab == 1) FontWeight.Bold else FontWeight.SemiBold,
                             fontSize = 14.sp,
                             color = if (activeTab == 1) LedgerBrandGreen else FlatTextSecondary,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 )
@@ -333,7 +335,8 @@ fun LedgerScreen(
                                 fontWeight = if (activeTab == 2) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 14.sp,
                                 color = if (activeTab == 2) LedgerBrandGreen else FlatTextSecondary,
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     )
@@ -657,7 +660,8 @@ fun CustomersTab(
                             fontWeight = FontWeight.Bold,
                             color = allPillFg,
                             maxLines = 1,
-                            softWrap = false
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -694,7 +698,8 @@ fun CustomersTab(
                             fontWeight = FontWeight.Bold,
                             color = udhariPillFg,
                             maxLines = 1,
-                            softWrap = false
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -729,7 +734,8 @@ fun CustomersTab(
                             fontWeight = FontWeight.Bold,
                             color = clearPillFg,
                             maxLines = 1,
-                            softWrap = false
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -764,7 +770,8 @@ fun CustomersTab(
                         fontWeight = FontWeight.Bold,
                         color = FlatTextPrimary,
                         maxLines = 1,
-                        softWrap = false
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1731,13 +1738,17 @@ fun RecordPaymentDialog(
                             .weight(1f)
                             .testTag("repayment_custom_date_btn"),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, FlatDarkInputBorder)
+                        border = BorderStroke(1.dp, FlatDarkInputBorder),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = dateFormatter.format(Date(activeTimestamp)),
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     OutlinedButton(
@@ -1763,13 +1774,17 @@ fun RecordPaymentDialog(
                             .weight(1f)
                             .testTag("repayment_custom_time_btn"),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, FlatDarkInputBorder)
+                        border = BorderStroke(1.dp, FlatDarkInputBorder),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = timeFormatter.format(Date(activeTimestamp)),
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

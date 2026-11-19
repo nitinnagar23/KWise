@@ -93,6 +93,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.layout.PaddingValues
 
 private val KhataPageBg: Color get() = if (com.example.ui.theme.KwThemeState.isDark) Color(0xFF0F1720) else Color(0xFFF6F7F9)
 private val KhataCardBorder: Color get() = kw(0xFFE2E8F0)
@@ -414,7 +415,10 @@ fun CustomerStatementScreen(
                                     text = label,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (selected) Color.White else KhataNavyText
+                                    color = if (selected) Color.White else KhataNavyText,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1092,12 +1096,16 @@ fun CustomerStatementScreen(
                     modifier = Modifier
                         .weight(1.2f)
                         .height(50.dp)
-                        .testTag("statement_primary_share_btn")
+                        .testTag("statement_primary_share_btn"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = if (!isImageMode) tr("Share PDF", "PDF शेयर करें") else tr("Share image", "इमेज शेयर करें"),
                         fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1145,7 +1153,10 @@ fun CustomerStatementScreen(
                             text = if (!isImageMode) tr("Save", "सेव करें") else tr("Save to gallery", "गैलरी में सेव करें"),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = KhataBrandGreen
+                            color = KhataBrandGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1660,7 +1671,10 @@ fun CollectUdhariScreen(
                                         text = mode,
                                         fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (selected) Color.White else KhataNavyText
+                                        color = if (selected) Color.White else KhataNavyText,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -2020,7 +2034,10 @@ fun CollectUdhariScreen(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = KhataNavyText
+                            color = KhataNavyText,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -2050,12 +2067,16 @@ fun CollectUdhariScreen(
                     modifier = Modifier
                         .weight(1.4f)
                         .height(50.dp)
-                        .testTag("collect_udhari_submit_btn")
+                        .testTag("collect_udhari_submit_btn"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = "${tr("Collect", "वसूलें")} ${CurrencyUtils.formatInr(parsedAmount)}",
                         fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

@@ -1287,15 +1287,18 @@ private fun ReportsOverviewTab(
                         containerColor = RepGreen,
                         contentColor = Color.White
                     ),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
                     modifier = Modifier
-                        .height(42.dp)
+                        .defaultMinSize(minHeight = 42.dp)
                         .testTag("open_export_backup_btn")
                 ) {
                     Text(
                         text = tr("Open", "खोलें"),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

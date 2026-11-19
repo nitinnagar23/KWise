@@ -542,7 +542,7 @@ fun CashbookScreen(
                             containerColor = CbBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("cashbook_add_cash_in_btn")
@@ -550,7 +550,10 @@ fun CashbookScreen(
                         Text(
                             text = tr("+ Cash in", "+ कैश इन"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -564,7 +567,7 @@ fun CashbookScreen(
                             containerColor = CbCrimsonRed,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("cashbook_add_cash_out_btn")
@@ -572,7 +575,10 @@ fun CashbookScreen(
                         Text(
                             text = tr("− Cash out", "− कैश आउट"),
                             fontSize = 15.5.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -809,7 +815,9 @@ fun CashbookScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                                        maxLines = 1
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -838,7 +846,9 @@ fun CashbookScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = CbBrandGreen,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                                        maxLines = 1
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -867,7 +877,9 @@ fun CashbookScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = CbCrimsonRed,
                                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
-                                        maxLines = 1
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -928,7 +940,10 @@ fun CashbookScreen(
                                         text = tr("Expense categories", "ख़र्च श्रेणियां"),
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = FlatTextPrimary
+                                        color = FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1373,7 +1388,10 @@ private fun AddCashEntryDialog(
                                         text = tr("Cash in", "कैश इन"),
                                         fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isCashIn) Color.White else FlatTextPrimary
+                                        color = if (isCashIn) Color.White else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1394,7 +1412,10 @@ private fun AddCashEntryDialog(
                                         text = tr("Cash out", "कैश आउट"),
                                         fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (!isCashIn) Color.White else FlatTextPrimary
+                                        color = if (!isCashIn) Color.White else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1630,7 +1651,7 @@ private fun AddCashEntryDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("cancel_cash_entry_btn")
@@ -1639,7 +1660,10 @@ private fun AddCashEntryDialog(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = FlatTextPrimary
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -1661,7 +1685,7 @@ private fun AddCashEntryDialog(
                             containerColor = activeAccentColor,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
                         modifier = Modifier
                             .weight(1.3f)
                             .testTag("save_cash_entry_btn")
@@ -1673,7 +1697,10 @@ private fun AddCashEntryDialog(
                                 tr("Save cash out", "कैश आउट सेव करें")
                             },
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

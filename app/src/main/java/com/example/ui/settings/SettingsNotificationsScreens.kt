@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -698,13 +699,16 @@ private fun NotificationCardRow(
                                     horizontal = 14.dp,
                                     vertical = 6.dp
                                 ),
-                                modifier = Modifier.height(34.dp)
+                                modifier = Modifier.defaultMinSize(minHeight = 38.dp)
                             ) {
                                 Text(
                                     text = item.primaryActionLabel,
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -717,13 +721,16 @@ private fun NotificationCardRow(
                                     horizontal = 14.dp,
                                     vertical = 6.dp
                                 ),
-                                modifier = Modifier.height(34.dp)
+                                modifier = Modifier.defaultMinSize(minHeight = 38.dp)
                             ) {
                                 Text(
                                     text = item.secondaryActionLabel,
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = KwTextPrimary
+                                    color = KwTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1361,6 +1368,7 @@ fun EditMessageTemplateSubScreen(
                     onClick = onBack,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, KwBorder),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(0.4f)
                         .height(50.dp)
@@ -1368,7 +1376,10 @@ fun EditMessageTemplateSubScreen(
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontWeight = FontWeight.Bold,
-                        color = KwTextPrimary
+                        color = KwTextPrimary,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1379,6 +1390,7 @@ fun EditMessageTemplateSubScreen(
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = KwGreen),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(0.6f)
                         .height(50.dp)
@@ -1387,7 +1399,10 @@ fun EditMessageTemplateSubScreen(
                     Text(
                         text = tr("Save template", "टेम्पलेट सेव करें"),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

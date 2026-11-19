@@ -96,6 +96,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun LoginScreen(
@@ -641,7 +642,10 @@ fun LoginScreen(
                                         text = tr("Store owner", "दुकान मालिक"),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (!isPairingMode) LoginBrandGreen else LoginSubtleText
+                                        color = if (!isPairingMode) LoginBrandGreen else LoginSubtleText,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -666,7 +670,10 @@ fun LoginScreen(
                                         text = tr("Staff device", "स्टाफ डिवाइस"),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isPairingMode) LoginBrandGreen else LoginSubtleText
+                                        color = if (isPairingMode) LoginBrandGreen else LoginSubtleText,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -989,7 +996,10 @@ fun LoginScreen(
                             Text(
                                 text = tr("Connect device", "डिवाइस जोड़ें"),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 

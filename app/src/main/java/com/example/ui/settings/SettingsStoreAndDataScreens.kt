@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -652,13 +653,16 @@ fun StoreProfileSubScreen(
                                     horizontal = 14.dp,
                                     vertical = 6.dp
                                 ),
-                                modifier = Modifier.height(34.dp)
+                                modifier = Modifier.defaultMinSize(minHeight = 38.dp)
                             ) {
                                 Text(
                                     text = tr("Change", "बदलें"),
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = KwGreenDark
+                                    color = KwGreenDark,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
@@ -962,6 +966,7 @@ fun StoreProfileSubScreen(
                     onClick = onBack,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, KwBorder),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(0.4f)
                         .height(50.dp)
@@ -969,7 +974,10 @@ fun StoreProfileSubScreen(
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontWeight = FontWeight.Bold,
-                        color = KwTextPrimary
+                        color = KwTextPrimary,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -990,6 +998,7 @@ fun StoreProfileSubScreen(
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = KwGreen),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(0.6f)
                         .height(50.dp)
@@ -998,7 +1007,10 @@ fun StoreProfileSubScreen(
                     Text(
                         text = tr("Save changes", "बदलाव सेव करें"),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1665,6 +1677,7 @@ fun UpiAndGstSubScreen(
                     onClick = onBack,
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, KwBorder),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(0.4f)
                         .height(50.dp)
@@ -1672,7 +1685,10 @@ fun UpiAndGstSubScreen(
                     Text(
                         text = tr("Cancel", "रद्द करें"),
                         fontWeight = FontWeight.Bold,
-                        color = KwTextPrimary
+                        color = KwTextPrimary,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -1694,6 +1710,7 @@ fun UpiAndGstSubScreen(
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = KwGreen),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                     modifier = Modifier
                         .weight(0.6f)
                         .height(50.dp)
@@ -1702,7 +1719,10 @@ fun UpiAndGstSubScreen(
                     Text(
                         text = tr("Save", "सेव करें"),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -2195,6 +2215,7 @@ fun SyncAndBackupSubScreen(
                             },
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = KwGreen),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(46.dp)
@@ -2210,7 +2231,10 @@ fun SyncAndBackupSubScreen(
                             Text(
                                 text = tr("Back up now", "अभी बैकअप लें"),
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -2278,16 +2302,19 @@ fun SyncAndBackupSubScreen(
                                         shape = RoundedCornerShape(10.dp),
                                         border = BorderStroke(1.dp, KwGreen),
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                                            horizontal = 12.dp,
+                                            horizontal = 14.dp,
                                             vertical = 6.dp
                                         ),
-                                        modifier = Modifier.height(34.dp)
+                                        modifier = Modifier.defaultMinSize(minHeight = 38.dp)
                                     ) {
                                         Text(
                                             text = tr("Restore", "रीस्टोर"),
                                             fontSize = 12.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = KwGreenDark
+                                            color = KwGreenDark,
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -2672,7 +2699,10 @@ fun ThemeAndLanguageSubScreen(
                         text = tr("Apply", "लागू करें"),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -3259,7 +3289,10 @@ fun AppLockAndSecuritySubScreen(
                         text = tr("Save", "सेव करें"),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -3740,7 +3773,10 @@ fun BillAndPdfSubScreen(
                     Text(
                         text = tr("Save", "सेव करें"),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -3920,7 +3956,10 @@ fun SettingsLogoutModalDialog(
                             text = tr("Sync & log out", "सिंक करें और लॉग आउट करें"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.White,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -3928,31 +3967,39 @@ fun SettingsLogoutModalDialog(
 
                     TextButton(
                         onClick = onLogoutAnyway,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(44.dp)
+                            .defaultMinSize(minHeight = 44.dp)
                             .testTag("btn_logout_anyway")
                     ) {
                         Text(
                             text = tr("Log out anyway", "फिर भी लॉग आउट करें"),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = KwRed
+                            color = KwRed,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
                     TextButton(
                         onClick = onDismiss,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .defaultMinSize(minHeight = 42.dp)
                             .testTag("btn_logout_cancel")
                     ) {
                         Text(
                             text = tr("Cancel", "रद्द करें"),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = KwTextSecondary
+                            color = KwTextSecondary,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

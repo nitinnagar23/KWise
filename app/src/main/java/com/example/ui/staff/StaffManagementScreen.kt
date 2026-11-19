@@ -856,12 +856,18 @@ fun StaffManagementScreen(
                                             color = KwSurface,
                                             border = BorderStroke(1.dp, kw(0xFFCBD5E1))
                                         ) {
-                                            Box(contentAlignment = Alignment.Center) {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier.padding(horizontal = 10.dp)
+                                            ) {
                                                 Text(
                                                     text = tr("Reject", "अस्वीकार करें"),
-                                                    fontSize = 14.5.sp,
+                                                    fontSize = 14.sp,
                                                     fontWeight = FontWeight.Bold,
-                                                    color = FlatTextPrimary
+                                                    color = FlatTextPrimary,
+                                                    maxLines = 1,
+                                                    softWrap = false,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                             }
                                         }
@@ -873,6 +879,7 @@ fun StaffManagementScreen(
                                                 .height(46.dp)
                                                 .testTag("pending_review_approve_btn"),
                                             shape = RoundedCornerShape(12.dp),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = StaffBrandGreen,
                                                 contentColor = Color.White
@@ -880,9 +887,11 @@ fun StaffManagementScreen(
                                         ) {
                                             Text(
                                                 text = tr("Review & approve", "समीक्षा और मंज़ूरी दें"),
-                                                fontSize = 14.sp,
+                                                fontSize = 13.5.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                maxLines = 1
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
@@ -1012,7 +1021,10 @@ fun StaffManagementScreen(
                 Text(
                     text = tr("Add staff", "स्टाफ जोड़ें"),
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -1068,12 +1080,26 @@ fun StaffManagementScreen(
                         FilterChip(
                             selected = newStaffRole == Role.STAFF,
                             onClick = { newStaffRole = Role.STAFF },
-                            label = { Text(tr("Cashier", "कैशियर")) }
+                            label = {
+                                Text(
+                                    text = tr("Cashier", "कैशियर"),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         )
                         FilterChip(
                             selected = newStaffRole == Role.MANAGER,
                             onClick = { newStaffRole = Role.MANAGER },
-                            label = { Text(tr("Manager", "मैनेजर")) }
+                            label = {
+                                Text(
+                                    text = tr("Manager", "मैनेजर"),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         )
                     }
 
