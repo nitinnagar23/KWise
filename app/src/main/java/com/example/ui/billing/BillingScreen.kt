@@ -1,7 +1,5 @@
 package com.example.ui.billing
 
-import com.example.ui.theme.pickerThemedContext
-import com.example.ui.theme.kw
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -21,8 +19,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,7 +49,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -90,12 +85,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -104,6 +102,7 @@ import com.example.data.repository.SaleItemRequest
 import com.example.model.Customer
 import com.example.model.CustomerStatusChip
 import com.example.model.Permission
+import com.example.model.Product
 import com.example.model.Role
 import com.example.model.User
 import com.example.model.can
@@ -115,7 +114,6 @@ import com.example.ui.theme.CAmber
 import com.example.ui.theme.CAmberBg
 import com.example.ui.theme.CAmberBorder
 import com.example.ui.theme.CGreen
-import com.example.ui.theme.CGreenContainer
 import com.example.ui.theme.CRedUdhari
 import com.example.ui.theme.CRedUdhariBg
 import com.example.ui.theme.FlatDarkBg
@@ -126,6 +124,8 @@ import com.example.ui.theme.FlatDarkSurface
 import com.example.ui.theme.FlatTextMuted
 import com.example.ui.theme.FlatTextPrimary
 import com.example.ui.theme.FlatTextSecondary
+import com.example.ui.theme.kw
+import com.example.ui.theme.pickerThemedContext
 import com.example.util.BillGenerator
 import com.example.util.CurrencyUtils
 import com.example.util.SecurityUtils
@@ -142,18 +142,24 @@ private val BillBrandGreen: Color get() = kw(0xFF0E6F43)
 private val BillMintPillBg: Color get() = kw(0xFFE1F5EB)
 private val BillCrimson: Color get() = kw(0xFFB91C1C)
 private val BillCrimsonSoftBg: Color get() = kw(0xFFFDE8E8)
-private val BillAvatarBg: Color get() = kw(0xFFE6EEF6)
-private val BillAvatarText: Color get() = kw(0xFF1E3A5F)
-private fun billCustomerInitials(name: String): String {
-    val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
-    return when {
-        parts.size >= 2 -> "${parts[0].first().uppercaseChar()}${parts[1].first().uppercaseChar()}"
-        parts.size == 1 -> parts[0].take(2).uppercase()
-        else -> "?"
+
+private val TrailingPackSizeRegex = Regex("\\s*(?:\\(\\s*\\d+(?:\\.\\d+)?\\s*(?:kg|kgs|kilo|g|gm|l|ltr)\\s*\\)|\\b\\d+(?:\\.\\d+)?\\s*(?:kg|kgs)\\b)\\s*$", RegexOption.IGNORE_CASE)
+
+private fun splitProductDisplayAndPack(product: Product): Pair<String, String> {
+    val cleanedName = product.feedName
+        .replace(TrailingPackSizeRegex, "")
+        .trim()
+        .ifBlank { product.feedName.trim() }
+
+    val packSubtitle = if (product.isLooseOnly) {
+        "Loose · ${CurrencyUtils.formatInr(product.effectiveLooseRatePerKg)}/kg"
+    } else {
+        val kgStr = product.safeKgPerBag.stripTrailingZeros().toPlainString()
+        "${kgStr}kg · ${CurrencyUtils.formatInr(product.bagSellingPrice)}"
     }
+    return cleanedName to packSubtitle
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BillingScreen(
     repository: CattleFeedRepository,
@@ -168,6 +174,7 @@ fun BillingScreen(
 
     val products by repository.allProducts.collectAsState(initial = emptyList())
     val customers by repository.allCustomers.collectAsState(initial = emptyList())
+    val allSales by repository.allSales.collectAsState(initial = emptyList())
     val allUsers by repository.allUsers.collectAsState(initial = emptyList())
 
     val selectedCustomer by billingViewModel.selectedCustomer.collectAsState()
@@ -182,39 +189,109 @@ fun BillingScreen(
 
     var showAddCustomerDialog by remember { mutableStateOf(false) }
     var showOverLimitConfirmDialog by remember { mutableStateOf(false) }
+    var showBillTimingDialog by remember { mutableStateOf(false) }
     var showRateOverrideLineId by remember { mutableStateOf<String?>(null) }
     var showCustomerPicker by remember { mutableStateOf(false) }
     var productSearchQuery by remember { mutableStateOf("") }
+    var showAllProducts by remember { mutableStateOf(false) }
 
     val canOverrideRate = can(currentUser?.role, Permission.OVERRIDE_BILL_RATE)
     val canViewFullCustomer = can(currentUser?.role, Permission.VIEW_CUSTOMER_FULL)
 
-    val activeProducts = remember(products) { products.filter { !it.isDeleted } }
+    // Rank products by actual sales frequency (most frequently sold first)
+    val activeProducts = remember(products, allSales) {
+        val active = products.filter { !it.isDeleted }
+        if (allSales.isEmpty()) {
+            active
+        } else {
+            val freqMap = HashMap<String, Int>()
+            allSales.forEach { sale ->
+                if (!sale.isDeleted) {
+                    freqMap[sale.productId] = (freqMap[sale.productId] ?: 0) + 1
+                }
+            }
+            active.sortedWith(
+                compareByDescending<Product> { freqMap[it.id] ?: 0 }
+                    .thenBy { it.feedName.lowercase(Locale.getDefault()) }
+            )
+        }
+    }
+
     val filteredFeedProducts = remember(activeProducts, productSearchQuery) {
         if (productSearchQuery.isBlank()) activeProducts
         else activeProducts.filter { it.feedName.contains(productSearchQuery.trim(), ignoreCase = true) }
     }
 
+    val displayedGridProducts = remember(filteredFeedProducts, productSearchQuery, showAllProducts) {
+        if (productSearchQuery.isNotBlank() || showAllProducts) {
+            filteredFeedProducts
+        } else {
+            filteredFeedProducts.take(6)
+        }
+    }
+
+    // Recent customers ordered by latest sale timestamp, then updatedAt
+    val recentCustomers = remember(customers, allSales, customerSearchQuery) {
+        val active = customers.filter { !it.isDeleted }
+        val latestSaleByCustomer = HashMap<String, Long>()
+        allSales.forEach { sale ->
+            if (!sale.isDeleted) {
+                val prev = latestSaleByCustomer[sale.customerId] ?: 0L
+                if (sale.date > prev) latestSaleByCustomer[sale.customerId] = sale.date
+            }
+        }
+        val sorted = active.sortedWith(
+            compareByDescending<Customer> { latestSaleByCustomer[it.id] ?: 0L }
+                .thenByDescending { it.updatedAt }
+        )
+        if (customerSearchQuery.isBlank()) {
+            sorted.take(12)
+        } else {
+            val q = customerSearchQuery.trim()
+            sorted.filter {
+                it.name.contains(q, ignoreCase = true) ||
+                    it.village.contains(q, ignoreCase = true) ||
+                    it.phone.contains(q) ||
+                    it.fatherName.contains(q, ignoreCase = true)
+            }.take(12)
+        }
+    }
+
     val lineCalculations = billingViewModel.calculateCartLines(activeProducts, currentUser?.role)
 
     val grandTotal = lineCalculations.fold(BigDecimal.ZERO) { acc, item -> acc.add(item.third.second) }
-    val paidAmount = when (selectedPayMode) {
-        "FULL" -> grandTotal
-        "HALF" -> grandTotal.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP)
-        "UDHARI" -> BigDecimal.ZERO
+    val paidAmount = when {
+        isWalkInCashCustomer -> grandTotal
+        selectedPayMode == "FULL" -> grandTotal
+        selectedPayMode == "HALF" -> grandTotal.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP)
+        selectedPayMode == "UDHARI" -> BigDecimal.ZERO
         else -> (paidAmountStr.toBigDecimalOrNull() ?: BigDecimal.ZERO).max(BigDecimal.ZERO)
     }
-    val udhariDue = grandTotal.subtract(paidAmount).max(BigDecimal.ZERO)
+    val udhariDue = if (isWalkInCashCustomer) BigDecimal.ZERO else grandTotal.subtract(paidAmount).max(BigDecimal.ZERO)
 
-    // Credit limit check (creditLimit > 0 means active limit; 0 means no limit)
+    // Credit guard calculations (creditLimit > 0 means active limit; 0 means no limit)
     val currentCustomerUdhari = selectedCustomer?.totalUdhari ?: BigDecimal.ZERO
     val customerCreditLimit = selectedCustomer?.creditLimit ?: BigDecimal.ZERO
+    val hasCreditLimit = !isWalkInCashCustomer && selectedCustomer != null && customerCreditLimit > BigDecimal.ZERO
     val projectedTotalUdhari = currentCustomerUdhari.add(udhariDue)
+    val remainingCreditBeforeBill = if (hasCreditLimit) customerCreditLimit.subtract(currentCustomerUdhari) else BigDecimal.ZERO
+    val remainingCreditAfterBill = if (hasCreditLimit) customerCreditLimit.subtract(projectedTotalUdhari) else BigDecimal.ZERO
     val isExceedingCreditLimit = !isWalkInCashCustomer &&
-            selectedCustomer != null &&
-            isCustomerCreditBlocked(selectedCustomer!!, udhariDue)
-
+        selectedCustomer != null &&
+        isCustomerCreditBlocked(selectedCustomer!!, udhariDue)
     val isStaffBlockedByCreditLimit = isExceedingCreditLimit && currentUser?.role == Role.STAFF
+
+    val shortDateTimeFmt = remember { SimpleDateFormat("d MMM · h:mm a", Locale.getDefault()) }
+    val billDateFmt = remember { SimpleDateFormat("d MMM yyyy", Locale.getDefault()) }
+    val billTimeFmt = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+    val promiseShortFmt = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
+    val effectiveTimingMillis = customBillDateMillis ?: System.currentTimeMillis()
+    val isCustomTiming = customBillDateMillis != null
+    val timingLinkLabel = if (isCustomTiming) {
+        "${shortDateTimeFmt.format(Date(effectiveTimingMillis))} ✎"
+    } else {
+        tr("Now ✎", "अभी ✎")
+    }
 
     val voiceLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -228,6 +305,7 @@ fun BillingScreen(
                 }
                 if (matchedCustomer != null) {
                     billingViewModel.selectCustomer(matchedCustomer)
+                    showCustomerPicker = false
                 }
 
                 val matchedProduct = activeProducts.firstOrNull { prod ->
@@ -339,6 +417,8 @@ fun BillingScreen(
         }
     }
 
+    val isCustomerCollapsed = !showCustomerPicker && (selectedCustomer != null || isWalkInCashCustomer)
+
     Scaffold(
         containerColor = FlatDarkBg,
         topBar = {
@@ -346,7 +426,7 @@ fun BillingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(FlatDarkBg)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -357,11 +437,11 @@ fun BillingScreen(
                 ) {
                     Surface(
                         onClick = onBack,
-                        shape = RoundedCornerShape(13.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(42.dp)
                             .testTag("new_bill_back_btn")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -377,19 +457,25 @@ fun BillingScreen(
                         Text(
                             text = tr("New sale bill", "नया बिक्री बिल"),
                             style = TextStyle(
-                                fontSize = 19.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = (-0.25).sp,
                                 color = FlatTextPrimary
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = tr("Quick chips · Voice · Credit guard", "तेज़ चिप्स · बोलकर लिखें · उधारी जांच"),
-                            fontSize = 12.sp,
-                            color = FlatTextSecondary
+                            fontSize = 11.5.sp,
+                            color = FlatTextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Surface(
                     onClick = {
@@ -404,11 +490,11 @@ fun BillingScreen(
                             Toast.makeText(context, "Voice input is not supported on this device", Toast.LENGTH_SHORT).show()
                         }
                     },
-                    shape = RoundedCornerShape(13.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = FlatDarkCard,
                     border = BorderStroke(1.dp, FlatDarkBorder),
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(42.dp)
                         .testTag("voice_bill_input_btn")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -423,55 +509,58 @@ fun BillingScreen(
             }
         },
         bottomBar = {
+            // 4. TIGHT PINNED FOOTER: Total / Paid / Due on one line + Quick paid buttons + Save button
             Surface(
                 color = FlatDarkSurface,
                 border = BorderStroke(1.dp, FlatDarkBorder),
-                shadowElevation = 12.dp
+                shadowElevation = 10.dp
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 3-Column Summary Row matching New Sale Bill.pdf (NO hidden amounts)
+                    // Single compact line: Total · Paid (editable) · Due
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = tr("TOTAL BILL", "कुल बिल"),
-                                fontSize = 11.sp,
+                                text = tr("TOTAL", "कुल"),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FlatTextSecondary,
+                                letterSpacing = 0.4.sp
+                            )
+                            Text(
+                                text = CurrencyUtils.formatInr(grandTotal),
+                                style = TextStyle(
+                                    fontSize = 16.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextPrimary,
+                                    fontFeatureSettings = "tnum"
+                                ),
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1.25f)
+                        ) {
+                            Text(
+                                text = tr("PAID", "जमा"),
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.4.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = CurrencyUtils.formatInr(grandTotal),
-                                style = TextStyle(
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = FlatTextPrimary,
-                                    fontFeatureSettings = "tnum"
-                                )
-                            )
-                        }
-
-                        Column(
-                            horizontalAlignment = Alignment.Start,
-                            modifier = Modifier.weight(1.1f)
-                        ) {
-                            Text(
-                                text = tr("PAID NOW", "नकद जमा"),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.4.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
                             val displayedPaidStr = if (isWalkInCashCustomer) {
                                 grandTotal.stripTrailingZeros().toPlainString()
                             } else if (selectedPayMode == "CUSTOM") {
@@ -481,19 +570,20 @@ fun BillingScreen(
                             }
                             Row(
                                 modifier = Modifier
-                                    .widthIn(min = 104.dp, max = 136.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(9.dp))
                                     .background(FlatDarkCard)
-                                    .border(1.5.dp, BillBrandGreen, RoundedCornerShape(10.dp))
-                                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                                    .border(1.25.dp, BillBrandGreen, RoundedCornerShape(9.dp))
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "₹ ",
-                                    fontSize = 14.sp,
+                                    text = "₹",
+                                    fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = FlatTextSecondary
                                 )
+                                Spacer(modifier = Modifier.width(3.dp))
                                 BasicTextField(
                                     value = displayedPaidStr,
                                     onValueChange = { newVal ->
@@ -505,7 +595,7 @@ fun BillingScreen(
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     textStyle = TextStyle(
-                                        fontSize = 15.sp,
+                                        fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = FlatTextPrimary,
                                         fontFeatureSettings = "tnum"
@@ -523,26 +613,161 @@ fun BillingScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = tr("UDHARI DUE", "बाक़ी उधारी"),
-                                fontSize = 11.sp,
+                                text = tr("DUE", "बाक़ी"),
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.4.sp
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            val effectiveUdhari = if (isWalkInCashCustomer) BigDecimal.ZERO else udhariDue
                             Text(
-                                text = CurrencyUtils.formatInr(effectiveUdhari),
+                                text = CurrencyUtils.formatInr(udhariDue),
                                 style = TextStyle(
-                                    fontSize = 20.sp,
+                                    fontSize = 16.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (effectiveUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary,
+                                    color = if (udhariDue > BigDecimal.ZERO) BillCrimson else FlatTextSecondary,
                                     fontFeatureSettings = "tnum"
-                                )
+                                ),
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
 
+                    // Quick Paid Buttons: Full · Half · Udhari (+ compact Promise date when due > 0)
+                    if (!isWalkInCashCustomer && grandTotal > BigDecimal.ZERO) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                onClick = { billingViewModel.setPayMode("FULL", grandTotal) },
+                                shape = RoundedCornerShape(9.dp),
+                                color = if (selectedPayMode == "FULL") BillMintPillBg else FlatDarkCard,
+                                border = BorderStroke(
+                                    width = if (selectedPayMode == "FULL") 1.5.dp else 1.dp,
+                                    color = if (selectedPayMode == "FULL") BillBrandGreen else FlatDarkBorder
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(32.dp)
+                                    .testTag("pay_mode_full_chip")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = tr("Full", "पूरा"),
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedPayMode == "FULL") BillBrandGreen else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = { billingViewModel.setPayMode("HALF", grandTotal) },
+                                shape = RoundedCornerShape(9.dp),
+                                color = if (selectedPayMode == "HALF") CAmberBg else FlatDarkCard,
+                                border = BorderStroke(
+                                    width = if (selectedPayMode == "HALF") 1.5.dp else 1.dp,
+                                    color = if (selectedPayMode == "HALF") CAmber else FlatDarkBorder
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(32.dp)
+                                    .testTag("pay_mode_half_chip")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = tr("Half", "आधा"),
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedPayMode == "HALF") CAmber else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = { billingViewModel.setPayMode("UDHARI", grandTotal) },
+                                shape = RoundedCornerShape(9.dp),
+                                color = if (selectedPayMode == "UDHARI") BillCrimsonSoftBg else FlatDarkCard,
+                                border = BorderStroke(
+                                    width = if (selectedPayMode == "UDHARI") 1.5.dp else 1.dp,
+                                    color = if (selectedPayMode == "UDHARI") BillCrimson else FlatDarkBorder
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(32.dp)
+                                    .testTag("pay_mode_udhari_chip")
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = tr("Udhari", "उधारी"),
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedPayMode == "UDHARI") BillCrimson else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+
+                            if (udhariDue > BigDecimal.ZERO && canViewFullCustomer) {
+                                Surface(
+                                    onClick = {
+                                        val cal = Calendar.getInstance()
+                                        DatePickerDialog(
+                                            pickerThemedContext(context),
+                                            { _, year, month, dayOfMonth ->
+                                                val chosen = Calendar.getInstance().apply {
+                                                    set(year, month, dayOfMonth, 9, 0, 0)
+                                                }
+                                                billingViewModel.setPromiseDate(chosen.timeInMillis)
+                                            },
+                                            cal.get(Calendar.YEAR),
+                                            cal.get(Calendar.MONTH),
+                                            cal.get(Calendar.DAY_OF_MONTH)
+                                        ).show()
+                                    },
+                                    shape = RoundedCornerShape(9.dp),
+                                    color = if (promiseDateMillis != null) CAmberBg else FlatDarkCard,
+                                    border = BorderStroke(1.dp, CAmberBorder),
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CalendarToday,
+                                            contentDescription = tr("Promise date", "वायदा तिथि"),
+                                            tint = CAmber,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = if (promiseDateMillis != null) {
+                                                promiseShortFmt.format(Date(promiseDateMillis!!))
+                                            } else {
+                                                tr("Promise", "वायदा")
+                                            },
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = CAmber,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Primary Save Button
                     Button(
                         onClick = {
                             if (isExceedingCreditLimit) {
@@ -568,31 +793,35 @@ fun BillingScreen(
                             disabledContainerColor = BillBrandGreen.copy(alpha = 0.45f),
                             disabledContentColor = Color.White.copy(alpha = 0.8f)
                         ),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(54.dp)
+                            .height(48.dp)
                             .testTag("submit_sale_button")
                     ) {
                         if (isStaffBlockedByCreditLimit) {
                             Icon(
                                 Icons.Default.Block,
                                 contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(6.dp))
                         }
                         Text(
                             text = if (isStaffBlockedByCreditLimit) {
                                 tr("Credit Blocked (Over Limit)", "उधारी सीमा पार - बिल ब्लॉक")
-                            } else {
+                            } else if (grandTotal > BigDecimal.ZERO) {
                                 tr(
                                     "Save & Share Bill · ${CurrencyUtils.formatInr(grandTotal)}",
                                     "बिल सेव करें · ${CurrencyUtils.formatInr(grandTotal)}"
                                 )
+                            } else {
+                                tr("Save & Share Bill", "बिल सेव करें")
                             },
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -602,506 +831,479 @@ fun BillingScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(innerPadding),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 1 · CUSTOMER Card
+            // =========================================================================
+            // 1. CUSTOMER CARD (Collapsed to 1 primary row after pick + Credit guard + "Now ✎")
+            // =========================================================================
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = FlatDarkCard,
                     border = BorderStroke(1.dp, FlatDarkBorder)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    if (isCustomerCollapsed) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
-                                text = tr("1 · CUSTOMER", "1 · ग्राहक"),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = FlatTextSecondary,
-                                letterSpacing = 0.6.sp
-                            )
-                            TextButton(
-                                onClick = { showAddCustomerDialog = true },
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                modifier = Modifier.testTag("new_bill_add_customer_btn")
-                            ) {
-                                Icon(Icons.Default.PersonAdd, contentDescription = null, tint = BillBrandGreen, modifier = Modifier.size(15.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(tr("+ Customer", "+ नया ग्राहक"), color = BillBrandGreen, fontSize = 12.5.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        // Segmented Toggle: Walk-in Cash | Customer (Concentric radius: 14dp outer - 4dp pad = 10dp inner)
-                        val walkInPillBg by animateColorAsState(
-                            targetValue = if (isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
-                            animationSpec = tween(durationMillis = 150),
-                            label = "walkInPillBg"
-                        )
-                        val walkInPillFg by animateColorAsState(
-                            targetValue = if (isWalkInCashCustomer) Color.White else FlatTextSecondary,
-                            animationSpec = tween(durationMillis = 150),
-                            label = "walkInPillFg"
-                        )
-                        val customerPillBg by animateColorAsState(
-                            targetValue = if (!isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
-                            animationSpec = tween(durationMillis = 150),
-                            label = "customerPillBg"
-                        )
-                        val customerPillFg by animateColorAsState(
-                            targetValue = if (!isWalkInCashCustomer) Color.White else FlatTextSecondary,
-                            animationSpec = tween(durationMillis = 150),
-                            label = "customerPillFg"
-                        )
-
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = FlatDarkBg,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                            // Collapsed single row: "Ramu · Gohra · Due ₹3,078" ... "Change"
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Surface(
-                                    onClick = { billingViewModel.toggleWalkInCash(true) },
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = walkInPillBg,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .defaultMinSize(minHeight = 40.dp)
-                                        .testTag("walk_in_cash_chip")
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp)
-                                    ) {
-                                        Text(
-                                            text = tr("Walk-in Cash", "नकद ग्राहक"),
-                                            fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = walkInPillFg,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-
-                                Surface(
-                                    onClick = { billingViewModel.toggleWalkInCash(false) },
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = customerPillBg,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .defaultMinSize(minHeight = 40.dp)
-                                        .testTag("customer_mode_chip")
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp)
-                                    ) {
-                                        Text(
-                                            text = tr("Customer", "खाता ग्राहक"),
-                                            fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = customerPillFg,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        if (!isWalkInCashCustomer) {
-                            // Selected Customer Summary matching New Sale Bill.pdf (NO hidden amount!)
-                            selectedCustomer?.let { cust ->
-                                val statusChip = getCustomerStatusChip(cust)
-                                val creditFlagBlocked = isCustomerCreditBlocked(cust, udhariDue.max(BigDecimal.ONE))
-                                val initials = remember(cust.name) { billCustomerInitials(cust.name) }
-                                val custSub = remember(cust) {
-                                    buildString {
-                                        if (cust.village.isNotBlank()) append(cust.village)
-                                        if (cust.fatherName.isNotBlank()) {
-                                            if (isNotEmpty()) append(" · ")
-                                            append("S/o ${cust.fatherName}")
-                                        } else if (cust.phone.isNotBlank()) {
-                                            if (isNotEmpty()) append(" · ")
-                                            append(cust.phone)
-                                        }
-                                    }.ifBlank { "Regular Customer" }
-                                }
-
-                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .clip(CircleShape)
-                                                .background(BillAvatarBg),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = initials,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 14.5.sp,
-                                                color = BillAvatarText
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.width(12.dp))
-
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = cust.name,
-                                                fontSize = 15.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = FlatTextPrimary,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(
-                                                text = custSub,
-                                                fontSize = 12.5.sp,
-                                                color = FlatTextSecondary,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        if (canViewFullCustomer) {
-                                            Column(horizontalAlignment = Alignment.End) {
-                                                Text(
-                                                    text = tr("UDHARI DUE", "पुरानी उधारी"),
-                                                    fontSize = 10.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = FlatTextSecondary
-                                                )
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text(
-                                                    text = CurrencyUtils.formatInr(cust.totalUdhari),
-                                                    fontSize = 15.5.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else BillBrandGreen
-                                                )
+                                if (isWalkInCashCustomer) {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
+                                                append(tr("Walk-in Cash", "नकद ग्राहक"))
                                             }
-                                        } else {
-                                            Column(horizontalAlignment = Alignment.End) {
-                                                Text(
-                                                    text = if (creditFlagBlocked) tr("Credit: Blocked", "क्रेडिट: ब्लॉक") else tr("Credit OK", "क्रेडिट: ठीक है"),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = if (creditFlagBlocked) BillCrimson else BillBrandGreen,
-                                                    modifier = Modifier.testTag("staff_credit_flag")
-                                                )
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text(
-                                                    text = tr(statusChip.labelEn, statusChip.labelHi),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = when (statusChip) {
-                                                        CustomerStatusChip.CLEAR -> BillBrandGreen
-                                                        CustomerStatusChip.HAS_UDHARI -> CAmber
-                                                        CustomerStatusChip.OVER_LIMIT -> BillCrimson
-                                                    }
-                                                )
+                                            withStyle(SpanStyle(color = FlatTextSecondary)) {
+                                                append(" · ")
+                                                append(tr("Counter cash", "काउंटर नकद"))
                                             }
-                                        }
-                                    }
-
-                                    // Bottom row: "Within credit limit" pill on left + "Change" button on right
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(50),
-                                            color = if (creditFlagBlocked) BillCrimsonSoftBg else BillMintPillBg
-                                        ) {
-                                            Text(
-                                                text = if (creditFlagBlocked) {
-                                                    tr("Over credit limit", "उधारी सीमा पार")
-                                                } else {
-                                                    tr("Within credit limit", "उधारी सीमा के भीतर")
-                                                },
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (creditFlagBlocked) BillCrimson else BillBrandGreen,
-                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
-                                            )
-                                        }
-
-                                        Text(
-                                            text = if (showCustomerPicker) tr("Hide list", "सूची छुपाएं") else tr("Change", "बदलें"),
-                                            fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = BillBrandGreen,
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .clickable { showCustomerPicker = !showCustomerPicker }
-                                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Show search input + chips when no customer is selected or when "Change" is tapped
-                            if (selectedCustomer == null || showCustomerPicker) {
-                                OutlinedTextField(
-                                    value = customerSearchQuery,
-                                    onValueChange = { billingViewModel.setCustomerSearchQuery(it) },
-                                    placeholder = { Text(tr("Search customer by name or village…", "नाम या गाँव से ग्राहक खोजें…"), fontSize = 14.sp) },
-                                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = FlatTextMuted) },
-                                    trailingIcon = {
-                                        if (customerSearchQuery.isNotEmpty()) {
-                                            IconButton(onClick = { billingViewModel.setCustomerSearchQuery("") }) {
-                                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = FlatTextMuted)
+                                        },
+                                        fontSize = 14.5.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                } else {
+                                    val cust = selectedCustomer!!
+                                    val statusChip = getCustomerStatusChip(cust)
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
+                                                append(cust.name)
                                             }
-                                        }
-                                    },
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(14.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("bill_customer_search_input")
-                                )
-
-                                val filteredCustomers = remember(customers, customerSearchQuery) {
-                                    val active = customers.filter { !it.isDeleted }
-                                    if (customerSearchQuery.isBlank()) active.take(12)
-                                    else active.filter {
-                                        it.name.contains(customerSearchQuery, ignoreCase = true) ||
-                                            it.village.contains(customerSearchQuery, ignoreCase = true) ||
-                                            it.phone.contains(customerSearchQuery)
-                                    }.take(12)
-                                }
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .horizontalScroll(rememberScrollState()),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    filteredCustomers.forEach { cust ->
-                                        val isSelected = selectedCustomer?.id == cust.id
-                                        val statusChip = getCustomerStatusChip(cust)
-                                        FilterChip(
-                                            selected = isSelected,
-                                            onClick = {
-                                                billingViewModel.selectCustomer(cust)
-                                                showCustomerPicker = false
-                                            },
-                                            label = {
-                                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                                                    Text(
-                                                        text = cust.name,
-                                                        fontWeight = FontWeight.Bold,
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
-                                                    )
-                                                    if (canViewFullCustomer) {
-                                                        Text(
-                                                            text = if (cust.totalUdhari > BigDecimal.ZERO) {
-                                                                "Due: ${CurrencyUtils.formatInr(cust.totalUdhari)}"
-                                                            } else {
-                                                                cust.village.ifBlank { "Clear" }
-                                                            },
-                                                            fontSize = 11.sp,
-                                                            color = if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary,
-                                                            maxLines = 1,
-                                                            overflow = TextOverflow.Ellipsis
-                                                        )
-                                                    } else {
-                                                        Text(
-                                                            text = statusChip.labelEn,
-                                                            fontSize = 11.sp,
-                                                            color = when (statusChip) {
-                                                                CustomerStatusChip.CLEAR -> BillBrandGreen
-                                                                CustomerStatusChip.HAS_UDHARI -> CAmber
-                                                                CustomerStatusChip.OVER_LIMIT -> BillCrimson
-                                                            },
-                                                            maxLines = 1,
-                                                            overflow = TextOverflow.Ellipsis
-                                                        )
-                                                    }
+                                            if (cust.village.isNotBlank()) {
+                                                withStyle(SpanStyle(color = FlatTextSecondary)) {
+                                                    append(" · ${cust.village}")
                                                 }
-                                            },
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = BillMintPillBg,
-                                                selectedLabelColor = BillBrandGreen
-                                            ),
-                                            modifier = Modifier.defaultMinSize(minHeight = 48.dp)
+                                            }
+                                            if (canViewFullCustomer) {
+                                                withStyle(SpanStyle(color = FlatTextSecondary)) {
+                                                    append(" · ")
+                                                }
+                                                withStyle(
+                                                    SpanStyle(
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else BillBrandGreen
+                                                    )
+                                                ) {
+                                                    append(
+                                                        if (cust.totalUdhari > BigDecimal.ZERO) {
+                                                            "Due ${CurrencyUtils.formatInr(cust.totalUdhari)}"
+                                                        } else {
+                                                            tr("Clear", "कोई बाक़ी नहीं")
+                                                        }
+                                                    )
+                                                }
+                                            } else {
+                                                withStyle(SpanStyle(color = FlatTextSecondary)) {
+                                                    append(" · ")
+                                                }
+                                                withStyle(
+                                                    SpanStyle(
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = when (statusChip) {
+                                                            CustomerStatusChip.CLEAR -> BillBrandGreen
+                                                            CustomerStatusChip.HAS_UDHARI -> CAmber
+                                                            CustomerStatusChip.OVER_LIMIT -> BillCrimson
+                                                        }
+                                                    )
+                                                ) {
+                                                    append(tr(statusChip.labelEn, statusChip.labelHi))
+                                                }
+                                            }
+                                        },
+                                        fontSize = 14.5.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Text(
+                                    text = tr("Change", "बदलें"),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BillBrandGreen,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { showCustomerPicker = true }
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        .testTag("change_customer_btn")
+                                )
+                            }
+
+                            // Compact Credit Guard + "Now ✎" timing link row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (!isWalkInCashCustomer && selectedCustomer != null) {
+                                    val cust = selectedCustomer!!
+                                    if (canViewFullCustomer && hasCreditLimit) {
+                                        val effectiveRemaining = if (udhariDue > BigDecimal.ZERO) remainingCreditAfterBill else remainingCreditBeforeBill
+                                        val isOver = effectiveRemaining < BigDecimal.ZERO
+                                        val isTight = !isOver && customerCreditLimit > BigDecimal.ZERO &&
+                                            effectiveRemaining.multiply(BigDecimal("5")) <= customerCreditLimit
+                                        val guardText = if (isOver) {
+                                            "Over ${CurrencyUtils.formatInr(customerCreditLimit)} by ${CurrencyUtils.formatInr(effectiveRemaining.abs())}"
+                                        } else {
+                                            "${CurrencyUtils.formatInr(effectiveRemaining)} left of ${CurrencyUtils.formatInr(customerCreditLimit)}"
+                                        }
+                                        val guardColor = when {
+                                            isOver -> BillCrimson
+                                            isTight -> CAmber
+                                            else -> BillBrandGreen
+                                        }
+                                        Text(
+                                            text = guardText,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = guardColor,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .testTag("customer_credit_guard_text")
+                                        )
+                                    } else if (!canViewFullCustomer) {
+                                        val creditFlagBlocked = isCustomerCreditBlocked(cust, udhariDue.max(BigDecimal.ONE))
+                                        Text(
+                                            text = if (creditFlagBlocked) tr("Credit: Blocked", "क्रेडिट: ब्लॉक") else tr("Credit OK", "क्रेडिट: ठीक है"),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (creditFlagBlocked) BillCrimson else BillBrandGreen,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .testTag("staff_credit_flag")
+                                        )
+                                    } else {
+                                        Text(
+                                            text = tr("No credit limit", "कोई उधारी सीमा नहीं"),
+                                            fontSize = 12.sp,
+                                            color = FlatTextMuted,
+                                            modifier = Modifier.weight(1f)
                                         )
                                     }
+                                } else {
+                                    Text(
+                                        text = tr("Full cash payment", "पूरा नकद भुगतान"),
+                                        fontSize = 12.sp,
+                                        color = FlatTextSecondary,
+                                        modifier = Modifier.weight(1f)
+                                    )
                                 }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Text(
+                                    text = timingLinkLabel,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isCustomTiming) BillBrandGreen else FlatTextSecondary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isCustomTiming) BillMintPillBg else Color.Transparent)
+                                        .clickable { showBillTimingDialog = true }
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        .testTag("bill_timing_trigger_btn")
+                                )
                             }
                         }
-
-                        HorizontalDivider(color = FlatDarkBorder)
-
-                        // BILL TIMING (DATE & TIME) SELECTOR
-                        val billDateFmt = remember { SimpleDateFormat("d MMM yyyy", Locale.getDefault()) }
-                        val billTimeFmt = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
-                        val effectiveMillis = customBillDateMillis ?: System.currentTimeMillis()
-                        val isCustomTiming = customBillDateMillis != null
-
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    } else {
+                        // Expanded customer picker state
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = tr("BILL TIMING (DATE & TIME)", "बिल का समय और तारीख"),
+                                    text = tr("CUSTOMER", "ग्राहक"),
                                     fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = FlatTextSecondary,
-                                    letterSpacing = 0.5.sp
+                                    letterSpacing = 0.6.sp
                                 )
-                                if (isCustomTiming) {
-                                    Surface(
-                                        onClick = { billingViewModel.setCustomBillDateMillis(null) },
-                                        shape = RoundedCornerShape(50),
-                                        color = BillMintPillBg,
-                                        modifier = Modifier.testTag("bill_timing_reset_now_btn")
-                                    ) {
-                                        Text(
-                                            text = tr("Reset to Now", "अभी का समय"),
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = BillBrandGreen,
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                } else {
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    // Single compact "Now ✎" timing link (replaces bulky date/time boxes)
                                     Text(
-                                        text = tr("Now · Current time", "अभी का समय"),
+                                        text = timingLinkLabel,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = BillBrandGreen
+                                        color = if (isCustomTiming) BillBrandGreen else FlatTextSecondary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isCustomTiming) BillMintPillBg else FlatDarkBg)
+                                            .clickable { showBillTimingDialog = true }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            .testTag("bill_timing_trigger_btn")
                                     )
+
+                                    // Fixed single "+" icon with "Customer" label (no doubled "+")
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { showAddCustomerDialog = true }
+                                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                                            .testTag("new_bill_add_customer_btn")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            tint = BillBrandGreen,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Text(
+                                            text = tr("Customer", "नया ग्राहक"),
+                                            color = BillBrandGreen,
+                                            fontSize = 12.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
+                                            softWrap = false
+                                        )
+                                    }
                                 }
                             }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            // Segmented Toggle: Walk-in Cash | Customer
+                            val walkInPillBg by animateColorAsState(
+                                targetValue = if (isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
+                                animationSpec = tween(durationMillis = 150),
+                                label = "walkInPillBg"
+                            )
+                            val walkInPillFg by animateColorAsState(
+                                targetValue = if (isWalkInCashCustomer) Color.White else FlatTextSecondary,
+                                animationSpec = tween(durationMillis = 150),
+                                label = "walkInPillFg"
+                            )
+                            val customerPillBg by animateColorAsState(
+                                targetValue = if (!isWalkInCashCustomer) BillBrandGreen else Color.Transparent,
+                                animationSpec = tween(durationMillis = 150),
+                                label = "customerPillBg"
+                            )
+                            val customerPillFg by animateColorAsState(
+                                targetValue = if (!isWalkInCashCustomer) Color.White else FlatTextSecondary,
+                                animationSpec = tween(durationMillis = 150),
+                                label = "customerPillFg"
+                            )
+
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = FlatDarkBg,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Surface(
-                                    onClick = {
-                                        val cal = Calendar.getInstance().apply { timeInMillis = effectiveMillis }
-                                        DatePickerDialog(
-                                            pickerThemedContext(context),
-                                            { _, year, month, dayOfMonth ->
-                                                cal.set(Calendar.YEAR, year)
-                                                cal.set(Calendar.MONTH, month)
-                                                cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                                                billingViewModel.setCustomBillDateMillis(cal.timeInMillis)
-                                            },
-                                            cal.get(Calendar.YEAR),
-                                            cal.get(Calendar.MONTH),
-                                            cal.get(Calendar.DAY_OF_MONTH)
-                                        ).show()
-                                    },
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = if (isCustomTiming) BillMintPillBg else FlatDarkBg,
-                                    border = BorderStroke(1.dp, if (isCustomTiming) BillBrandGreen else FlatDarkBorder),
+                                Row(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .height(44.dp)
-                                        .testTag("bill_custom_date_btn")
+                                        .fillMaxWidth()
+                                        .padding(3.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Row(
+                                    Surface(
+                                        onClick = {
+                                            billingViewModel.toggleWalkInCash(true)
+                                            showCustomerPicker = false
+                                        },
+                                        shape = RoundedCornerShape(9.dp),
+                                        color = walkInPillBg,
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(horizontal = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            .weight(1f)
+                                            .defaultMinSize(minHeight = 36.dp)
+                                            .testTag("walk_in_cash_chip")
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CalendarToday,
-                                            contentDescription = null,
-                                            tint = BillBrandGreen,
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = tr("Walk-in Cash", "नकद ग्राहक"),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = walkInPillFg,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+
+                                    Surface(
+                                        onClick = { billingViewModel.toggleWalkInCash(false) },
+                                        shape = RoundedCornerShape(9.dp),
+                                        color = customerPillBg,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .defaultMinSize(minHeight = 36.dp)
+                                            .testTag("customer_mode_chip")
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = tr("Customer", "खाता ग्राहक"),
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = customerPillFg,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (!isWalkInCashCustomer) {
+                                OutlinedTextField(
+                                    value = customerSearchQuery,
+                                    onValueChange = { billingViewModel.setCustomerSearchQuery(it) },
+                                    placeholder = {
                                         Text(
-                                            text = billDateFmt.format(Date(effectiveMillis)),
+                                            tr("Search customer by name or village…", "नाम या गाँव से ग्राहक खोजें…"),
                                             fontSize = 13.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = FlatTextPrimary,
+                                            color = FlatTextMuted,
                                             maxLines = 1,
-                                            softWrap = false,
                                             overflow = TextOverflow.Ellipsis
                                         )
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Search, contentDescription = null, tint = FlatTextMuted, modifier = Modifier.size(18.dp))
+                                    },
+                                    trailingIcon = {
+                                        if (customerSearchQuery.isNotEmpty()) {
+                                            IconButton(onClick = { billingViewModel.setCustomerSearchQuery("") }) {
+                                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = FlatTextMuted, modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = FlatDarkBg,
+                                        unfocusedContainerColor = FlatDarkBg,
+                                        focusedBorderColor = BillBrandGreen,
+                                        unfocusedBorderColor = FlatDarkBorder,
+                                        focusedTextColor = FlatTextPrimary,
+                                        unfocusedTextColor = FlatTextPrimary
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("bill_customer_search_input")
+                                )
+
+                                // Recent customers in a single horizontal row
+                                if (recentCustomers.isNotEmpty()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        recentCustomers.forEach { cust ->
+                                            val isSelected = selectedCustomer?.id == cust.id
+                                            val statusChip = getCustomerStatusChip(cust)
+                                            Surface(
+                                                onClick = {
+                                                    billingViewModel.selectCustomer(cust)
+                                                    billingViewModel.setCustomerSearchQuery("")
+                                                    showCustomerPicker = false
+                                                },
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = if (isSelected) BillMintPillBg else FlatDarkBg,
+                                                border = BorderStroke(
+                                                    1.dp,
+                                                    if (isSelected) BillBrandGreen else FlatDarkBorder
+                                                )
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                                                ) {
+                                                    Text(
+                                                        text = cust.name,
+                                                        fontSize = 13.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = if (isSelected) BillBrandGreen else FlatTextPrimary,
+                                                        maxLines = 1,
+                                                        softWrap = false,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                    val subText = if (canViewFullCustomer) {
+                                                        when {
+                                                            cust.totalUdhari > BigDecimal.ZERO && cust.village.isNotBlank() ->
+                                                                "${cust.village} · ${CurrencyUtils.formatInr(cust.totalUdhari)}"
+                                                            cust.totalUdhari > BigDecimal.ZERO ->
+                                                                "Due ${CurrencyUtils.formatInr(cust.totalUdhari)}"
+                                                            else -> cust.village.ifBlank { tr("Clear", "क्लियर") }
+                                                        }
+                                                    } else {
+                                                        tr(statusChip.labelEn, statusChip.labelHi)
+                                                    }
+                                                    val subColor = if (canViewFullCustomer) {
+                                                        if (cust.totalUdhari > BigDecimal.ZERO) BillCrimson else FlatTextSecondary
+                                                    } else {
+                                                        when (statusChip) {
+                                                            CustomerStatusChip.CLEAR -> BillBrandGreen
+                                                            CustomerStatusChip.HAS_UDHARI -> CAmber
+                                                            CustomerStatusChip.OVER_LIMIT -> BillCrimson
+                                                        }
+                                                    }
+                                                    Text(
+                                                        text = subText,
+                                                        fontSize = 11.sp,
+                                                        color = subColor,
+                                                        maxLines = 1,
+                                                        softWrap = false,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
 
-                                Surface(
-                                    onClick = {
-                                        val cal = Calendar.getInstance().apply { timeInMillis = effectiveMillis }
-                                        TimePickerDialog(
-                                            pickerThemedContext(context),
-                                            { _, hourOfDay, minute ->
-                                                cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                                                cal.set(Calendar.MINUTE, minute)
-                                                cal.set(Calendar.SECOND, 0)
-                                                billingViewModel.setCustomBillDateMillis(cal.timeInMillis)
-                                            },
-                                            cal.get(Calendar.HOUR_OF_DAY),
-                                            cal.get(Calendar.MINUTE),
-                                            false
-                                        ).show()
-                                    },
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = if (isCustomTiming) BillMintPillBg else FlatDarkBg,
-                                    border = BorderStroke(1.dp, if (isCustomTiming) BillBrandGreen else FlatDarkBorder),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(44.dp)
-                                        .testTag("bill_custom_time_btn")
-                                ) {
+                                if (selectedCustomer != null) {
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(horizontal = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AccessTime,
-                                            contentDescription = null,
-                                            tint = BillBrandGreen,
-                                            modifier = Modifier.size(16.dp)
-                                        )
                                         Text(
-                                            text = billTimeFmt.format(Date(effectiveMillis)),
-                                            fontSize = 13.5.sp,
+                                            text = tr("Done", "हो गया"),
+                                            fontSize = 12.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = FlatTextPrimary,
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis
+                                            color = BillBrandGreen,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .clickable { showCustomerPicker = false }
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
                                         )
                                     }
                                 }
@@ -1111,7 +1313,9 @@ fun BillingScreen(
                 }
             }
 
-            // Credit Limit Warning Banner
+            // =========================================================================
+            // CREDIT GUARD BILL-LEVEL WARNING (when udhari due crosses limit)
+            // =========================================================================
             if (isExceedingCreditLimit) {
                 item {
                     Card(
@@ -1120,39 +1324,44 @@ fun BillingScreen(
                             .testTag("credit_limit_warning_card"),
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = CRedUdhariBg),
-                        border = BorderStroke(1.5.dp, CRedUdhari)
+                        border = BorderStroke(1.25.dp, CRedUdhari)
                     ) {
                         Row(
-                            modifier = Modifier.padding(14.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Icon(
                                 Icons.Default.Warning,
                                 contentDescription = "Credit Limit Exceeded",
                                 tint = CRedUdhari,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = if (currentUser?.role == Role.STAFF) {
-                                        tr("Credit Blocked: Over Limit!", "उधारी सीमा पार - क्रेडिट ब्लॉक!")
+                                        tr("Credit Blocked · Over Limit", "उधारी सीमा पार · क्रेडिट ब्लॉक")
                                     } else {
-                                        tr("Credit Limit Warning!", "उधारी सीमा (Credit Limit) चेतावनी!")
+                                        tr(
+                                            "Crosses ${CurrencyUtils.formatInr(customerCreditLimit)} credit limit",
+                                            "${CurrencyUtils.formatInr(customerCreditLimit)} उधारी सीमा पार"
+                                        )
                                     },
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = CRedUdhari
                                 )
                                 Text(
                                     text = if (!canViewFullCustomer) {
                                         tr(
-                                            "This udhari bill exceeds the customer's credit limit. Staff cannot override credit limits.",
-                                            "यह उधारी बिल ग्राहक की क्रेडिट सीमा से अधिक है। स्टाफ इसे मंजूर नहीं कर सकता।"
+                                            "This udhari bill exceeds the customer's credit limit. Staff cannot override.",
+                                            "यह उधारी बिल ग्राहक की क्रेडिट सीमा से अधिक है।"
                                         )
                                     } else {
-                                        "New Total Udhari (${CurrencyUtils.formatInr(projectedTotalUdhari)}) exceeds ${selectedCustomer?.name}'s credit limit of ${CurrencyUtils.formatInr(customerCreditLimit)}."
+                                        val overBy = projectedTotalUdhari.subtract(customerCreditLimit).max(BigDecimal.ZERO)
+                                        "New due ${CurrencyUtils.formatInr(projectedTotalUdhari)} is ${CurrencyUtils.formatInr(overBy)} over ${selectedCustomer?.name}'s limit."
                                     },
-                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 12.sp,
                                     color = FlatTextPrimary
                                 )
                             }
@@ -1161,145 +1370,59 @@ fun BillingScreen(
                 }
             }
 
-            // 2 · ADD FEED / GRAIN Card
+            // =========================================================================
+            // 2. BILL ITEMS + RUNNING TOTAL (Placed FIRST, right under customer)
+            // =========================================================================
             item {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = FlatDarkCard,
                     border = BorderStroke(1.dp, FlatDarkBorder)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = tr("2 · ADD FEED / GRAIN", "2 · पशु आहार / अनाज जोड़ें"),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextSecondary,
-                            letterSpacing = 0.6.sp
-                        )
-
-                        OutlinedTextField(
-                            value = productSearchQuery,
-                            onValueChange = { productSearchQuery = it },
-                            placeholder = {
-                                Text(
-                                    text = tr("Search item...", "सामान खोजें..."),
-                                    color = FlatTextMuted,
-                                    fontSize = 14.sp
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    tint = BillBrandGreen
-                                )
-                            },
-                            trailingIcon = {
-                                if (productSearchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { productSearchQuery = "" }) {
-                                        Icon(Icons.Default.Close, contentDescription = tr("Close", "बंद करें"), tint = FlatTextSecondary)
-                                    }
-                                }
-                            },
-                            singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = FlatDarkCard,
-                                unfocusedContainerColor = FlatDarkCard,
-                                focusedBorderColor = BillBrandGreen,
-                                unfocusedBorderColor = BillBrandGreen,
-                                focusedTextColor = FlatTextPrimary,
-                                unfocusedTextColor = FlatTextPrimary
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Text(
-                            text = tr("Frequently sold", "अक्सर बिकने वाले"),
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = FlatTextSecondary
-                        )
-
-                        FlowRow(
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            filteredFeedProducts.forEach { prod ->
-                                val alreadyInCart = cartLines.any { it.productId == prod.id }
-                                Surface(
-                                    onClick = { billingViewModel.addOrIncrementProduct(prod) },
-                                    shape = RoundedCornerShape(50),
-                                    color = if (alreadyInCart) BillMintPillBg else FlatDarkCard,
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (alreadyInCart) BillBrandGreen else FlatDarkBorder
-                                    ),
-                                    modifier = Modifier.defaultMinSize(minHeight = 38.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            text = "+ ${prod.feedName}",
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (alreadyInCart) BillBrandGreen else FlatTextPrimary,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
+                            Text(
+                                text = if (cartLines.isEmpty()) {
+                                    tr("BILL ITEMS", "बिल के सामान")
+                                } else {
+                                    tr("BILL ITEMS · ${cartLines.size}", "बिल के सामान · ${cartLines.size}")
+                                },
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FlatTextSecondary,
+                                letterSpacing = 0.6.sp
+                            )
+                            if (cartLines.isNotEmpty()) {
+                                Text(
+                                    text = CurrencyUtils.formatInr(grandTotal),
+                                    style = TextStyle(
+                                        fontSize = 14.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = BillBrandGreen,
+                                        fontFeatureSettings = "tnum"
+                                    )
+                                )
                             }
                         }
-                    }
-                }
-            }
-
-            // BILL ITEMS Card
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    color = FlatDarkCard,
-                    border = BorderStroke(1.dp, FlatDarkBorder)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = tr("BILL ITEMS", "बिल के सामान"),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = FlatTextSecondary,
-                            letterSpacing = 0.6.sp
-                        )
 
                         if (cartLines.isEmpty()) {
-                            Surface(
-                                color = FlatDarkBg,
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, FlatDarkBorder),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = tr(
-                                        "Tap any feed chip above or use Voice button to add items.",
-                                        "ऊपर दिए गए किसी भी आइटम पर टैप करें या बोलकर जोड़ें।"
-                                    ),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = FlatTextMuted,
-                                    modifier = Modifier.padding(14.dp)
-                                )
-                            }
+                            Text(
+                                text = tr(
+                                    "No items yet — tap any item below or use Voice.",
+                                    "अभी कोई सामान नहीं — नीचे टैप करें या बोलकर जोड़ें।"
+                                ),
+                                fontSize = 13.sp,
+                                color = FlatTextMuted,
+                                modifier = Modifier.padding(vertical = 2.dp)
+                            )
                         } else {
                             cartLines.forEachIndexed { index, line ->
                                 val product = activeProducts.find { it.id == line.productId } ?: return@forEachIndexed
@@ -1307,26 +1430,27 @@ fun BillingScreen(
                                 val lineTotal = calc?.third?.second ?: BigDecimal.ZERO
                                 val looseVal = line.looseKgStr.toBigDecimalOrNull() ?: BigDecimal.ZERO
                                 val isExpandedOptions = showRateOverrideLineId == line.id
+                                val (cleanItemName, _) = remember(product) { splitProductDisplayAndPack(product) }
 
                                 val rateLabel = if (!product.isLooseOnly && line.bagsCount > 0 && looseVal <= BigDecimal.ZERO) {
-                                    "${CurrencyUtils.formatInr(product.bagSellingPrice)} / bag"
+                                    "${CurrencyUtils.formatInr(product.bagSellingPrice)}/bag"
                                 } else if (product.isLooseOnly || (line.bagsCount == 0 && looseVal > BigDecimal.ZERO)) {
-                                    "${CurrencyUtils.formatInr(product.effectiveLooseRatePerKg)} / kg"
+                                    "${CurrencyUtils.formatInr(product.effectiveLooseRatePerKg)}/kg"
                                 } else {
-                                    "${CurrencyUtils.formatInr(product.bagSellingPrice)}/bag · ${CurrencyUtils.formatInr(product.effectiveLooseRatePerKg)}/kg"
+                                    "${CurrencyUtils.formatInr(product.bagSellingPrice)}/b · ${CurrencyUtils.formatInr(product.effectiveLooseRatePerKg)}/kg"
                                 }
 
                                 val qtyDisplayText = when {
                                     !product.isLooseOnly && line.bagsCount > 0 && looseVal <= BigDecimal.ZERO ->
-                                        "${line.bagsCount} ${if (line.bagsCount == 1) "bag" else "bags"}"
+                                        "${line.bagsCount}"
                                     line.bagsCount == 0 && looseVal > BigDecimal.ZERO ->
-                                        "${line.looseKgStr} kg"
+                                        "${line.looseKgStr}kg"
                                     !product.isLooseOnly && line.bagsCount > 0 && looseVal > BigDecimal.ZERO ->
-                                        "${line.bagsCount}b + ${line.looseKgStr}kg"
+                                        "${line.bagsCount}b+${line.looseKgStr}k"
                                     product.isLooseOnly ->
-                                        "${line.looseKgStr.ifBlank { "0" }} kg"
+                                        "${line.looseKgStr.ifBlank { "0" }}kg"
                                     else ->
-                                        "${line.bagsCount} bags"
+                                        "${line.bagsCount}"
                                 }
 
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1335,29 +1459,31 @@ fun BillingScreen(
                                             .fillMaxWidth()
                                             .clickable {
                                                 showRateOverrideLineId = if (isExpandedOptions) null else line.id
-                                            },
+                                            }
+                                            .padding(vertical = 2.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        // Left: Item Name + Rate subtitle
+                                        // Compact Name + Rate
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                text = product.feedName,
-                                                fontSize = 15.sp,
+                                                text = cleanItemName,
+                                                fontSize = 14.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
                                             )
-                                            Spacer(modifier = Modifier.height(2.dp))
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
                                                 Text(
                                                     text = rateLabel,
-                                                    fontSize = 12.5.sp,
-                                                    color = FlatTextSecondary
+                                                    fontSize = 11.5.sp,
+                                                    color = FlatTextSecondary,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                                 if (canOverrideRate) {
                                                     Icon(
@@ -1365,22 +1491,17 @@ fun BillingScreen(
                                                         contentDescription = "Override Rate",
                                                         tint = CAmber,
                                                         modifier = Modifier
-                                                            .size(14.dp)
-                                                            .clickable {
-                                                                showRateOverrideLineId = if (isExpandedOptions) null else line.id
-                                                            }
+                                                            .size(12.dp)
                                                             .testTag("override_rate_btn_${product.id}")
                                                     )
                                                 }
                                             }
                                         }
 
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        // Middle: Minus [-]  Qty  Plus [+]
+                                        // Compact Qty Stepper
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
                                             Surface(
                                                 onClick = {
@@ -1402,16 +1523,16 @@ fun BillingScreen(
                                                         }
                                                     }
                                                 },
-                                                shape = RoundedCornerShape(10.dp),
+                                                shape = RoundedCornerShape(8.dp),
                                                 color = FlatDarkInput,
-                                                modifier = Modifier.size(40.dp)
+                                                modifier = Modifier.size(32.dp)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(
                                                         Icons.Default.Remove,
                                                         contentDescription = "Decrease quantity",
                                                         tint = FlatTextPrimary,
-                                                        modifier = Modifier.size(18.dp)
+                                                        modifier = Modifier.size(16.dp)
                                                     )
                                                 }
                                             }
@@ -1419,13 +1540,15 @@ fun BillingScreen(
                                             Text(
                                                 text = qtyDisplayText,
                                                 style = TextStyle(
-                                                    fontSize = 14.5.sp,
+                                                    fontSize = 13.5.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = FlatTextPrimary,
                                                     textAlign = TextAlign.Center,
                                                     fontFeatureSettings = "tnum"
                                                 ),
-                                                modifier = Modifier.widthIn(min = 56.dp)
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                modifier = Modifier.widthIn(min = 28.dp)
                                             )
 
                                             Surface(
@@ -1439,38 +1562,38 @@ fun BillingScreen(
                                                         cartLines[index] = line.copy(bagsCount = line.bagsCount + 1)
                                                     }
                                                 },
-                                                shape = RoundedCornerShape(10.dp),
+                                                shape = RoundedCornerShape(8.dp),
                                                 color = BillBrandGreen,
-                                                modifier = Modifier.size(40.dp)
+                                                modifier = Modifier.size(32.dp)
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
                                                     Icon(
                                                         Icons.Default.Add,
                                                         contentDescription = "Increase quantity",
                                                         tint = Color.White,
-                                                        modifier = Modifier.size(18.dp)
+                                                        modifier = Modifier.size(16.dp)
                                                     )
                                                 }
                                             }
                                         }
 
-                                        Spacer(modifier = Modifier.width(10.dp))
-
-                                        // Right: Line Total with tabular numerals
+                                        // Line Price
                                         Text(
                                             text = CurrencyUtils.formatInr(lineTotal),
                                             style = TextStyle(
-                                                fontSize = 15.5.sp,
+                                                fontSize = 14.5.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = FlatTextPrimary,
                                                 textAlign = TextAlign.End,
                                                 fontFeatureSettings = "tnum"
                                             ),
-                                            modifier = Modifier.widthIn(min = 68.dp)
+                                            maxLines = 1,
+                                            softWrap = false,
+                                            modifier = Modifier.widthIn(min = 64.dp)
                                         )
                                     }
 
-                                    // Expanded Inline Editor for Loose Kg, Bag Presets, Rate Override, and Remove
+                                    // Expanded Inline Editor for Loose Kg, Rate Override, and Remove
                                     if (isExpandedOptions) {
                                         Surface(
                                             shape = RoundedCornerShape(12.dp),
@@ -1479,7 +1602,7 @@ fun BillingScreen(
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
                                             Column(
-                                                modifier = Modifier.padding(12.dp),
+                                                modifier = Modifier.padding(10.dp),
                                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                                             ) {
                                                 Row(
@@ -1488,16 +1611,16 @@ fun BillingScreen(
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     Text(
-                                                        text = tr("Loose Weight / Custom Options", "खुला किलो / कस्टम विकल्प"),
+                                                        text = tr("Loose Weight / Custom Rate", "खुला किलो / कस्टम रेट"),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontWeight = FontWeight.Bold,
                                                         color = FlatTextSecondary
                                                     )
                                                     IconButton(
                                                         onClick = { cartLines.removeAt(index) },
-                                                        modifier = Modifier.size(44.dp)
+                                                        modifier = Modifier.size(34.dp)
                                                     ) {
-                                                        Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = BillCrimson, modifier = Modifier.size(18.dp))
+                                                        Icon(Icons.Default.Delete, contentDescription = "Remove Item", tint = BillCrimson, modifier = Modifier.size(17.dp))
                                                     }
                                                 }
 
@@ -1520,10 +1643,13 @@ fun BillingScreen(
                                                                     text = "${kgPreset}kg",
                                                                     fontWeight = FontWeight.Bold,
                                                                     maxLines = 1,
-                                                                    softWrap = false,
-                                                                    overflow = TextOverflow.Ellipsis
+                                                                    softWrap = false
                                                                 )
-                                                            }
+                                                            },
+                                                            colors = FilterChipDefaults.filterChipColors(
+                                                                selectedContainerColor = BillMintPillBg,
+                                                                selectedLabelColor = BillBrandGreen
+                                                            )
                                                         )
                                                     }
                                                 }
@@ -1548,7 +1674,7 @@ fun BillingScreen(
                                                             OutlinedTextField(
                                                                 value = line.customBagRateStr,
                                                                 onValueChange = { v -> cartLines[index] = line.copy(customBagRateStr = v) },
-                                                                label = { Text("Custom Bag ₹") },
+                                                                label = { Text("Bag ₹") },
                                                                 singleLine = true,
                                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                                                 modifier = Modifier.weight(1f)
@@ -1557,7 +1683,7 @@ fun BillingScreen(
                                                         OutlinedTextField(
                                                             value = line.customLooseRateStr,
                                                             onValueChange = { v -> cartLines[index] = line.copy(customLooseRateStr = v) },
-                                                            label = { Text("Custom Loose ₹/kg") },
+                                                            label = { Text("Loose ₹/kg") },
                                                             singleLine = true,
                                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                                             modifier = Modifier.weight(1f)
@@ -1578,145 +1704,348 @@ fun BillingScreen(
                 }
             }
 
-            // Quick Payment Mode Chips & Promise Date (when customer bill has items)
-            if (!isWalkInCashCustomer && grandTotal > BigDecimal.ZERO) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+            // =========================================================================
+            // 3. ADD ITEMS (Search + 2-Column Grid of Top 6 Frequently Sold + "See all")
+            // =========================================================================
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = FlatDarkCard,
+                    border = BorderStroke(1.dp, FlatDarkBorder)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Surface(
-                            onClick = { billingViewModel.setPayMode("FULL", grandTotal) },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (selectedPayMode == "FULL") BillMintPillBg else FlatDarkCard,
-                            border = BorderStroke(
-                                width = if (selectedPayMode == "FULL") 1.5.dp else 1.dp,
-                                color = if (selectedPayMode == "FULL") BillBrandGreen else FlatDarkBorder
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 40.dp)
-                                .testTag("pay_mode_full_chip")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 9.dp)
-                            ) {
-                                Text(
-                                    text = tr("Full paid", "पूरा नकद"),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selectedPayMode == "FULL") BillBrandGreen else FlatTextPrimary,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-
-                        Surface(
-                            onClick = { billingViewModel.setPayMode("HALF", grandTotal) },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (selectedPayMode == "HALF") CAmberBg else FlatDarkCard,
-                            border = BorderStroke(
-                                width = if (selectedPayMode == "HALF") 1.5.dp else 1.dp,
-                                color = if (selectedPayMode == "HALF") CAmber else FlatDarkBorder
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 40.dp)
-                                .testTag("pay_mode_half_chip")
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 9.dp)
-                            ) {
-                                Text(
-                                    text = tr("Half (50%)", "आधा जमा"),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selectedPayMode == "HALF") CAmber else FlatTextPrimary,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-
-                        Surface(
-                            onClick = { billingViewModel.setPayMode("UDHARI", grandTotal) },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (selectedPayMode == "UDHARI") BillCrimsonSoftBg else FlatDarkCard,
-                            border = BorderStroke(
-                                width = if (selectedPayMode == "UDHARI") 1.5.dp else 1.dp,
-                                color = if (selectedPayMode == "UDHARI") BillCrimson else FlatDarkBorder
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .defaultMinSize(minHeight = 40.dp)
-                                .testTag("pay_mode_udhari_chip")
-                        ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 9.dp)
-                            ) {
-                                Text(
-                                    text = tr("Full udhari", "पूरी उधारी"),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (selectedPayMode == "UDHARI") BillCrimson else FlatTextPrimary,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-
-                    if (udhariDue > BigDecimal.ZERO) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        val fmt = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-                        OutlinedButton(
-                            onClick = {
-                                val cal = Calendar.getInstance()
-                                DatePickerDialog(
-                                    pickerThemedContext(context),
-                                    { _, year, month, dayOfMonth ->
-                                        val chosen = Calendar.getInstance().apply {
-                                            set(year, month, dayOfMonth, 9, 0, 0)
-                                        }
-                                        billingViewModel.setPromiseDate(chosen.timeInMillis)
-                                    },
-                                    cal.get(Calendar.YEAR),
-                                    cal.get(Calendar.MONTH),
-                                    cal.get(Calendar.DAY_OF_MONTH)
-                                ).show()
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, CAmberBorder),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.CalendarToday, contentDescription = null, tint = CAmber, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(8.dp))
                             Text(
-                                text = if (promiseDateMillis != null) {
-                                    "Promise Date (वायदा तिथि): ${fmt.format(Date(promiseDateMillis!!))}"
-                                } else {
-                                    tr("Set Udhari Promise Date (वायदा तिथि चुनें)", "उधारी वायदा तिथि चुनें (Promise Date)")
-                                },
-                                color = CAmber,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                text = tr("ADD ITEMS", "सामान जोड़ें"),
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FlatTextSecondary,
+                                letterSpacing = 0.6.sp
                             )
+
+                            if (productSearchQuery.isBlank() && activeProducts.size > 6) {
+                                Text(
+                                    text = if (showAllProducts) {
+                                        tr("Show top 6", "शीर्ष 6 दिखाएं")
+                                    } else {
+                                        tr("See all (${activeProducts.size})", "सभी देखें (${activeProducts.size})")
+                                    },
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BillBrandGreen,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { showAllProducts = !showAllProducts }
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        .testTag("billing_see_all_products_btn")
+                                )
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = productSearchQuery,
+                            onValueChange = { productSearchQuery = it },
+                            placeholder = {
+                                Text(
+                                    text = tr("Search item…", "सामान खोजें…"),
+                                    color = FlatTextMuted,
+                                    fontSize = 13.5.sp
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null,
+                                    tint = BillBrandGreen,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (productSearchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { productSearchQuery = "" }) {
+                                        Icon(Icons.Default.Close, contentDescription = tr("Close", "बंद करें"), tint = FlatTextSecondary, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = FlatDarkBg,
+                                unfocusedContainerColor = FlatDarkBg,
+                                focusedBorderColor = BillBrandGreen,
+                                unfocusedBorderColor = FlatDarkBorder,
+                                focusedTextColor = FlatTextPrimary,
+                                unfocusedTextColor = FlatTextPrimary
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Text(
+                            text = if (productSearchQuery.isBlank()) {
+                                if (showAllProducts) {
+                                    tr("All items", "सभी सामान")
+                                } else {
+                                    tr("Frequently sold", "अक्सर बिकने वाले")
+                                }
+                            } else {
+                                tr("${displayedGridProducts.size} matching items", "${displayedGridProducts.size} सामान मिले")
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = FlatTextSecondary
+                        )
+
+                        if (displayedGridProducts.isEmpty()) {
+                            Text(
+                                text = tr("No matching inventory items found.", "कोई सामान नहीं मिला।"),
+                                fontSize = 13.sp,
+                                color = FlatTextMuted,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        } else {
+                            // 2-Column Grid of Short Chips with Pack Size on Second Line
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                displayedGridProducts.chunked(2).forEach { pair ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        pair.forEach { prod ->
+                                            val cartLine = cartLines.find { it.productId == prod.id }
+                                            val inCartQtyLabel = when {
+                                                cartLine == null -> null
+                                                prod.isLooseOnly -> {
+                                                    val kg = cartLine.looseKgStr.toBigDecimalOrNull() ?: BigDecimal.ZERO
+                                                    if (kg > BigDecimal.ZERO) "${kg.stripTrailingZeros().toPlainString()}kg" else null
+                                                }
+                                                cartLine.bagsCount > 0 -> "×${cartLine.bagsCount}"
+                                                else -> null
+                                            }
+                                            val isSelected = inCartQtyLabel != null
+                                            val (shortName, packSubtitle) = remember(prod) { splitProductDisplayAndPack(prod) }
+
+                                            Surface(
+                                                onClick = { billingViewModel.addOrIncrementProduct(prod) },
+                                                shape = RoundedCornerShape(12.dp),
+                                                color = if (isSelected) BillMintPillBg else FlatDarkBg,
+                                                border = BorderStroke(
+                                                    width = if (isSelected) 1.25.dp else 1.dp,
+                                                    color = if (isSelected) BillBrandGreen else FlatDarkBorder
+                                                ),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .defaultMinSize(minHeight = 56.dp)
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 11.dp, vertical = 9.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                    ) {
+                                                        Text(
+                                                            text = shortName,
+                                                            fontSize = 13.5.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (isSelected) BillBrandGreen else FlatTextPrimary,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                            modifier = Modifier.weight(1f)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        if (inCartQtyLabel != null) {
+                                                            Surface(
+                                                                shape = CircleShape,
+                                                                color = BillBrandGreen
+                                                            ) {
+                                                                Text(
+                                                                    text = inCartQtyLabel,
+                                                                    fontSize = 11.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = Color.White,
+                                                                    maxLines = 1,
+                                                                    softWrap = false,
+                                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                                                )
+                                                            }
+                                                        } else {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Add,
+                                                                contentDescription = null,
+                                                                tint = BillBrandGreen,
+                                                                modifier = Modifier.size(16.dp)
+                                                            )
+                                                        }
+                                                    }
+
+                                                    Text(
+                                                        text = packSubtitle,
+                                                        fontSize = 11.5.sp,
+                                                        color = if (isSelected) BillBrandGreen.copy(alpha = 0.85f) else FlatTextSecondary,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (pair.size == 1) {
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    // Bill Timing Dialog (opened from "Now ✎" link)
+    if (showBillTimingDialog) {
+        AlertDialog(
+            onDismissRequest = { showBillTimingDialog = false },
+            containerColor = FlatDarkCard,
+            title = {
+                Text(
+                    text = tr("Bill date & time", "बिल की तारीख और समय"),
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = FlatTextPrimary
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Surface(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply { timeInMillis = effectiveTimingMillis }
+                            DatePickerDialog(
+                                pickerThemedContext(context),
+                                { _, year, month, dayOfMonth ->
+                                    cal.set(Calendar.YEAR, year)
+                                    cal.set(Calendar.MONTH, month)
+                                    cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                                    billingViewModel.setCustomBillDateMillis(cal.timeInMillis)
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        color = FlatDarkBg,
+                        border = BorderStroke(1.dp, if (isCustomTiming) BillBrandGreen else FlatDarkBorder),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("bill_custom_date_btn")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = BillBrandGreen, modifier = Modifier.size(18.dp))
+                                Text(
+                                    text = billDateFmt.format(Date(effectiveTimingMillis)),
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = FlatTextPrimary
+                                )
+                            }
+                            Text(tr("Change", "बदलें"), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = BillBrandGreen)
+                        }
+                    }
+
+                    Surface(
+                        onClick = {
+                            val cal = Calendar.getInstance().apply { timeInMillis = effectiveTimingMillis }
+                            TimePickerDialog(
+                                pickerThemedContext(context),
+                                { _, hourOfDay, minute ->
+                                    cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                    cal.set(Calendar.MINUTE, minute)
+                                    cal.set(Calendar.SECOND, 0)
+                                    billingViewModel.setCustomBillDateMillis(cal.timeInMillis)
+                                },
+                                cal.get(Calendar.HOUR_OF_DAY),
+                                cal.get(Calendar.MINUTE),
+                                false
+                            ).show()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        color = FlatDarkBg,
+                        border = BorderStroke(1.dp, if (isCustomTiming) BillBrandGreen else FlatDarkBorder),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("bill_custom_time_btn")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(Icons.Default.AccessTime, contentDescription = null, tint = BillBrandGreen, modifier = Modifier.size(18.dp))
+                                Text(
+                                    text = billTimeFmt.format(Date(effectiveTimingMillis)),
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = FlatTextPrimary
+                                )
+                            }
+                            Text(tr("Change", "बदलें"), fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = BillBrandGreen)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showBillTimingDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = BillBrandGreen, contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(tr("Done", "हो गया"), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                if (isCustomTiming) {
+                    TextButton(
+                        onClick = {
+                            billingViewModel.setCustomBillDateMillis(null)
+                            showBillTimingDialog = false
+                        },
+                        modifier = Modifier.testTag("bill_timing_reset_now_btn")
+                    ) {
+                        Text(tr("Reset to Now", "अभी का समय"), color = BillBrandGreen, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        )
     }
 
     // Over-Credit-Limit Confirmation / Admin Approval Dialog
@@ -1794,7 +2123,7 @@ fun BillingScreen(
                                 pinError = adminPinRequiredMsg
                             } else if (SecurityUtils.isPinLockedOut(lockoutKey)) {
                                 val remSec = SecurityUtils.getRemainingLockoutSeconds(lockoutKey)
-                                pinError = String.format(java.util.Locale.getDefault(), lockedAdminPinTemplate, remSec)
+                                pinError = String.format(Locale.getDefault(), lockedAdminPinTemplate, remSec)
                             } else {
                                 val approved = adminsWithPin.any { admin ->
                                     SecurityUtils.verifyPin(adminApprovalPin, admin.pinHash)
@@ -1807,7 +2136,7 @@ fun BillingScreen(
                                     val res = SecurityUtils.recordFailedPinAttempt(userId = lockoutKey)
                                     pinError = if (res.isLockedOut) {
                                         String.format(
-                                            java.util.Locale.getDefault(),
+                                            Locale.getDefault(),
                                             lockedAdminPinTemplate,
                                             res.remainingLockoutSeconds
                                         )
@@ -1847,6 +2176,7 @@ fun BillingScreen(
                 scope.launch {
                     repository.saveCustomer(customer, currentUser)
                     billingViewModel.selectCustomer(customer)
+                    showCustomerPicker = false
                     showAddCustomerDialog = false
                 }
             }

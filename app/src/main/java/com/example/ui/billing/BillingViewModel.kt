@@ -95,7 +95,7 @@ class BillingViewModel : ViewModel() {
         if (existingIdx >= 0) {
             val current = cartLines[existingIdx]
             if (prod.isLooseOnly) {
-                val nextKg = (current.looseKgStr.toBigDecimalOrNull() ?: BigDecimal.ZERO).add(BigDecimal("5"))
+                val nextKg = (current.looseKgStr.toBigDecimalOrNull() ?: BigDecimal.ZERO).add(BigDecimal.ONE)
                 cartLines[existingIdx] = current.copy(looseKgStr = nextKg.stripTrailingZeros().toPlainString())
             } else {
                 cartLines[existingIdx] = current.copy(bagsCount = current.bagsCount + 1)
@@ -105,7 +105,7 @@ class BillingViewModel : ViewModel() {
                 BillCartLine(
                     productId = prod.id,
                     bagsCount = if (prod.isLooseOnly) 0 else 1,
-                    looseKgStr = if (prod.isLooseOnly) "5" else ""
+                    looseKgStr = if (prod.isLooseOnly) "1" else ""
                 )
             )
         }
