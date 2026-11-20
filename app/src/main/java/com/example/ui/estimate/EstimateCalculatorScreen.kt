@@ -418,6 +418,7 @@ fun EstimateCalculatorScreen(
 
     Scaffold(
         containerColor = FlatDarkBg,
+        contentWindowInsets = if (onBack == null) WindowInsets(0, 0, 0, 0) else ScaffoldDefaults.contentWindowInsets,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             // Sticky Bottom Bar with Total Kg, Total Amount, Share and Make Sale
@@ -430,7 +431,7 @@ fun EstimateCalculatorScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding()
+                        .then(if (onBack != null) Modifier.navigationBarsPadding() else Modifier)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -589,9 +590,9 @@ fun EstimateCalculatorScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Header Row: "Estimate" + "Build a quote for a customer" on left, 3 icon buttons on right
+            // Unified Top-Level Tab Header (matches Home, Ledger & Settings)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -599,42 +600,44 @@ fun EstimateCalculatorScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = tr("Estimate", "एस्टीमेट (पर्चा)"),
-                        style = TextStyle(
-                            fontSize = 24.sp,
-                            color = FlatTextPrimary,
-                            fontWeight = FontWeight.Bold,
+                        text = tr("Calculator", "कैलकुलेटर"),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 23.sp,
                             letterSpacing = (-0.3).sp
                         ),
+                        fontWeight = FontWeight.Bold,
+                        color = FlatTextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (calcMode == CalculatorTabMode.ITEMS) {
-                            tr("Build a quote for a customer", "ग्राहक के लिए कोटेशन बनाएं")
+                            tr("Quick estimate & bill", "तेज़ पर्चा और बिल")
                         } else {
-                            tr("Split a customer's ₹ budget across loose items", "ग्राहक के बजट को खुले सामानों में बांटें")
+                            tr("Split ₹ budget across items", "बजट को सामानों में बांटें")
                         },
-                        fontSize = 13.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = FlatTextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 0. Voice Bill Mic icon button
+                    // 0. Voice Bill Mic circular button
                     Surface(
                         onClick = { showVoiceBillFlow = true },
-                        shape = RoundedCornerShape(13.dp),
+                        shape = CircleShape,
                         color = EstimateMintSurface,
                         border = BorderStroke(1.dp, EstimateBrandGreen.copy(alpha = 0.35f)),
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(40.dp)
                             .testTag("open_voice_bill_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -647,14 +650,14 @@ fun EstimateCalculatorScreen(
                         }
                     }
 
-                    // 1. Today's Rates icon button
+                    // 1. Today's Rates circular button
                     Surface(
                         onClick = onNavigateToDailyRates,
-                        shape = RoundedCornerShape(13.dp),
+                        shape = CircleShape,
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(40.dp)
                             .testTag("open_daily_rates_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -662,19 +665,19 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Outlined.LocalOffer,
                                 contentDescription = tr("Today's Rates", "आज के भाव"),
                                 tint = CAmber,
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
 
-                    // 2. Open Drafts folder icon button
+                    // 2. Open Drafts folder circular button
                     Surface(
                         onClick = { showDraftsDialog = true },
-                        shape = RoundedCornerShape(13.dp),
+                        shape = CircleShape,
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(40.dp)
                             .testTag("open_drafts_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -682,12 +685,12 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Outlined.FolderOpen,
                                 contentDescription = tr("Drafts", "ड्राफ्ट"),
                                 tint = FlatTextPrimary,
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
 
-                    // 3. Save Draft icon button
+                    // 3. Save Draft circular button
                     Surface(
                         onClick = {
                             if (hasValidSaleItems) {
@@ -709,11 +712,11 @@ fun EstimateCalculatorScreen(
                                 showSaveDraftDialog = true
                             }
                         },
-                        shape = RoundedCornerShape(13.dp),
+                        shape = CircleShape,
                         color = FlatDarkCard,
                         border = BorderStroke(1.dp, FlatDarkBorder),
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(40.dp)
                             .testTag("save_draft_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -721,7 +724,7 @@ fun EstimateCalculatorScreen(
                                 imageVector = Icons.Outlined.Save,
                                 contentDescription = tr("Save draft", "ड्राफ्ट सेव"),
                                 tint = if (hasValidSaleItems) FlatTextPrimary else FlatTextSecondary,
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }

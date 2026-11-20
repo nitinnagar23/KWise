@@ -246,16 +246,73 @@ fun LedgerScreen(
 
     val activeTab = pagerState.currentPage.coerceIn(0, maxTabs - 1)
 
+    val dueCustomersCount = remember(customers) {
+        customers.count { !it.isDeleted && it.totalUdhari > BigDecimal.ZERO }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(FlatDarkBg)
         ) {
+            // Unified Top-Level Tab Header (matches Home & Settings header rhythm)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = tr("Ledger", "खाता"),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 23.sp,
+                            letterSpacing = (-0.3).sp
+                        ),
+                        fontWeight = FontWeight.Bold,
+                        color = FlatTextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${customers.size} ${tr("customers", "ग्राहक")} · $dueCustomersCount ${tr("due", "बाकी")}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = FlatTextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .clickable { onNavigateToBills() }
+                        .testTag("ledger_header_bills_btn"),
+                    shape = CircleShape,
+                    color = FlatDarkCard,
+                    border = BorderStroke(1.dp, FlatDarkBorder)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Receipt,
+                            contentDescription = tr("All bills & audit", "सभी बिल और ऑडिट"),
+                            tint = FlatTextPrimary,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                }
+            }
+
             // Header Tabs: Customers, Sales Ledger, and (for Admin/Manager) Repayments
             TabRow(
                 selectedTabIndex = activeTab,
-                containerColor = FlatDarkNav,
+                containerColor = FlatDarkBg,
                 contentColor = FlatTextPrimary,
                 indicator = { tabPositions ->
                     if (activeTab < tabPositions.size) {

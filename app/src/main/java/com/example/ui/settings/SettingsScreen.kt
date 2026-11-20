@@ -651,7 +651,7 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // -------------------------------------------------------------
         // Top Header: KhataWise Logo + Title on Left | Search + Bell with Badge on Right

@@ -307,7 +307,7 @@ fun HomeScreen(
                 ) {
                     Surface(
                         modifier = Modifier
-                            .size(44.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
                             .clickable { showGlobalSearch = true }
                             .testTag("home_search_btn"),
