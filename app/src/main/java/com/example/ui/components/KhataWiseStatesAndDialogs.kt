@@ -2330,7 +2330,10 @@ fun DeleteInventoryItemConfirmationDialog(
                         text = tr("Hide item instead", "इसके बजाय आइटम छुपाएं"),
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StateBrandGreen
+                        color = StateBrandGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -2650,139 +2653,13 @@ fun LogoutKhataWiseConfirmationDialog(
     onLogoutAnyway: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .testTag("logout_khatawise_confirm_dialog"),
-            shape = RoundedCornerShape(24.dp),
-            color = KwSurface
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp, vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
-                    modifier = Modifier.size(56.dp),
-                    shape = CircleShape,
-                    color = StateSoftAmber
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Outlined.WarningAmber,
-                            contentDescription = null,
-                            tint = StateAmberText,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = tr("Log out of KhataWise?", "KhataWise से लॉग आउट करें?"),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = StateNavyText,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = tr(
-                        "You'll need Google sign-in to open the shop again.",
-                        "दुकान फिर से खोलने के लिए आपको Google साइन-इन की आवश्यकता होगी।"
-                    ),
-                    fontSize = 14.5.sp,
-                    color = StateSubtleText,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
-                )
-
-                if (pendingSyncChanges > 0) {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = kw(0xFFFFF7ED)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = tr(
-                                    "$pendingSyncChanges changes are still waiting to sync",
-                                    "$pendingSyncChanges बदलाव अभी भी सिंक होने बाकी हैं"
-                                ),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = StateAmberText,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                Button(
-                    onClick = onSyncAndLogout,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = StateBrandGreen,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .testTag("dialog_sync_and_logout_btn")
-                ) {
-                    Text(
-                        text = tr("Sync & log out", "सिंक करें और लॉग आउट करें"),
-                        fontSize = 15.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextButton(
-                    onClick = onLogoutAnyway,
-                    modifier = Modifier.testTag("dialog_logout_anyway_btn")
-                ) {
-                    Text(
-                        text = tr("Log out anyway", "फिर भी लॉग आउट करें"),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = StateCrimsonRed
-                    )
-                }
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.testTag("dialog_cancel_logout_btn")
-                ) {
-                    Text(
-                        text = tr("Cancel", "रद्द करें"),
-                        fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = StateSubtleText
-                    )
-                }
-            }
-        }
-    }
+    com.example.ui.settings.SettingsLogoutModalDialog(
+        userEmail = "",
+        pendingSyncChanges = pendingSyncChanges,
+        onSyncAndLogout = onSyncAndLogout,
+        onLogoutAnyway = onLogoutAnyway,
+        onDismiss = onDismiss
+    )
 }
 
 /**

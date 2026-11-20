@@ -5,6 +5,7 @@ import android.app.TimePickerDialog
 import com.example.model.buildConsolidatedBillNoMap
 import com.example.ui.bills.BillSummaryCard
 import com.example.ui.bills.UnifiedBillInspectorOverlay
+import com.example.ui.collections.UnifiedRecordPaymentDialog
 import com.example.ui.theme.pickerThemedContext
 import com.example.ui.theme.kw
 import android.widget.Toast
@@ -529,272 +530,29 @@ fun HomeScreen(
         }
     }
 
-    // Quick Collect Udhari Dialog (Admin & Manager only)
+    // Quick Collect Udhari Dialog (Unified across Home, Ledger, and Collections)
     if (showQuickCollectDialog && canAccessCollections) {
-        val customersWithDue = remember(customers) {
-            customers.filter { !it.isDeleted && it.totalUdhari > BigDecimal.ZERO }
-                .sortedByDescending { it.totalUdhari }
-        }
-        var selectedDueCustomer by remember { mutableStateOf(customersWithDue.firstOrNull()) }
-        var collectAmountStr by remember { mutableStateOf("") }
-        var collectNote by remember { mutableStateOf("") }
-        var customDateMillis by remember { mutableStateOf<Long?>(null) }
-
-        val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-        val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
-        val activeTimestamp = customDateMillis ?: System.currentTimeMillis()
-
-        AlertDialog(
-            onDismissRequest = { showQuickCollectDialog = false },
-            containerColor = FlatDarkCard,
-            title = {
-                Text(
-                    tr("Collect udhari payment", "उधारी वसूली दर्ज करें"),
-                    color = FlatTextPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (customersWithDue.isEmpty()) {
-                        Text(
-                            tr("No customers currently have pending Udhari!", "किसी भी ग्राहक पर उधारी बाक़ी नहीं है!"),
-                            color = primaryForestGreen
-                        )
-                    } else {
-                        Text(
-                            tr("Select Customer:", "ग्राहक चुनें:"),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = FlatTextSecondary
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            customersWithDue.forEach { cust ->
-                                FilterChip(
-                                    selected = selectedDueCustomer?.id == cust.id,
-                                    onClick = {
-                                        selectedDueCustomer = cust
-                                        collectAmountStr = cust.totalUdhari.stripTrailingZeros().toPlainString()
-                                    },
-                                    label = {
-                                        Text(
-                                            text = "${cust.name} (${CurrencyUtils.formatInr(cust.totalUdhari)})",
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = CGreenContainer,
-                                        selectedLabelColor = CGreen
-                                    ),
-                                    modifier = Modifier.defaultMinSize(minHeight = 48.dp)
-                                )
-                            }
-                        }
-
-                        selectedDueCustomer?.let { cust ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                FilterChip(
-                                    selected = collectAmountStr == cust.totalUdhari.stripTrailingZeros().toPlainString(),
-                                    onClick = {
-                                        collectAmountStr = cust.totalUdhari.stripTrailingZeros().toPlainString()
-                                    },
-                                    label = {
-                                        Text(
-                                            text = tr("Full due", "पूरा बाक़ी"),
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                )
-                                FilterChip(
-                                    selected = false,
-                                    onClick = {
-                                        collectAmountStr = cust.totalUdhari.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP).toPlainString()
-                                    },
-                                    label = {
-                                        Text(
-                                            text = tr("Half (50%)", "आधा (50%)"),
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                )
-                            }
-                        }
-
-                        OutlinedTextField(
-                            value = collectAmountStr,
-                            onValueChange = { collectAmountStr = it },
-                            label = { Text(tr("Amount Received (₹)", "प्राप्त राशि (₹)")) },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("collect_udhari_amount_input")
-                        )
-
-                        OutlinedTextField(
-                            value = collectNote,
-                            onValueChange = { collectNote = it },
-                            label = { Text(tr("Note (Cash / UPI / Ref)", "नोट (नकद / UPI)")) },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = tr("Payment Timing:", "भुगतान का समय:"),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = FlatTextSecondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                            if (customDateMillis != null) {
-                                Text(
-                                    text = tr("Reset to Now", "अभी का समय"),
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = primaryForestGreen,
-                                    modifier = Modifier.clickable { customDateMillis = null }
-                                )
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Surface(
-                                onClick = {
-                                    val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
-                                    DatePickerDialog(
-                                        pickerThemedContext(context),
-                                        { _, y, m, d ->
-                                            val updated = Calendar.getInstance().apply {
-                                                timeInMillis = activeTimestamp
-                                                set(Calendar.YEAR, y)
-                                                set(Calendar.MONTH, m)
-                                                set(Calendar.DAY_OF_MONTH, d)
-                                            }
-                                            customDateMillis = updated.timeInMillis
-                                        },
-                                        cal.get(Calendar.YEAR),
-                                        cal.get(Calendar.MONTH),
-                                        cal.get(Calendar.DAY_OF_MONTH)
-                                    ).show()
-                                },
-                                shape = RoundedCornerShape(10.dp),
-                                color = FlatDarkBg,
-                                border = BorderStroke(1.dp, FlatDarkBorder),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("quick_collect_custom_date_btn")
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
-                                ) {
-                                    Text(
-                                        text = dateFormatter.format(Date(activeTimestamp)),
-                                        fontSize = 12.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = FlatTextPrimary,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                onClick = {
-                                    val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
-                                    TimePickerDialog(
-                                        pickerThemedContext(context),
-                                        { _, hourOfDay, minute ->
-                                            val updated = Calendar.getInstance().apply {
-                                                timeInMillis = activeTimestamp
-                                                set(Calendar.HOUR_OF_DAY, hourOfDay)
-                                                set(Calendar.MINUTE, minute)
-                                                set(Calendar.SECOND, 0)
-                                            }
-                                            customDateMillis = updated.timeInMillis
-                                        },
-                                        cal.get(Calendar.HOUR_OF_DAY),
-                                        cal.get(Calendar.MINUTE),
-                                        false
-                                    ).show()
-                                },
-                                shape = RoundedCornerShape(10.dp),
-                                color = FlatDarkBg,
-                                border = BorderStroke(1.dp, FlatDarkBorder),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("quick_collect_custom_time_btn")
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
-                                ) {
-                                    Text(
-                                        text = timeFormatter.format(Date(activeTimestamp)),
-                                        fontSize = 12.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = FlatTextPrimary,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                if (customersWithDue.isNotEmpty()) {
-                    Button(
-                        onClick = {
-                            val cust = selectedDueCustomer ?: return@Button
-                            val amt = collectAmountStr.toBigDecimalOrNull() ?: BigDecimal.ZERO
-                            if (amt > BigDecimal.ZERO) {
-                                scope.launch {
-                                    repository.recordPayment(
-                                        customerId = cust.id,
-                                        amount = amt,
-                                        note = collectNote.ifBlank { "Cash received" },
-                                        collectedByUserId = currentUser?.id ?: "admin",
-                                        performedByRole = currentUser?.role,
-                                        customDateMillis = customDateMillis
-                                    )
-                                    showQuickCollectDialog = false
-                                    Toast.makeText(context, "Recorded ${CurrencyUtils.formatInr(amt)} from ${cust.name}", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = CGreenPrimary,
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier.testTag("confirm_collect_udhari_btn")
-                    ) {
-                        Text(tr("Save payment", "जमा करें"), fontWeight = FontWeight.Bold)
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showQuickCollectDialog = false }) {
-                    Text(tr("Close", "बंद करें"))
+        UnifiedRecordPaymentDialog(
+            customers = customers,
+            initialCustomer = null,
+            allowCustomerChange = true,
+            onDismiss = { showQuickCollectDialog = false },
+            onConfirmPayment = { cust, amt, note, customDateMillis ->
+                scope.launch {
+                    repository.recordPayment(
+                        customerId = cust.id,
+                        amount = amt,
+                        note = note.ifBlank { "Cash received" },
+                        collectedByUserId = currentUser?.id ?: "admin",
+                        performedByRole = currentUser?.role,
+                        customDateMillis = customDateMillis
+                    )
+                    showQuickCollectDialog = false
+                    Toast.makeText(
+                        context,
+                        "Recorded ${CurrencyUtils.formatInr(amt)} from ${cust.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         )

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -375,9 +376,10 @@ fun CloseDayScreen(
                         onClick = onBack,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .testTag("close_day_cancel_btn")
                     ) {
                         Text(
@@ -417,9 +419,10 @@ fun CloseDayScreen(
                             containerColor = CbBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1.4f)
+                            .heightIn(min = 48.dp)
                             .testTag("close_day_confirm_btn")
                     ) {
                         Text(
@@ -988,9 +991,10 @@ fun DayClosedSummaryScreen(
                             },
                             shape = RoundedCornerShape(14.dp),
                             border = BorderStroke(1.dp, FlatDarkBorder),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             modifier = Modifier
                                 .weight(1f)
+                                .heightIn(min = 48.dp)
                                 .testTag("day_closed_share_btn")
                         ) {
                             Text(
@@ -1017,9 +1021,10 @@ fun DayClosedSummaryScreen(
                                 containerColor = CbBrandGreen,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                             modifier = Modifier
                                 .weight(1f)
+                                .heightIn(min = 48.dp)
                                 .testTag("day_closed_reopen_btn")
                         ) {
                             Text(
@@ -1357,9 +1362,10 @@ fun ExpenseCategoriesScreen(
                             containerColor = CbBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                             .testTag("expense_categories_add_btn")
                     ) {
                         Text(

@@ -1641,7 +1641,9 @@ fun EstimateCalculatorScreen(
                 text = {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.verticalScroll(rememberScrollState())
+                        modifier = Modifier
+                            .heightIn(max = 380.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
                         Surface(
                             shape = RoundedCornerShape(10.dp),

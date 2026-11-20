@@ -2315,7 +2315,10 @@ fun ImportCustomersFlowScreen(
                     Text(
                         text = tr("View customers", "ग्राहक देखें"),
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -2326,7 +2329,10 @@ fun ImportCustomersFlowScreen(
                         text = tr("Import more", "और इम्पोर्ट करें"),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = EditBrandGreen
+                        color = EditBrandGreen,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

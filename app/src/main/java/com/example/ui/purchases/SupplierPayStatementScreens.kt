@@ -1238,7 +1238,10 @@ fun PaySupplierFlowScreen(
                     text = tr("View supplier khata", "सप्लायर खाता देखें"),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = SupGreen
+                    color = SupGreen,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -1252,7 +1255,10 @@ fun PaySupplierFlowScreen(
                     text = tr("Done", "हो गया"),
                     fontSize = 14.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = FlatTextSecondary
+                    color = FlatTextSecondary,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

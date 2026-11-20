@@ -159,7 +159,7 @@ fun CustomerDropdownSelector(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.PersonAdd, contentDescription = null, tint = CGreen, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(tr("+ Add New Customer", "+ नया ग्राहक जोड़ें"), color = CGreen, fontWeight = FontWeight.Bold)
+                        Text(tr("Add new customer", "नया ग्राहक जोड़ें"), color = CGreen, fontWeight = FontWeight.Bold)
                     }
                 },
                 onClick = {
@@ -454,11 +454,11 @@ fun QuickAddCustomerDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Scrollable Form Fields
+                // Scrollable Form Fields (flex-bounded so Cancel/Save buttons are never crushed)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 500.dp)
+                        .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -1092,9 +1092,10 @@ fun QuickAddCustomerDialog(
                             disabledContainerColor = DialogBrandGreen.copy(alpha = 0.4f),
                             disabledContentColor = Color.White.copy(alpha = 0.7f)
                         ),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1.5f)
+                            .heightIn(min = 48.dp)
                             .testTag("save_customer_btn")
                     ) {
                         Text(

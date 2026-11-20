@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -542,14 +543,15 @@ fun CashbookScreen(
                             containerColor = CbBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .testTag("cashbook_add_cash_in_btn")
                     ) {
                         Text(
                             text = tr("+ Cash in", "+ कैश इन"),
-                            fontSize = 15.5.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             softWrap = false,
@@ -567,14 +569,15 @@ fun CashbookScreen(
                             containerColor = CbCrimsonRed,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .testTag("cashbook_add_cash_out_btn")
                     ) {
                         Text(
                             text = tr("− Cash out", "− कैश आउट"),
-                            fontSize = 15.5.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             softWrap = false,
@@ -912,13 +915,16 @@ fun CashbookScreen(
                                 ) {
                                     Text(
                                         text = if (closedRecordForSelectedDay != null) {
-                                            tr("Day closed · View summary", "दिन बंद · सारांश देखें")
+                                            tr("Day closed · View", "दिन बंद · सारांश")
                                         } else {
                                             tr("Close day", "दिन बंद करें")
                                         },
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (closedRecordForSelectedDay != null) CbBrandGreen else Color.White
+                                        color = if (closedRecordForSelectedDay != null) CbBrandGreen else Color.White,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -1051,13 +1057,8 @@ fun CashbookScreen(
             initialIsCashIn = addEntryInitialCashIn,
             selectedDayMillis = selectedDayStart,
             onDismiss = { showAddEntryDialog = false },
-            onSaveEntry = { isCashIn, amount, category, note, receiptUri ->
-                val now = System.currentTimeMillis()
-                val entryTime = if (selectedDayStart == todayStart) {
-                    now
-                } else {
-                    selectedDayStart + (14L * 60L * 60L * 1000L) + (30L * 60L * 1000L)
-                }
+            onSaveEntry = { isCashIn, amount, category, note, receiptUri, customEntryMillis ->
+                val entryTime = customEntryMillis
                 val formattedTime = timeFormat.format(Date(entryTime))
                 val subtitleText = if (note.isNotBlank()) {
                     "$note · $formattedTime"
@@ -1262,7 +1263,8 @@ private fun AddCashEntryDialog(
         amount: BigDecimal,
         category: String,
         note: String,
-        receiptUri: String?
+        receiptUri: String?,
+        entryTimeMillis: Long
     ) -> Unit
 ) {
     var isCashIn by remember { mutableStateOf(initialIsCashIn) }
@@ -1295,12 +1297,26 @@ private fun AddCashEntryDialog(
         }
     }
 
-    val dateDisplay = remember(selectedDayMillis) {
-        "Today, " + SimpleDateFormat("d MMM", Locale.ENGLISH).format(Date(selectedDayMillis))
+    val initialEntryMillis = remember(selectedDayMillis) {
+        val todayStart = ShopAnalytics.getStartOfTodayMillis(System.currentTimeMillis())
+        if (selectedDayMillis == todayStart) {
+            System.currentTimeMillis()
+        } else {
+            val nowCal = java.util.Calendar.getInstance()
+            java.util.Calendar.getInstance().apply {
+                timeInMillis = selectedDayMillis
+                set(java.util.Calendar.HOUR_OF_DAY, nowCal.get(java.util.Calendar.HOUR_OF_DAY))
+                set(java.util.Calendar.MINUTE, nowCal.get(java.util.Calendar.MINUTE))
+                set(java.util.Calendar.SECOND, 0)
+            }.timeInMillis
+        }
     }
-    val timeDisplay = remember {
-        SimpleDateFormat("h:mm a", Locale.ENGLISH).format(Date())
-    }
+    var entryMillis by remember(initialEntryMillis) { mutableLongStateOf(initialEntryMillis) }
+
+    val dateFormat = remember { SimpleDateFormat("d MMM yyyy", Locale.ENGLISH) }
+    val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.ENGLISH) }
+    val dateDisplay = dateFormat.format(Date(entryMillis))
+    val timeDisplay = timeFormat.format(Date(entryMillis))
 
     val activeAccentColor = if (isCashIn) CbBrandGreen else CbCrimsonRed
 
@@ -1358,6 +1374,7 @@ private fun AddCashEntryDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
@@ -1539,7 +1556,7 @@ private fun AddCashEntryDialog(
                         )
                     }
 
-                    // 6. DATE & TIME Row
+                    // 6. Interactive DATE & TIME Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1555,22 +1572,48 @@ private fun AddCashEntryDialog(
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
-                            OutlinedTextField(
-                                value = dateDisplay,
-                                onValueChange = {},
-                                readOnly = true,
-                                singleLine = true,
+                            Surface(
+                                onClick = {
+                                    val cal = java.util.Calendar.getInstance().apply { timeInMillis = entryMillis }
+                                    android.app.DatePickerDialog(
+                                        com.example.ui.theme.pickerThemedContext(context),
+                                        { _, y, m, d ->
+                                            val updated = java.util.Calendar.getInstance().apply {
+                                                timeInMillis = entryMillis
+                                                set(java.util.Calendar.YEAR, y)
+                                                set(java.util.Calendar.MONTH, m)
+                                                set(java.util.Calendar.DAY_OF_MONTH, d)
+                                            }
+                                            entryMillis = updated.timeInMillis
+                                        },
+                                        cal.get(java.util.Calendar.YEAR),
+                                        cal.get(java.util.Calendar.MONTH),
+                                        cal.get(java.util.Calendar.DAY_OF_MONTH)
+                                    ).show()
+                                },
                                 shape = RoundedCornerShape(14.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = FlatDarkCard,
-                                    unfocusedContainerColor = FlatDarkCard,
-                                    focusedBorderColor = FlatDarkBorder,
-                                    unfocusedBorderColor = FlatDarkBorder,
-                                    focusedTextColor = FlatTextPrimary,
-                                    unfocusedTextColor = FlatTextPrimary
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                                color = FlatDarkBg,
+                                border = BorderStroke(1.dp, FlatDarkBorder),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .testTag("cash_entry_date_btn")
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.CenterStart,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = dateDisplay,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
 
                         Column(
@@ -1584,22 +1627,48 @@ private fun AddCashEntryDialog(
                                 color = FlatTextSecondary,
                                 letterSpacing = 0.5.sp
                             )
-                            OutlinedTextField(
-                                value = timeDisplay,
-                                onValueChange = {},
-                                readOnly = true,
-                                singleLine = true,
+                            Surface(
+                                onClick = {
+                                    val cal = java.util.Calendar.getInstance().apply { timeInMillis = entryMillis }
+                                    android.app.TimePickerDialog(
+                                        com.example.ui.theme.pickerThemedContext(context),
+                                        { _, hourOfDay, minute ->
+                                            val updated = java.util.Calendar.getInstance().apply {
+                                                timeInMillis = entryMillis
+                                                set(java.util.Calendar.HOUR_OF_DAY, hourOfDay)
+                                                set(java.util.Calendar.MINUTE, minute)
+                                                set(java.util.Calendar.SECOND, 0)
+                                            }
+                                            entryMillis = updated.timeInMillis
+                                        },
+                                        cal.get(java.util.Calendar.HOUR_OF_DAY),
+                                        cal.get(java.util.Calendar.MINUTE),
+                                        false
+                                    ).show()
+                                },
                                 shape = RoundedCornerShape(14.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = FlatDarkCard,
-                                    unfocusedContainerColor = FlatDarkCard,
-                                    focusedBorderColor = FlatDarkBorder,
-                                    unfocusedBorderColor = FlatDarkBorder,
-                                    focusedTextColor = FlatTextPrimary,
-                                    unfocusedTextColor = FlatTextPrimary
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                                color = FlatDarkBg,
+                                border = BorderStroke(1.dp, FlatDarkBorder),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .testTag("cash_entry_time_btn")
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.CenterStart,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = timeDisplay,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -1642,7 +1711,7 @@ private fun AddCashEntryDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 8. Bottom Buttons: Cancel | Save cash out / Save cash in
+                // 8. Bottom Buttons: Cancel | Save cash out / Save cash in (pinned, never crushed)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1651,9 +1720,10 @@ private fun AddCashEntryDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .testTag("cancel_cash_entry_btn")
                     ) {
                         Text(
@@ -1676,7 +1746,8 @@ private fun AddCashEntryDialog(
                                     parsedAmt,
                                     selectedCategory,
                                     noteInput.trim(),
-                                    attachedReceiptUri?.toString()
+                                    attachedReceiptUri?.toString(),
+                                    entryMillis
                                 )
                             }
                         },
@@ -1685,9 +1756,10 @@ private fun AddCashEntryDialog(
                             containerColor = activeAccentColor,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1.3f)
+                            .heightIn(min = 48.dp)
                             .testTag("save_cash_entry_btn")
                     ) {
                         Text(

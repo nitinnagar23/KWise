@@ -36,6 +36,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
@@ -48,6 +49,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -74,6 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.repository.CattleFeedRepository
@@ -268,31 +271,21 @@ fun BillsScreen(
     currentUser: User?,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val sales by repository.allSales.collectAsState(initial = emptyList())
     val customers by repository.allCustomers.collectAsState(initial = emptyList())
     val products by repository.allProducts.collectAsState(initial = emptyList())
     val auditLogs by repository.allBillAuditLogs.collectAsState(initial = emptyList())
     val allUsers by repository.allUsers.collectAsState(initial = emptyList())
-    val settings by repository.settingsFlow.collectAsState(initial = null)
 
-    val customerMap = remember(customers) { customers.associateBy { it.id } }
-    val productMap = remember(products) { products.associateBy { it.id } }
-
-    val filterKeys = remember { listOf("All", "Paid", "Udhari", "Returned") }
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All") } // All, Paid, Udhari, Returned
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { filterKeys.size })
-    LaunchedEffect(pagerState.currentPage) {
-        selectedFilter = filterKeys[pagerState.currentPage]
-    }
-    var filterDateMillis by remember { mutableStateOf<Long?>(null) }
     var selectedSaleIdForDetail by remember { mutableStateOf<String?>(null) }
     var showAllAuditModal by remember { mutableStateOf(false) }
 
     val selectedSaleForDetail = remember(sales, selectedSaleIdForDetail) {
         selectedSaleIdForDetail?.let { id -> sales.find { it.id == id } }
+    }
+
+    val editedSaleIds = remember(auditLogs) {
+        auditLogs.filter { it.actionType == "EDIT" }.map { it.saleId }.toSet()
     }
 
     when {
@@ -315,354 +308,280 @@ fun BillsScreen(
         }
 
         else -> {
-        BackHandler { onBack() }
+            BackHandler { onBack() }
 
-        val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
-        val dayFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-
-        val editedSaleIds = remember(auditLogs) {
-            auditLogs.filter { it.actionType == "EDIT" }.map { it.saleId }.toSet()
-        }
-
-        // Consolidate multi-item checkouts into single bills
-        val groupedBills = remember(sales) {
-            groupSalesIntoBills(sales, descending = true)
-        }
-
-        val billNoMap = remember(sales) {
-            buildConsolidatedBillNoMap(sales)
-        }
-
-        fun filterBillsForKey(filterKey: String): List<GroupedSaleBill> {
-            return groupedBills.filter { bill ->
-                val customerName = customerMap[bill.customerId]?.name ?: "Walk-in"
-                val shortNo = bill.billNumber.ifBlank { bill.id.takeLast(4).uppercase() }
-                val matchesSearch = if (searchQuery.isBlank()) {
-                    true
-                } else {
-                    val q = searchQuery.trim()
-                    val anyProductMatches = bill.items.any { item ->
-                        val pName = productMap[item.productId]?.feedName ?: "Item"
-                        pName.contains(q, ignoreCase = true)
-                    }
-                    customerName.contains(q, ignoreCase = true) ||
-                        anyProductMatches ||
-                        shortNo.contains(q, ignoreCase = true) ||
-                        bill.id.takeLast(6).contains(q, ignoreCase = true)
-                }
-
-                val isReturned = bill.isReturned
-                val isUdhari = bill.udhariAmount > BigDecimal.ZERO && !bill.isCancelled
-                val isPaid = bill.paymentStatus == PaymentStatus.PAID && !isReturned && !bill.isCancelled
-
-                val matchesFilter = when (filterKey) {
-                    "Paid" -> isPaid
-                    "Udhari" -> isUdhari
-                    "Returned" -> isReturned
-                    else -> true
-                }
-
-                val matchesDate = if (filterDateMillis == null) {
-                    true
-                } else {
-                    isSameCalendarDay(bill.date, filterDateMillis!!)
-                }
-
-                matchesSearch && matchesFilter && matchesDate
-            }
-        }
-
-        val filteredSales = remember(groupedBills, searchQuery, selectedFilter, filterDateMillis, customerMap, productMap) {
-            filterBillsForKey(selectedFilter)
-        }
-
-        val todayStart = remember { startOfDayMillis(System.currentTimeMillis()) }
-        val yesterdayStart = remember { todayStart - 24L * 60L * 60L * 1000L }
-
-        val summarySales = remember(filteredSales, filterDateMillis, todayStart) {
-            if (filterDateMillis != null) {
-                filteredSales
-            } else {
-                val todayOnes = filteredSales.filter { it.date >= todayStart }
-                if (todayOnes.isNotEmpty()) todayOnes else filteredSales
-            }
-        }
-        val summaryTotalAmount = remember(summarySales) {
-            summarySales.fold(BigDecimal.ZERO) { acc, b ->
-                if (b.isCancelled) acc else acc.add(b.totalSalePrice)
-            }
-        }
-        val summaryDateTitle = remember(filterDateMillis, filteredSales, todayStart) {
-            when {
-                filterDateMillis != null && isSameCalendarDay(filterDateMillis!!, System.currentTimeMillis()) -> "Today"
-                filterDateMillis != null -> dayFormat.format(Date(filterDateMillis!!))
-                filteredSales.any { it.date >= todayStart } -> "Today"
-                else -> "Today"
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(FlatDarkBg)
-        ) {
-            // Top Bar matching Bills.pdf
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .background(FlatDarkBg)
             ) {
-                Surface(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .testTag("bills_back_btn"),
-                    shape = RoundedCornerShape(13.dp),
-                    color = FlatDarkCard,
-                    border = BorderStroke(1.dp, FlatDarkBorder)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = FlatTextPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = tr("Bills", "बिल"),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = FlatTextPrimary
-                    )
-                    Text(
-                        text = tr("Edit, return & audit", "बदलाव, वापसी और ऑडिट"),
-                        fontSize = 13.sp,
-                        color = FlatTextSecondary
-                    )
-                }
-
-                Surface(
-                    onClick = { showAllAuditModal = true },
-                    modifier = Modifier
-                        .size(44.dp)
-                        .testTag("bills_audit_btn"),
-                    shape = RoundedCornerShape(13.dp),
-                    color = FlatDarkCard,
-                    border = BorderStroke(1.dp, FlatDarkBorder)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Outlined.VerifiedUser,
-                            contentDescription = "Audit trail",
-                            tint = FlatTextPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
-
-            // Search bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = {
-                    Text(
-                        text = tr("Search bill no., customer, item...", "बिल नंबर, ग्राहक या आइटम खोजें..."),
-                        color = FlatTextMuted,
-                        fontSize = 14.5.sp
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = FlatTextSecondary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = FlatDarkCard,
-                    unfocusedContainerColor = FlatDarkCard,
-                    focusedBorderColor = BillsGreen,
-                    unfocusedBorderColor = FlatDarkBorder,
-                    focusedTextColor = FlatTextPrimary,
-                    unfocusedTextColor = FlatTextPrimary
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .testTag("bills_search_input")
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Filter chips row: All, Paid, Udhari, Returned
-            val filterOptions = listOf(
-                "All" to tr("All", "सभी"),
-                "Paid" to tr("Paid", "भुगतान"),
-                "Udhari" to tr("Udhari", "उधारी"),
-                "Returned" to tr("Returned", "वापस")
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                filterOptions.forEachIndexed { pageIndex, (key, label) ->
-                    val isSelected = pagerState.currentPage == pageIndex
-                    Surface(
-                        onClick = {
-                            selectedFilter = key
-                            scope.launch { pagerState.animateScrollToPage(pageIndex) }
-                        },
-                        shape = RoundedCornerShape(50),
-                        color = if (isSelected) BillsGreen else BillsChipIdleBg,
-                        modifier = Modifier
-                            .defaultMinSize(minHeight = 38.dp)
-                            .testTag("bills_filter_${key.lowercase(Locale.ROOT)}")
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = label,
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else FlatTextPrimary
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Date summary & Change date row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
-                            append(summaryDateTitle)
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = FlatTextSecondary)) {
-                            append(" · ${summarySales.size} bills · ${CurrencyUtils.formatInr(summaryTotalAmount)}")
-                        }
-                    },
-                    fontSize = 14.sp
-                )
-
+                // Unified 42dp rounded back-button header
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable {
-                            if (filterDateMillis != null) {
-                                filterDateMillis = null
-                            } else {
-                                val cal = Calendar.getInstance()
-                                DatePickerDialog(
-                                    pickerThemedContext(context),
-                                    { _, y, m, d ->
-                                        val picked = Calendar.getInstance().apply {
-                                            set(Calendar.YEAR, y)
-                                            set(Calendar.MONTH, m)
-                                            set(Calendar.DAY_OF_MONTH, d)
-                                        }
-                                        filterDateMillis = picked.timeInMillis
-                                    },
-                                    cal.get(Calendar.YEAR),
-                                    cal.get(Calendar.MONTH),
-                                    cal.get(Calendar.DAY_OF_MONTH)
-                                ).show()
-                            }
-                        }
-                        .padding(horizontal = 6.dp, vertical = 4.dp)
-                        .testTag("bills_change_date_btn"),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.CalendarToday,
-                        contentDescription = null,
-                        tint = BillsGreen,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Text(
-                        text = if (filterDateMillis != null) tr("All dates", "सभी तारीखें") else tr("Change date", "तारीख बदलें"),
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = BillsGreen
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { pageIndex ->
-                val pageFilterKey = filterKeys[pageIndex]
-                val pageSales = remember(groupedBills, searchQuery, pageFilterKey, filterDateMillis, customerMap, productMap) {
-                    filterBillsForKey(pageFilterKey)
-                }
-                val pageTodayGroup = remember(pageSales, todayStart) {
-                    pageSales.filter { it.date >= todayStart }
-                }
-                val pageYesterdayGroup = remember(pageSales, todayStart, yesterdayStart) {
-                    pageSales.filter { it.date in yesterdayStart until todayStart }
-                }
-                val pageOlderGroups = remember(pageSales, yesterdayStart) {
-                    pageSales.filter { it.date < yesterdayStart }
-                        .groupBy { dayFormat.format(Date(it.date)).uppercase(Locale.getDefault()) }
-                }
-
-                if (pageSales.isEmpty()) {
-                    Box(
+                    Surface(
+                        onClick = onBack,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.TopCenter
+                            .size(42.dp)
+                            .testTag("bills_back_btn"),
+                        shape = RoundedCornerShape(13.dp),
+                        color = FlatDarkCard,
+                        border = BorderStroke(1.dp, FlatDarkBorder)
                     ) {
-                        if (searchQuery.isNotBlank()) {
-                            com.example.ui.components.NoSearchResultsStateCard(
-                                query = searchQuery,
-                                onClearSearch = { searchQuery = "" }
-                            )
-                        } else {
-                            com.example.ui.components.EmptyBillsTodayStateCard(
-                                onNewBill = onBack
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = tr("Back", "वापस"),
+                                tint = FlatTextPrimary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
-                } else {
-                    LazyColumn(
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = tr("Bills", "बिल"),
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = FlatTextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = tr("Edit, return & audit", "बदलाव, वापसी और ऑडिट"),
+                            fontSize = 12.5.sp,
+                            color = FlatTextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Surface(
+                        onClick = { showAllAuditModal = true },
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 28.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .size(42.dp)
+                            .testTag("bills_audit_btn"),
+                        shape = RoundedCornerShape(13.dp),
+                        color = FlatDarkCard,
+                        border = BorderStroke(1.dp, FlatDarkBorder)
                     ) {
-                        items(pageTodayGroup, key = { it.id }) { bill ->
-                            val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
-                            val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Outlined.VerifiedUser,
+                                contentDescription = tr("Audit trail", "ऑडिट ट्रेल"),
+                                tint = FlatTextPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+
+                UnifiedBillsContent(
+                    sales = sales,
+                    customers = customers,
+                    products = products,
+                    editedSaleIds = editedSaleIds,
+                    onInspectBill = { sale -> selectedSaleIdForDetail = sale.id },
+                    onEmptyNewBill = onBack,
+                    enablePagerSwipe = true,
+                    bottomContentPadding = 28.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun UnifiedBillsContent(
+    sales: List<SaleEntry>,
+    customers: List<Customer>,
+    products: List<Product>,
+    editedSaleIds: Set<String> = emptySet(),
+    onInspectBill: (SaleEntry) -> Unit,
+    onEmptyNewBill: () -> Unit = {},
+    onOpenAllBills: (() -> Unit)? = null,
+    enablePagerSwipe: Boolean = true,
+    bottomContentPadding: Dp = 28.dp,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val customerMap = remember(customers) { customers.associateBy { it.id } }
+    val productMap = remember(products) { products.associateBy { it.id } }
+
+    val filterKeys = remember { listOf("All", "Paid", "Udhari", "Returned") }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilter by remember { mutableStateOf("All") }
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { filterKeys.size })
+    LaunchedEffect(pagerState.currentPage) {
+        if (enablePagerSwipe) {
+            selectedFilter = filterKeys[pagerState.currentPage]
+        }
+    }
+    var filterDateMillis by remember { mutableStateOf<Long?>(null) }
+
+    val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+    val dayFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+
+    val groupedBills = remember(sales) {
+        groupSalesIntoBills(sales.filter { !it.isDeleted }, descending = true)
+    }
+    val billNoMap = remember(sales) {
+        buildConsolidatedBillNoMap(sales)
+    }
+
+    fun filterBillsForKey(filterKey: String): List<GroupedSaleBill> {
+        return groupedBills.filter { bill ->
+            val customerName = customerMap[bill.customerId]?.name ?: "Walk-in"
+            val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+            val matchesSearch = if (searchQuery.isBlank()) {
+                true
+            } else {
+                val q = searchQuery.trim()
+                val anyProductMatches = bill.items.any { item ->
+                    val pName = productMap[item.productId]?.feedName ?: "Item"
+                    pName.contains(q, ignoreCase = true)
+                }
+                customerName.contains(q, ignoreCase = true) ||
+                    anyProductMatches ||
+                    shortNo.contains(q, ignoreCase = true) ||
+                    bill.id.takeLast(6).contains(q, ignoreCase = true)
+            }
+
+            val isReturned = bill.isReturned
+            val isUdhari = bill.udhariAmount > BigDecimal.ZERO && !bill.isCancelled
+            val isPaid = bill.paymentStatus == PaymentStatus.PAID && !isReturned && !bill.isCancelled
+
+            val matchesFilter = when (filterKey) {
+                "Paid" -> isPaid
+                "Udhari" -> isUdhari
+                "Returned" -> isReturned
+                else -> true
+            }
+
+            val matchesDate = if (filterDateMillis == null) {
+                true
+            } else {
+                isSameCalendarDay(bill.date, filterDateMillis!!)
+            }
+
+            matchesSearch && matchesFilter && matchesDate
+        }
+    }
+
+    val filteredSales = remember(groupedBills, searchQuery, selectedFilter, filterDateMillis, customerMap, productMap) {
+        filterBillsForKey(selectedFilter)
+    }
+
+    val todayStart = remember { startOfDayMillis(System.currentTimeMillis()) }
+    val yesterdayStart = remember { todayStart - 24L * 60L * 60L * 1000L }
+
+    val summarySales = remember(filteredSales, filterDateMillis, todayStart) {
+        if (filterDateMillis != null) {
+            filteredSales
+        } else {
+            val todayOnes = filteredSales.filter { it.date >= todayStart }
+            if (todayOnes.isNotEmpty()) todayOnes else filteredSales
+        }
+    }
+    val summaryTotalAmount = remember(summarySales) {
+        summarySales.fold(BigDecimal.ZERO) { acc, b ->
+            if (b.isCancelled) acc else acc.add(b.totalSalePrice)
+        }
+    }
+    val todayLabel = tr("Today", "आज")
+    val allBillsLabel = tr("All bills", "सभी बिल")
+    val summaryDateTitle = remember(filterDateMillis, filteredSales, todayStart, todayLabel, allBillsLabel) {
+        when {
+            filterDateMillis != null && isSameCalendarDay(filterDateMillis!!, System.currentTimeMillis()) -> todayLabel
+            filterDateMillis != null -> dayFormat.format(Date(filterDateMillis!!))
+            filteredSales.any { it.date >= todayStart } -> todayLabel
+            else -> allBillsLabel
+        }
+    }
+
+    @Composable
+    fun BillsListPage(pageFilterKey: String) {
+        val pageSales = remember(groupedBills, searchQuery, pageFilterKey, filterDateMillis, customerMap, productMap) {
+            filterBillsForKey(pageFilterKey)
+        }
+        val pageTodayGroup = remember(pageSales, todayStart) {
+            pageSales.filter { it.date >= todayStart }
+        }
+        val pageYesterdayGroup = remember(pageSales, todayStart, yesterdayStart) {
+            pageSales.filter { it.date in yesterdayStart until todayStart }
+        }
+        val pageOlderGroups = remember(pageSales, yesterdayStart) {
+            pageSales.filter { it.date < yesterdayStart }
+                .groupBy { dayFormat.format(Date(it.date)).uppercase(Locale.getDefault()) }
+        }
+
+        if (pageSales.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                if (searchQuery.isNotBlank()) {
+                    com.example.ui.components.NoSearchResultsStateCard(
+                        query = searchQuery,
+                        onClearSearch = { searchQuery = "" }
+                    )
+                } else {
+                    com.example.ui.components.EmptyBillsTodayStateCard(
+                        onNewBill = onEmptyNewBill
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(top = 4.dp, bottom = bottomContentPadding),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(pageTodayGroup, key = { it.id }) { bill ->
+                    val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                    val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                    Box(modifier = Modifier.testTag("sale_ledger_item_${bill.id}")) {
+                        BillSummaryCard(
+                            bill = bill,
+                            shortBillNo = shortNo,
+                            customer = customerMap[bill.customerId],
+                            product = productMap[bill.primarySale.productId],
+                            timeFormatted = timeFormat.format(Date(bill.date)),
+                            isEdited = isEdited,
+                            onClick = { onInspectBill(bill.primarySale) }
+                        )
+                    }
+                }
+
+                if (pageYesterdayGroup.isNotEmpty()) {
+                    item(key = "header_yesterday") {
+                        Text(
+                            text = tr("YESTERDAY", "कल"),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = FlatTextSecondary,
+                            letterSpacing = 0.8.sp,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
+                        )
+                    }
+                    items(pageYesterdayGroup, key = { it.id }) { bill ->
+                        val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                        val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                        Box(modifier = Modifier.testTag("sale_ledger_item_${bill.id}")) {
                             BillSummaryCard(
                                 bill = bill,
                                 shortBillNo = shortNo,
@@ -670,69 +589,266 @@ fun BillsScreen(
                                 product = productMap[bill.primarySale.productId],
                                 timeFormatted = timeFormat.format(Date(bill.date)),
                                 isEdited = isEdited,
-                                onClick = { selectedSaleIdForDetail = bill.id }
+                                onClick = { onInspectBill(bill.primarySale) }
                             )
                         }
+                    }
+                }
 
-                        if (pageYesterdayGroup.isNotEmpty()) {
-                            item(key = "header_yesterday") {
-                                Text(
-                                    text = tr("YESTERDAY", "कल"),
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = FlatTextSecondary,
-                                    letterSpacing = 0.8.sp,
-                                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
-                                )
-                            }
-                            items(pageYesterdayGroup, key = { it.id }) { bill ->
-                                val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
-                                val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
-                                BillSummaryCard(
-                                    bill = bill,
-                                    shortBillNo = shortNo,
-                                    customer = customerMap[bill.customerId],
-                                    product = productMap[bill.primarySale.productId],
-                                    timeFormatted = timeFormat.format(Date(bill.date)),
-                                    isEdited = isEdited,
-                                    onClick = { selectedSaleIdForDetail = bill.id }
-                                )
-                            }
-                        }
-
-                        pageOlderGroups.forEach { (dateHeader, salesInDate) ->
-                            item(key = "header_$dateHeader") {
-                                Text(
-                                    text = if (pageTodayGroup.isEmpty() && pageYesterdayGroup.isEmpty() && pageOlderGroups.keys.first() == dateHeader) {
-                                        tr("YESTERDAY", "पिछले बिल")
-                                    } else {
-                                        dateHeader
-                                    },
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = FlatTextSecondary,
-                                    letterSpacing = 0.8.sp,
-                                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
-                                )
-                            }
-                            items(salesInDate, key = { it.id }) { bill ->
-                                val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
-                                val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
-                                BillSummaryCard(
-                                    bill = bill,
-                                    shortBillNo = shortNo,
-                                    customer = customerMap[bill.customerId],
-                                    product = productMap[bill.primarySale.productId],
-                                    timeFormatted = timeFormat.format(Date(bill.date)),
-                                    isEdited = isEdited,
-                                    onClick = { selectedSaleIdForDetail = bill.id }
-                                )
-                            }
+                pageOlderGroups.forEach { (dateHeader, salesInDate) ->
+                    item(key = "header_$dateHeader") {
+                        Text(
+                            text = dateHeader,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = FlatTextSecondary,
+                            letterSpacing = 0.8.sp,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 2.dp)
+                        )
+                    }
+                    items(salesInDate, key = { it.id }) { bill ->
+                        val shortNo = bill.billNumber.ifBlank { billNoMap[bill.id] ?: bill.id.takeLast(4).uppercase() }
+                        val isEdited = bill.isEdited || bill.items.any { editedSaleIds.contains(it.id) }
+                        Box(modifier = Modifier.testTag("sale_ledger_item_${bill.id}")) {
+                            BillSummaryCard(
+                                bill = bill,
+                                shortBillNo = shortNo,
+                                customer = customerMap[bill.customerId],
+                                product = productMap[bill.primarySale.productId],
+                                timeFormatted = timeFormat.format(Date(bill.date)),
+                                isEdited = isEdited,
+                                onClick = { onInspectBill(bill.primarySale) }
+                            )
                         }
                     }
                 }
             }
         }
+    }
+
+    Column(modifier = modifier) {
+        // Search bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = {
+                Text(
+                    text = tr("Search bill no., customer, item...", "बिल नंबर, ग्राहक या आइटम खोजें..."),
+                    color = FlatTextMuted,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = FlatTextSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { searchQuery = "" }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = tr("Clear search", "सर्च साफ़ करें"),
+                            tint = FlatTextSecondary
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = FlatDarkCard,
+                unfocusedContainerColor = FlatDarkCard,
+                focusedBorderColor = BillsGreen,
+                unfocusedBorderColor = FlatDarkBorder,
+                focusedTextColor = FlatTextPrimary,
+                unfocusedTextColor = FlatTextPrimary
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .testTag("bills_search_input")
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Filter chips row: All, Paid, Udhari, Returned (+ optional Audit shortcut when embedded in Ledger)
+        val filterOptions = listOf(
+            "All" to tr("All", "सभी"),
+            "Paid" to tr("Paid", "भुगतान"),
+            "Udhari" to tr("Udhari", "उधारी"),
+            "Returned" to tr("Returned", "वापस")
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                filterOptions.forEachIndexed { pageIndex, (key, label) ->
+                    val isSelected = if (enablePagerSwipe) pagerState.currentPage == pageIndex else selectedFilter == key
+                    Surface(
+                        onClick = {
+                            selectedFilter = key
+                            if (enablePagerSwipe) {
+                                scope.launch { pagerState.animateScrollToPage(pageIndex) }
+                            }
+                        },
+                        shape = RoundedCornerShape(50),
+                        color = if (isSelected) BillsGreen else BillsChipIdleBg,
+                        modifier = Modifier
+                            .height(36.dp)
+                            .testTag("bills_filter_${key.lowercase(Locale.ROOT)}")
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(horizontal = 15.dp)
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) Color.White else FlatTextPrimary,
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (onOpenAllBills != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    onClick = onOpenAllBills,
+                    shape = RoundedCornerShape(50),
+                    color = BillsGreenSoft,
+                    modifier = Modifier
+                        .height(36.dp)
+                        .testTag("sales_ledger_open_all_bills_btn")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.VerifiedUser,
+                            contentDescription = null,
+                            tint = BillsGreen,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = tr("Audit", "ऑडिट"),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = BillsGreen,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Date summary & Change date row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = FlatTextPrimary)) {
+                        append(summaryDateTitle)
+                    }
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = FlatTextSecondary)) {
+                        append(" · ${summarySales.size} ${tr("bills", "बिल")} · ${CurrencyUtils.formatInr(summaryTotalAmount)}")
+                    }
+                },
+                fontSize = 13.5.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        if (filterDateMillis != null) {
+                            filterDateMillis = null
+                        } else {
+                            val cal = Calendar.getInstance()
+                            DatePickerDialog(
+                                pickerThemedContext(context),
+                                { _, y, m, d ->
+                                    val picked = Calendar.getInstance().apply {
+                                        set(Calendar.YEAR, y)
+                                        set(Calendar.MONTH, m)
+                                        set(Calendar.DAY_OF_MONTH, d)
+                                    }
+                                    filterDateMillis = picked.timeInMillis
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        }
+                    }
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                    .testTag("bills_change_date_btn"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CalendarToday,
+                    contentDescription = null,
+                    tint = BillsGreen,
+                    modifier = Modifier.size(15.dp)
+                )
+                Text(
+                    text = if (filterDateMillis != null) tr("All dates", "सभी तारीखें") else tr("Change date", "तारीख बदलें"),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BillsGreen,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        if (enablePagerSwipe) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { pageIndex ->
+                BillsListPage(filterKeys[pageIndex])
+            }
+        } else {
+            BillsListPage(selectedFilter)
         }
     }
 }

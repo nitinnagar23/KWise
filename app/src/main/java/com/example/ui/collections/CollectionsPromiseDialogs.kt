@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.model.Customer
+import com.example.ui.theme.FlatDarkBg
 import com.example.ui.theme.FlatDarkBorder
 import com.example.ui.theme.FlatDarkCard
 import com.example.ui.theme.FlatTextMuted
@@ -244,6 +246,7 @@ internal fun SetPromiseDateDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
@@ -525,9 +528,10 @@ internal fun SetPromiseDateDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .testTag("cancel_promise_btn")
                     ) {
                         Text(
@@ -557,9 +561,10 @@ internal fun SetPromiseDateDialog(
                             containerColor = ColBrandGreen,
                             contentColor = Color.White
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1.3f)
+                            .heightIn(min = 48.dp)
                             .testTag("save_promise_btn")
                     ) {
                         Text(
@@ -604,21 +609,56 @@ internal fun SetPromiseDateDialog(
 }
 
 @Composable
-internal fun CollectPaymentDialog(
+fun CollectPaymentDialog(
     customer: Customer,
     onDismiss: () -> Unit,
     onConfirmCollect: (amount: BigDecimal, note: String, customDateMillis: Long?) -> Unit
 ) {
+    UnifiedRecordPaymentDialog(
+        customers = listOf(customer),
+        initialCustomer = customer,
+        allowCustomerChange = false,
+        onDismiss = onDismiss,
+        onConfirmPayment = { _, amount, note, customDateMillis ->
+            onConfirmCollect(amount, note, customDateMillis)
+        }
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun UnifiedRecordPaymentDialog(
+    customers: List<Customer>,
+    initialCustomer: Customer? = null,
+    allowCustomerChange: Boolean = true,
+    onDismiss: () -> Unit,
+    onConfirmPayment: (customer: Customer, amount: BigDecimal, note: String, customDateMillis: Long?) -> Unit
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    var amountInput by remember {
-        mutableStateOf(customer.totalUdhari.setScale(0, RoundingMode.HALF_UP).toPlainString())
+    val udhariCustomers = remember(customers) {
+        val withDue = customers.filter { !it.isDeleted && it.totalUdhari > BigDecimal.ZERO }
+            .sortedByDescending { it.totalUdhari }
+        if (withDue.isNotEmpty()) withDue else customers.filter { !it.isDeleted }
     }
-    var noteInput by remember { mutableStateOf("Cash collection") }
+    var selectedCustomer by remember(initialCustomer, udhariCustomers) {
+        mutableStateOf(initialCustomer ?: udhariCustomers.firstOrNull())
+    }
+    var showCustomerPicker by remember { mutableStateOf(false) }
+    var customerSearch by remember { mutableStateOf("") }
+    var amountInput by remember(selectedCustomer?.id) {
+        val due = selectedCustomer?.totalUdhari ?: BigDecimal.ZERO
+        mutableStateOf(
+            if (due > BigDecimal.ZERO) due.setScale(0, RoundingMode.HALF_UP).toPlainString() else ""
+        )
+    }
+    var payMode by remember { mutableStateOf("CASH") } // CASH or UPI
+    var noteInput by remember { mutableStateOf("") }
     var customDateMillis by remember { mutableStateOf<Long?>(null) }
 
     val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
     val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
     val activeTimestamp = customDateMillis ?: System.currentTimeMillis()
+    val parsedAmount = amountInput.trim().toBigDecimalOrNull() ?: BigDecimal.ZERO
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -636,27 +676,31 @@ internal fun CollectPaymentDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = tr("Collect payment", "भुगतान प्राप्त करें"),
-                            fontSize = 20.sp,
+                            fontSize = 19.sp,
                             fontWeight = FontWeight.Bold,
                             color = FlatTextPrimary
                         )
-                        Text(
-                            text = "${customer.name} · ${tr("Due", "बकाया")} ${CurrencyUtils.formatInr(customer.totalUdhari)}",
-                            fontSize = 13.sp,
-                            color = FlatTextSecondary
-                        )
+                        selectedCustomer?.let { cust ->
+                            Text(
+                                text = "${cust.name} · ${tr("Due", "बकाया")} ${CurrencyUtils.formatInr(cust.totalUdhari)}",
+                                fontSize = 12.5.sp,
+                                color = FlatTextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(12.dp),
@@ -674,163 +718,369 @@ internal fun CollectPaymentDialog(
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = tr("AMOUNT RECEIVED (₹)", "प्राप्त राशि (₹)"),
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = FlatTextSecondary
-                    )
-                    OutlinedTextField(
-                        value = amountInput,
-                        onValueChange = { amountInput = it.filter { c -> c.isDigit() || c == '.' } },
-                        leadingIcon = {
-                            Text("₹", fontWeight = FontWeight.Bold, color = FlatTextSecondary)
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = FlatDarkCard,
-                            unfocusedContainerColor = FlatDarkCard,
-                            focusedBorderColor = ColBrandGreen,
-                            unfocusedBorderColor = FlatDarkBorder,
-                            focusedTextColor = FlatTextPrimary,
-                            unfocusedTextColor = FlatTextPrimary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("collect_payment_amount_input")
-                    )
-                }
+                Spacer(modifier = Modifier.height(14.dp))
 
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = tr("NOTE (OPTIONAL)", "नोट (वैकल्पिक)"),
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = FlatTextSecondary
-                    )
-                    OutlinedTextField(
-                        value = noteInput,
-                        onValueChange = { noteInput = it },
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = FlatDarkCard,
-                            unfocusedContainerColor = FlatDarkCard,
-                            focusedBorderColor = ColBrandGreen,
-                            unfocusedBorderColor = FlatDarkBorder,
-                            focusedTextColor = FlatTextPrimary,
-                            unfocusedTextColor = FlatTextPrimary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("collect_payment_note_input")
-                    )
-                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (allowCustomerChange) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = tr("CUSTOMER", "ग्राहक"),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = FlatTextSecondary
+                                )
+                                Text(
+                                    text = if (showCustomerPicker) tr("Hide", "छुपाएं") else tr("Change", "बदलें"),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColBrandGreen,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { showCustomerPicker = !showCustomerPicker }
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
 
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                            if (showCustomerPicker || selectedCustomer == null) {
+                                OutlinedTextField(
+                                    value = customerSearch,
+                                    onValueChange = { customerSearch = it },
+                                    placeholder = { Text(tr("Search customer…", "ग्राहक खोजें…"), fontSize = 13.5.sp) },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = FlatDarkBg,
+                                        unfocusedContainerColor = FlatDarkBg,
+                                        focusedBorderColor = ColBrandGreen,
+                                        unfocusedBorderColor = FlatDarkBorder,
+                                        focusedTextColor = FlatTextPrimary,
+                                        unfocusedTextColor = FlatTextPrimary
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                val filtered = remember(udhariCustomers, customerSearch) {
+                                    if (customerSearch.isBlank()) udhariCustomers.take(8)
+                                    else udhariCustomers.filter {
+                                        it.name.contains(customerSearch.trim(), ignoreCase = true) ||
+                                            it.village.contains(customerSearch.trim(), ignoreCase = true)
+                                    }.take(8)
+                                }
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    filtered.forEach { c ->
+                                        val isPicked = selectedCustomer?.id == c.id
+                                        Surface(
+                                            onClick = {
+                                                selectedCustomer = c
+                                                showCustomerPicker = false
+                                            },
+                                            shape = RoundedCornerShape(10.dp),
+                                            color = if (isPicked) ColBrandGreen else FlatDarkBg,
+                                            border = BorderStroke(1.dp, if (isPicked) ColBrandGreen else FlatDarkBorder)
+                                        ) {
+                                            Text(
+                                                text = if (c.totalUdhari > BigDecimal.ZERO) {
+                                                    "${c.name} · ${CurrencyUtils.formatInr(c.totalUdhari)}"
+                                                } else c.name,
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (isPicked) Color.White else FlatTextPrimary,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                val cust = selectedCustomer!!
+                                Surface(
+                                    onClick = { showCustomerPicker = true },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = FlatDarkBg,
+                                    border = BorderStroke(1.dp, FlatDarkBorder),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = if (cust.village.isNotBlank()) "${cust.name} · ${cust.village}" else cust.name,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = FlatTextPrimary,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = CurrencyUtils.formatInr(cust.totalUdhari),
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (cust.totalUdhari > BigDecimal.ZERO) kw(0xFFB91C1C) else ColBrandGreen
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Amount + Quick chips
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = tr("PAYMENT TIMING (DATE & TIME)", "भुगतान का समय"),
+                            text = tr("AMOUNT RECEIVED (₹)", "प्राप्त राशि (₹)"),
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = FlatTextSecondary
                         )
-                        if (customDateMillis != null) {
-                            Text(
-                                text = tr("Reset to Now", "अभी का समय"),
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = ColBrandGreen,
-                                modifier = Modifier.clickable { customDateMillis = null }
+                        OutlinedTextField(
+                            value = amountInput,
+                            onValueChange = { amountInput = it.filter { c -> c.isDigit() || c == '.' } },
+                            leadingIcon = {
+                                Text("₹", fontWeight = FontWeight.Bold, color = FlatTextSecondary)
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = FlatDarkBg,
+                                unfocusedContainerColor = FlatDarkBg,
+                                focusedBorderColor = ColBrandGreen,
+                                unfocusedBorderColor = FlatDarkBorder,
+                                focusedTextColor = FlatTextPrimary,
+                                unfocusedTextColor = FlatTextPrimary
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("collect_payment_amount_input")
+                        )
+
+                        val due = selectedCustomer?.totalUdhari ?: BigDecimal.ZERO
+                        if (due > BigDecimal.ZERO) {
+                            val halfDue = due.divide(BigDecimal("2"), 0, RoundingMode.HALF_UP)
+                            val presets = listOf(
+                                tr("Full", "पूरा") to due.setScale(0, RoundingMode.HALF_UP),
+                                tr("Half", "आधा") to halfDue,
+                                "₹500" to BigDecimal("500"),
+                                "₹1,000" to BigDecimal("1000")
                             )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                presets.forEach { (label, value) ->
+                                    val isMatch = parsedAmount.compareTo(value) == 0
+                                    Surface(
+                                        onClick = { amountInput = value.toPlainString() },
+                                        shape = RoundedCornerShape(9.dp),
+                                        color = if (isMatch) ColBrandGreen else FlatDarkBg,
+                                        border = BorderStroke(1.dp, if (isMatch) ColBrandGreen else FlatDarkBorder),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.padding(vertical = 7.dp, horizontal = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isMatch) Color.White else FlatTextPrimary,
+                                                maxLines = 1,
+                                                softWrap = false,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+
+                    // Mode toggle: Cash | UPI
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
-                                android.app.DatePickerDialog(
-                                    com.example.ui.theme.pickerThemedContext(context),
-                                    { _, y, m, d ->
-                                        val updated = Calendar.getInstance().apply {
-                                            timeInMillis = activeTimestamp
-                                            set(Calendar.YEAR, y)
-                                            set(Calendar.MONTH, m)
-                                            set(Calendar.DAY_OF_MONTH, d)
-                                        }
-                                        customDateMillis = updated.timeInMillis
-                                    },
-                                    cal.get(Calendar.YEAR),
-                                    cal.get(Calendar.MONTH),
-                                    cal.get(Calendar.DAY_OF_MONTH)
-                                ).show()
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, FlatDarkBorder),
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("collect_payment_custom_date_btn"),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = dateFormatter.format(Date(activeTimestamp)),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = FlatTextPrimary,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        listOf("CASH" to tr("Cash", "नकद"), "UPI" to tr("UPI / Bank", "यूपीआई / बैंक")).forEach { (modeKey, modeLabel) ->
+                            val isSelected = payMode == modeKey
+                            Surface(
+                                onClick = { payMode = modeKey },
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) ColBrandGreen else FlatDarkBg,
+                                border = BorderStroke(1.dp, if (isSelected) ColBrandGreen else FlatDarkBorder),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.padding(vertical = 9.dp)
+                                ) {
+                                    Text(
+                                        text = modeLabel,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else FlatTextPrimary,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
                         }
+                    }
 
-                        OutlinedButton(
-                            onClick = {
-                                val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
-                                android.app.TimePickerDialog(
-                                    com.example.ui.theme.pickerThemedContext(context),
-                                    { _, hourOfDay, minute ->
-                                        val updated = Calendar.getInstance().apply {
-                                            timeInMillis = activeTimestamp
-                                            set(Calendar.HOUR_OF_DAY, hourOfDay)
-                                            set(Calendar.MINUTE, minute)
-                                            set(Calendar.SECOND, 0)
-                                        }
-                                        customDateMillis = updated.timeInMillis
-                                    },
-                                    cal.get(Calendar.HOUR_OF_DAY),
-                                    cal.get(Calendar.MINUTE),
-                                    false
-                                ).show()
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, FlatDarkBorder),
+                    // Note
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = tr("NOTE (OPTIONAL)", "नोट (वैकल्पिक)"),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = FlatTextSecondary
+                        )
+                        OutlinedTextField(
+                            value = noteInput,
+                            onValueChange = { noteInput = it },
+                            placeholder = { Text(tr("Cash received at counter", "काउंटर पर नकद मिला"), fontSize = 13.5.sp) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = FlatDarkBg,
+                                unfocusedContainerColor = FlatDarkBg,
+                                focusedBorderColor = ColBrandGreen,
+                                unfocusedBorderColor = FlatDarkBorder,
+                                focusedTextColor = FlatTextPrimary,
+                                unfocusedTextColor = FlatTextPrimary
+                            ),
                             modifier = Modifier
-                                .weight(1f)
-                                .testTag("collect_payment_custom_time_btn"),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                                .fillMaxWidth()
+                                .testTag("collect_payment_note_input")
+                        )
+                    }
+
+                    // Timing
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = timeFormatter.format(Date(activeTimestamp)),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = FlatTextPrimary,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Ellipsis
+                                text = tr("PAYMENT TIMING", "भुगतान का समय"),
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FlatTextSecondary
                             )
+                            if (customDateMillis != null) {
+                                Text(
+                                    text = tr("Reset to Now", "अभी का समय"),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ColBrandGreen,
+                                    modifier = Modifier.clickable { customDateMillis = null }
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                                    android.app.DatePickerDialog(
+                                        com.example.ui.theme.pickerThemedContext(context),
+                                        { _, y, m, d ->
+                                            val updated = Calendar.getInstance().apply {
+                                                timeInMillis = activeTimestamp
+                                                set(Calendar.YEAR, y)
+                                                set(Calendar.MONTH, m)
+                                                set(Calendar.DAY_OF_MONTH, d)
+                                            }
+                                            customDateMillis = updated.timeInMillis
+                                        },
+                                        cal.get(Calendar.YEAR),
+                                        cal.get(Calendar.MONTH),
+                                        cal.get(Calendar.DAY_OF_MONTH)
+                                    ).show()
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, FlatDarkBorder),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 44.dp)
+                                    .testTag("collect_payment_custom_date_btn")
+                            ) {
+                                Text(
+                                    text = dateFormatter.format(Date(activeTimestamp)),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    val cal = Calendar.getInstance().apply { timeInMillis = activeTimestamp }
+                                    android.app.TimePickerDialog(
+                                        com.example.ui.theme.pickerThemedContext(context),
+                                        { _, hourOfDay, minute ->
+                                            val updated = Calendar.getInstance().apply {
+                                                timeInMillis = activeTimestamp
+                                                set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                                set(Calendar.MINUTE, minute)
+                                                set(Calendar.SECOND, 0)
+                                            }
+                                            customDateMillis = updated.timeInMillis
+                                        },
+                                        cal.get(Calendar.HOUR_OF_DAY),
+                                        cal.get(Calendar.MINUTE),
+                                        false
+                                    ).show()
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, FlatDarkBorder),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 44.dp)
+                                    .testTag("collect_payment_custom_time_btn")
+                            ) {
+                                Text(
+                                    text = timeFormatter.format(Date(activeTimestamp)),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = FlatTextPrimary,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -840,8 +1090,10 @@ internal fun CollectPaymentDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.dp, FlatDarkBorder),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
-                        modifier = Modifier.weight(1f)
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp)
                     ) {
                         Text(
                             text = tr("Cancel", "रद्द करें"),
@@ -855,19 +1107,30 @@ internal fun CollectPaymentDialog(
 
                     Button(
                         onClick = {
-                            val amt = amountInput.trim().toBigDecimalOrNull() ?: BigDecimal.ZERO
-                            if (amt > BigDecimal.ZERO) {
-                                onConfirmCollect(amt, noteInput.trim(), customDateMillis)
+                            val cust = selectedCustomer ?: return@Button
+                            if (parsedAmount > BigDecimal.ZERO) {
+                                val finalNote = buildString {
+                                    if (payMode == "UPI") append("UPI")
+                                    if (noteInput.isNotBlank()) {
+                                        if (isNotEmpty()) append(" · ")
+                                        append(noteInput.trim())
+                                    }
+                                }.ifBlank { if (payMode == "UPI") "UPI collection" else "Cash collection" }
+                                onConfirmPayment(cust, parsedAmount, finalNote, customDateMillis)
                             }
                         },
+                        enabled = selectedCustomer != null && parsedAmount > BigDecimal.ZERO,
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = ColBrandGreen,
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = ColBrandGreen.copy(alpha = 0.45f),
+                            disabledContentColor = Color.White.copy(alpha = 0.8f)
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 13.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
                         modifier = Modifier
                             .weight(1.3f)
+                            .heightIn(min = 48.dp)
                             .testTag("confirm_collect_payment_btn")
                     ) {
                         Text(

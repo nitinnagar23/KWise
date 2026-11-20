@@ -2263,7 +2263,10 @@ fun RepaymentReceivedSuccessScreen(
             Text(
                 text = tr("Share receipt on WhatsApp", "व्हाट्सएप पर रसीद शेयर करें"),
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -2274,7 +2277,10 @@ fun RepaymentReceivedSuccessScreen(
                 text = tr("View khata", "खाता देखें"),
                 fontSize = 15.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = KhataBrandGreen
+                color = KhataBrandGreen,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -2283,7 +2289,10 @@ fun RepaymentReceivedSuccessScreen(
                 text = tr("Done", "पूरा हुआ"),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = KhataSubtleText
+                color = KhataSubtleText,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
